@@ -1034,7 +1034,8 @@ function render(state) {
     if (logoutBtn) {
         logoutBtn.addEventListener("click", async () => {
             await logout();
-            window.location.reload();
+            const baseUrl = `${window.location.pathname}${window.location.search}`;
+            window.location.href = baseUrl;
         });
     }
 

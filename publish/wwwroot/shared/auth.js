@@ -16,6 +16,10 @@ export function saveSessionHint(payload) {
     localStorage.setItem(storageKey, JSON.stringify(payload));
 }
 
+export function clearSessionHint() {
+    localStorage.removeItem(storageKey);
+}
+
 export async function getSession() {
     return apiGet("/api/auth/me");
 }
@@ -44,6 +48,12 @@ export async function register({ email, password, studioSlug, fullName, phone })
 }
 
 export async function logout() {
-    await apiPost("/api/auth/logout", {});
+    try {
+        await apiPost("/api/auth/logout", {});
+    } catch {
+        // Ignore network failures so local logout can proceed.
+    } finally {
+        clearSessionHint();
+    }
 }
 

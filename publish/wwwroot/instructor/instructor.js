@@ -356,7 +356,8 @@ function bindCalendarActions(viewState) {
     if (logoutBtn) {
         logoutBtn.addEventListener("click", async () => {
             await logout();
-            renderLogin();
+            const baseUrl = `${window.location.pathname}${window.location.search}`;
+            window.location.href = baseUrl;
         });
     }
 

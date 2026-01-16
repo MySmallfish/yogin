@@ -315,6 +315,14 @@ form {
   }
 }
 
+html[dir="rtl"] .waiver-signature-grid .waiver-signature-block {
+  order: 1;
+}
+
+html[dir="rtl"] .waiver-signature-grid .waiver-checkboxes {
+  order: 2;
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;
