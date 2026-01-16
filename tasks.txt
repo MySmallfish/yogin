@@ -1,0 +1,23 @@
+1. Add Quick Call icon near each registration - Phone, Email, WhatsApp, Sms
+2. moving session should keep the instructor
+3. Add Room management
+4. Products - One time purchase -> yoga matress, merchandise, Rentals etc. including Product Category
+5. Define event series type with icon and color
+6. Series - assign plans available for using on that series
+7. allow edit plan, plan price is monthly indefeinatly
+8. All prices should be in leading currency (NIS) and not cents
+9. Session contains different capacity for In person or remote
+10. Load Holidays calendars, including alerts and reminders 
+11. Cancellation - define in hours by Series (Default) - "lose" the credit - Series (default) and Session override
+12. Waitlist - if a slot is open, send question to the first with question and 5m to answer, with the number of waiting. (if not answered or rejected, removed from waitlist) 
+13. Instructor - can replace teacher or register sudents (defined by permissions - per field). 
+14. Add List view with search funcionallity
+15. Series, Users, Customers , etc. - edit with Popup
+16. Customer Id, Email, Attached files (Health, etc) - simple form with digital signature, send by mail after signature. Identifying customer by icons - participate in yoga, massage, etc. customer sign on Verify Health Viewer (הצהרת בריאות)
+17. Terms & Conditions, Privacy Policy, etc - change requires signature 
+18. User invitation flow
+19. Payroll - how much the instructor get
+20. Guests -> simple User with permission
+21. Create Invoice - preferred by api, maybe create
+22. File Management
+23. Calendar start day

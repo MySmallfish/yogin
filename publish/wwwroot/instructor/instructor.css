@@ -1,0 +1,139 @@
+.portal-shell {
+  min-height: 100vh;
+  padding: 36px 40px 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.portal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.portal-title h1 {
+  margin: 0;
+  font-family: "Playfair Display", serif;
+  font-size: 30px;
+}
+
+html[lang^="he"] .portal-title h1 {
+  font-family: Arial, "Segoe UI", sans-serif;
+}
+
+.portal-title .muted {
+  font-size: 14px;
+}
+
+.calendar-event.muted {
+  opacity: 0.45;
+  background: rgba(255, 255, 255, 0.6);
+  cursor: default;
+}
+
+.calendar-event.holiday {
+  background: rgba(254, 243, 199, 0.7);
+  border-color: rgba(245, 158, 11, 0.6);
+  cursor: default;
+}
+
+.calendar-event.muted:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.calendar-event.holiday:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.calendar-event.mine {
+  border-color: rgba(245, 158, 11, 0.6);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.pill.mine {
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--ink);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+}
+
+.pill.readonly {
+  background: rgba(148, 163, 184, 0.2);
+  color: var(--slate);
+  border: 1px solid rgba(148, 163, 184, 0.5);
+}
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.meta-grid label {
+  font-size: 12px;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.section-title {
+  font-weight: 600;
+  margin: 12px 0 8px;
+}
+
+.readonly-note {
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(148, 163, 184, 0.12);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.attendance-toggle {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.attendance-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: white;
+  color: var(--slate);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+}
+
+.attendance-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.attendance-btn.active {
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.5);
+  background: rgba(245, 158, 11, 0.16);
+}
+
+@media (max-width: 900px) {
+  .portal-shell {
+    padding: 24px;
+  }
+}
