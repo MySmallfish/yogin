@@ -2156,6 +2156,24 @@ const adminMachine = createMachine({
 
 const actor = createActor(adminMachine);
 
+const adminRoutes = new Set(["calendar", "events", "rooms", "plans", "customers", "users", "guests", "reports", "payroll", "audit", "settings"]);
+
+function resolveRouteFromLocation(defaultRoute) {
+    const hash = window.location.hash || "";
+    if (hash.startsWith("#/")) {
+        const cleaned = hash.replace(/^#\/?/, "");
+        const [path] = cleaned.split("?");
+        const route = path.split("/")[0] || defaultRoute;
+        if (adminRoutes.has(route)) return route;
+    }
+
+    const parts = window.location.pathname.split("/").filter(Boolean);
+    const candidate = parts[parts.length - 1] || "";
+    if (adminRoutes.has(candidate)) return candidate;
+
+    return defaultRoute;
+}
+
 function render(state) {
     if (state.matches("login")) {
         root.innerHTML = loginTemplate({ error: state.context.error, studioSlug: sessionHint.studioSlug || "demo" });
@@ -5844,24 +5862,6 @@ actor.subscribe((state) => {
 });
 
 actor.start();
-
-const adminRoutes = new Set(["calendar", "events", "rooms", "plans", "customers", "users", "guests", "reports", "payroll", "audit", "settings"]);
-
-function resolveRouteFromLocation(defaultRoute) {
-    const hash = window.location.hash || "";
-    if (hash.startsWith("#/")) {
-        const cleaned = hash.replace(/^#\/?/, "");
-        const [path] = cleaned.split("?");
-        const route = path.split("/")[0] || defaultRoute;
-        if (adminRoutes.has(route)) return route;
-    }
-
-    const parts = window.location.pathname.split("/").filter(Boolean);
-    const candidate = parts[parts.length - 1] || "";
-    if (adminRoutes.has(candidate)) return candidate;
-
-    return defaultRoute;
-}
 
 function handleRouteChange() {
     const route = resolveRouteFromLocation("calendar");
