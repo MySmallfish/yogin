@@ -123,6 +123,103 @@ async function openLegalModal(kind) {
     }
 }
 
+function setupSignaturePad(canvas, outputInput, clearButton) {
+    if (!canvas || !outputInput) return null;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    let drawing = false;
+    let hasStroke = false;
+
+    const getPoint = (event) => {
+        const rect = canvas.getBoundingClientRect();
+        return {
+            x: event.clientX - rect.left,
+            y: event.clientY - rect.top
+        };
+    };
+
+    const redraw = () => {
+        const rect = canvas.getBoundingClientRect();
+        const ratio = window.devicePixelRatio || 1;
+        canvas.width = Math.max(1, rect.width * ratio);
+        canvas.height = Math.max(1, rect.height * ratio);
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        ctx.lineWidth = 2;
+        ctx.lineCap = "round";
+        ctx.strokeStyle = "#0f172a";
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, rect.width, rect.height);
+        if (outputInput.value) {
+            const img = new Image();
+            img.onload = () => {
+                ctx.drawImage(img, 0, 0, rect.width, rect.height);
+            };
+            img.src = outputInput.value;
+            hasStroke = true;
+        }
+    };
+
+    const syncOutput = () => {
+        if (!hasStroke) {
+            outputInput.value = "";
+            return;
+        }
+        outputInput.value = canvas.toDataURL("image/png");
+    };
+
+    const startDraw = (event) => {
+        drawing = true;
+        hasStroke = true;
+        const point = getPoint(event);
+        ctx.beginPath();
+        ctx.moveTo(point.x, point.y);
+        ctx.lineTo(point.x + 0.01, point.y + 0.01);
+        ctx.stroke();
+        canvas.setPointerCapture(event.pointerId);
+    };
+    const moveDraw = (event) => {
+        if (!drawing) return;
+        const point = getPoint(event);
+        ctx.lineTo(point.x, point.y);
+        ctx.stroke();
+    };
+    const endDraw = (event) => {
+        if (!drawing) return;
+        drawing = false;
+        try {
+            canvas.releasePointerCapture(event.pointerId);
+        } catch {
+            // Ignore if pointer was not captured.
+        }
+        syncOutput();
+    };
+
+    canvas.addEventListener("pointerdown", startDraw);
+    canvas.addEventListener("pointermove", moveDraw);
+    canvas.addEventListener("pointerup", endDraw);
+    canvas.addEventListener("pointercancel", endDraw);
+    canvas.addEventListener("pointerleave", endDraw);
+
+    if (clearButton) {
+        clearButton.addEventListener("click", () => {
+            hasStroke = false;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const rect = canvas.getBoundingClientRect();
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, rect.width, rect.height);
+            syncOutput();
+        });
+    }
+
+    redraw();
+    window.addEventListener("resize", redraw);
+
+    return {
+        sync: syncOutput,
+        hasSignature: () => hasStroke
+    };
+}
+
 const scheduleTemplate = compileTemplate("schedule", `
   {{#if notice}}
     <div class="notice">{{notice}}</div>
@@ -511,8 +608,19 @@ const waiverTemplate = compileTemplate("waiver", `
         </span>
       </label>
       <div class="form-grid">
-        <div>
+        <div class="span-2">
           <label>{{t "waiver.field.signature" "Signature"}}</label>
+          <div class="signature-pad">
+            <canvas id="waiver-signature" aria-label="{{t "waiver.signature.hint" "Draw your signature above."}}"></canvas>
+          </div>
+          <div class="signature-actions">
+            <button type="button" class="secondary" id="clear-signature">{{t "waiver.signature.clear" "Clear signature"}}</button>
+            <span class="signature-hint">{{t "waiver.signature.hint" "Draw your signature above."}}</span>
+          </div>
+          <input type="hidden" name="signatureDataUrl" />
+        </div>
+        <div>
+          <label>{{t "waiver.field.signatureName" "Signature name"}}</label>
           <input name="signatureName" value="{{signatureName}}" required />
         </div>
         <div>
@@ -1121,6 +1229,12 @@ function bindRouteActions(route, data, state) {
         const waiverForm = document.getElementById("waiver-form");
         const openTermsBtn = document.getElementById("open-terms");
         const openPrivacyBtn = document.getElementById("open-privacy");
+        const signatureCanvas = document.getElementById("waiver-signature");
+        const signatureInput = waiverForm?.querySelector("[name=\"signatureDataUrl\"]") || null;
+        const clearSignatureBtn = document.getElementById("clear-signature");
+        const signaturePad = signatureCanvas && signatureInput
+            ? setupSignaturePad(signatureCanvas, signatureInput, clearSignatureBtn)
+            : null;
         if (openTermsBtn) {
             openTermsBtn.addEventListener("click", () => openLegalModal("terms"));
         }
@@ -1132,6 +1246,11 @@ function bindRouteActions(route, data, state) {
             waiverForm.addEventListener("submit", async (event) => {
                 event.preventDefault();
                 if (!waiverForm.reportValidity()) return;
+                signaturePad?.sync();
+                if (!signatureInput?.value) {
+                    showToast(t("waiver.signature.required", "Signature is required."), "error");
+                    return;
+                }
                 const formData = new FormData(waiverForm);
                 const toBool = (value) => value === "yes";
                 try {
@@ -1168,7 +1287,8 @@ function bindRouteActions(route, data, state) {
                         acknowledged: formData.get("acknowledged") === "on",
                         agreeToTerms: formData.get("agreeToTerms") === "on",
                         signatureName: formData.get("signatureName"),
-                        signatureType: "typed",
+                        signatureType: "drawn",
+                        signatureDataUrl: formData.get("signatureDataUrl"),
                         password: formData.get("password")
                     });
                     showToast(t("waiver.submitted", "Waiver submitted."), "success");

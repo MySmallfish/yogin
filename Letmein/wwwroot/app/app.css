@@ -243,6 +243,23 @@ form {
   margin-top: 3px;
 }
 
+.waiver-signature-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(320px, 1.2fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.waiver-checkboxes {
+  display: grid;
+  gap: 12px;
+}
+
+.waiver-signature-block {
+  display: grid;
+  gap: 12px;
+}
+
 .link-button {
   border: none;
   background: none;
@@ -280,8 +297,22 @@ form {
   color: var(--muted);
 }
 
+.waiver-signature-block .form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.waiver-signature-block .form-grid > div {
+  min-width: 0;
+}
+
 .waiver-card {
   margin-top: 18px;
+}
+
+@media (max-width: 860px) {
+  .waiver-signature-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .modal-overlay {
