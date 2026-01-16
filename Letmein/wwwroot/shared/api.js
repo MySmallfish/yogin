@@ -32,8 +32,10 @@ export async function apiFetch(path, options = {}) {
 
     const payload = await parseResponse(response);
     if (!response.ok) {
-        const error = payload?.error || response.statusText || "Request failed";
-        throw new Error(error);
+        const message = payload?.error || response.statusText || "Request failed";
+        const error = new Error(message);
+        error.status = response.status;
+        throw error;
     }
 
     return payload;

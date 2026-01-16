@@ -1992,11 +1992,13 @@ const adminMachine = createMachine({
         })),
         setError: assign(({ context, event }) => {
             const message = event.error?.message;
+            const status = event.error?.status;
+            const shouldLogout = message === "LOGOUT" || status === 401 || status === 403;
             return {
                 ...context,
-                user: null,
-                studio: null,
-                error: message === "LOGOUT" ? "" : (message || "Unable to load data")
+                user: shouldLogout ? null : context.user,
+                studio: shouldLogout ? null : context.studio,
+                error: shouldLogout ? "" : (message || "Unable to load data")
             };
         })
     },
@@ -2036,7 +2038,16 @@ const adminMachine = createMachine({
             }
         }),
         loadRoute: fromPromise(async ({ input }) => {
-            const studio = await apiGet("/api/admin/studio");
+            let studio;
+            try {
+                studio = await apiGet("/api/admin/studio");
+            } catch (error) {
+                if (error.status === 401 || error.status === 403) {
+                    await logout();
+                    throw new Error("LOGOUT");
+                }
+                throw error;
+            }
             switch (input.route) {
                 case "calendar": {
                     const view = input.calendarView || "week";

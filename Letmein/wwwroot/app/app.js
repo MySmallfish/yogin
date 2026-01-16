@@ -737,9 +737,13 @@ const appMachine = createMachine({
         })),
         setError: assign(({ context, event }) => {
             const message = event.error?.message;
+            const status = event.error?.status;
+            const shouldLogout = message === "LOGOUT" || status === 401 || status === 403;
             return {
                 ...context,
-                error: message === "LOGOUT" ? "" : (message || "Unable to load data")
+                user: shouldLogout ? null : context.user,
+                studio: shouldLogout ? null : context.studio,
+                error: shouldLogout ? "" : (message || "Unable to load data")
             };
         })
     },
