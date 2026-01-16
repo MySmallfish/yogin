@@ -2163,7 +2163,11 @@ function render(state) {
         return;
     }
 
-    const route = state.context.route;
+    const route = resolveRouteFromLocation(state.context.route || "calendar");
+    if (route !== state.context.route) {
+        actor.send({ type: "NAVIGATE", route });
+        return;
+    }
     const titleMap = {
         calendar: t("page.calendar.title", "Calendar"),
         events: t("page.events.title", "Event series"),
@@ -5843,16 +5847,24 @@ actor.start();
 
 const adminRoutes = new Set(["calendar", "events", "rooms", "plans", "customers", "users", "guests", "reports", "payroll", "audit", "settings"]);
 
-function resolveRouteFromHash(defaultRoute) {
-    const hash = window.location.hash || `#/${defaultRoute}`;
-    const cleaned = hash.replace(/^#\/?/, "");
-    const [path] = cleaned.split("?");
-    const route = path.split("/")[0] || defaultRoute;
-    return adminRoutes.has(route) ? route : defaultRoute;
+function resolveRouteFromLocation(defaultRoute) {
+    const hash = window.location.hash || "";
+    if (hash.startsWith("#/")) {
+        const cleaned = hash.replace(/^#\/?/, "");
+        const [path] = cleaned.split("?");
+        const route = path.split("/")[0] || defaultRoute;
+        if (adminRoutes.has(route)) return route;
+    }
+
+    const parts = window.location.pathname.split("/").filter(Boolean);
+    const candidate = parts[parts.length - 1] || "";
+    if (adminRoutes.has(candidate)) return candidate;
+
+    return defaultRoute;
 }
 
 function handleRouteChange() {
-    const route = resolveRouteFromHash("calendar");
+    const route = resolveRouteFromLocation("calendar");
     const snapshot = actor.getSnapshot?.();
     if (snapshot?.matches?.("login")) {
         return;
