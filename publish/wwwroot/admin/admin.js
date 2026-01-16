@@ -1889,11 +1889,11 @@ const adminMachine = createMachine({
     },
     on: {
         NAVIGATE: {
-            target: "loading",
+            target: ".loading",
             actions: "setRoute"
         },
         SET_CALENDAR: {
-            target: "loading",
+            target: ".loading",
             actions: "setCalendar"
         },
         SET_CALENDAR_SEARCH: {
