@@ -1890,10 +1890,12 @@ const adminMachine = createMachine({
     on: {
         NAVIGATE: {
             target: ".loading",
+            guard: "isAuthenticated",
             actions: "setRoute"
         },
         SET_CALENDAR: {
             target: ".loading",
+            guard: "isAuthenticated",
             actions: "setCalendar"
         },
         SET_CALENDAR_SEARCH: {
@@ -1992,9 +1994,14 @@ const adminMachine = createMachine({
             const message = event.error?.message;
             return {
                 ...context,
+                user: null,
+                studio: null,
                 error: message === "LOGOUT" ? "" : (message || "Unable to load data")
             };
         })
+    },
+    guards: {
+        isAuthenticated: ({ context }) => !!context.user
     },
     actors: {
         loadSession: fromPromise(async () => {
@@ -5835,6 +5842,10 @@ function resolveRouteFromHash(defaultRoute) {
 
 function handleRouteChange() {
     const route = resolveRouteFromHash("calendar");
+    const snapshot = actor.getSnapshot?.();
+    if (snapshot?.matches?.("login")) {
+        return;
+    }
     actor.send({ type: "NAVIGATE", route });
 }
 
