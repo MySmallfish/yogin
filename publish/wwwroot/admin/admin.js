@@ -9,6 +9,12 @@ import { formatMoney, getQueryParam, toDateInputValue } from "../shared/utils.js
 const root = document.getElementById("app");
 const sessionHint = loadSessionHint();
 Handlebars.registerHelper("t", (key, fallback) => t(key, fallback));
+const debugEnabled = new URLSearchParams(window.location.search).has("debug")
+    || localStorage.getItem("letmein.debug") === "1";
+function debugLog(...args) {
+    if (!debugEnabled) return;
+    console.info("[admin]", ...args);
+}
 
 const layoutTemplate = compileTemplate("layout", `
   <div class="app-shell">
@@ -2038,6 +2044,11 @@ const adminMachine = createMachine({
             }
         }),
         loadRoute: fromPromise(async ({ input }) => {
+            debugLog("loadRoute:start", {
+                route: input.route,
+                hash: window.location.hash,
+                path: window.location.pathname
+            });
             let studio;
             try {
                 studio = await apiGet("/api/admin/studio");
@@ -2046,6 +2057,7 @@ const adminMachine = createMachine({
                     await logout();
                     throw new Error("LOGOUT");
                 }
+                debugLog("loadRoute:error", { route: input.route, message: error.message, status: error.status });
                 throw error;
             }
             switch (input.route) {
@@ -2148,6 +2160,7 @@ const adminMachine = createMachine({
                     return { studio };
                 }
                 default:
+                    debugLog("loadRoute:done", { route: input.route });
                     return { studio };
             }
         })
@@ -2156,24 +2169,6 @@ const adminMachine = createMachine({
 
 const actor = createActor(adminMachine);
 
-const adminRoutes = new Set(["calendar", "events", "rooms", "plans", "customers", "users", "guests", "reports", "payroll", "audit", "settings"]);
-
-function resolveRouteFromLocation(defaultRoute) {
-    const hash = window.location.hash || "";
-    if (hash.startsWith("#/")) {
-        const cleaned = hash.replace(/^#\/?/, "");
-        const [path] = cleaned.split("?");
-        const route = path.split("/")[0] || defaultRoute;
-        if (adminRoutes.has(route)) return route;
-    }
-
-    const parts = window.location.pathname.split("/").filter(Boolean);
-    const candidate = parts[parts.length - 1] || "";
-    if (adminRoutes.has(candidate)) return candidate;
-
-    return defaultRoute;
-}
-
 function render(state) {
     if (state.matches("login")) {
         root.innerHTML = loginTemplate({ error: state.context.error, studioSlug: sessionHint.studioSlug || "demo" });
@@ -2181,11 +2176,8 @@ function render(state) {
         return;
     }
 
-    const route = resolveRouteFromLocation(state.context.route || "calendar");
-    if (route !== state.context.route) {
-        actor.send({ type: "NAVIGATE", route });
-        return;
-    }
+    const route = state.context.route;
+    debugLog("render", { route, state: state.value, hash: window.location.hash, path: window.location.pathname });
     const titleMap = {
         calendar: t("page.calendar.title", "Calendar"),
         events: t("page.events.title", "Event series"),
@@ -2573,6 +2565,7 @@ function render(state) {
 
     const navigateToRoute = (routeName) => {
         const targetHash = `#/${routeName}`;
+        debugLog("nav:navigate", { routeName, targetHash });
         actor.send({ type: "NAVIGATE", route: routeName });
         if (window.location.hash !== targetHash) {
             window.location.hash = targetHash;
@@ -2586,6 +2579,7 @@ function render(state) {
         link.addEventListener("click", (event) => {
             event.preventDefault();
             if (!routeName) return;
+            debugLog("nav:click", { routeName, hash: window.location.hash });
             navigateToRoute(routeName);
         });
     });
@@ -5858,14 +5852,26 @@ function getWeekdayNames(weekStartsOn) {
 }
 
 actor.subscribe((state) => {
+    debugLog("state", { value: state.value, route: state.context.route });
     render(state);
 });
 
 actor.start();
 
+const adminRoutes = new Set(["calendar", "events", "rooms", "plans", "customers", "users", "guests", "reports", "payroll", "audit", "settings"]);
+
+function resolveRouteFromHash(defaultRoute) {
+    const hash = window.location.hash || `#/${defaultRoute}`;
+    const cleaned = hash.replace(/^#\/?/, "");
+    const [path] = cleaned.split("?");
+    const route = path.split("/")[0] || defaultRoute;
+    return adminRoutes.has(route) ? route : defaultRoute;
+}
+
 function handleRouteChange() {
-    const route = resolveRouteFromLocation("calendar");
+    const route = resolveRouteFromHash("calendar");
     const snapshot = actor.getSnapshot?.();
+    debugLog("hashchange", { route, hash: window.location.hash, state: snapshot?.value });
     if (snapshot?.matches?.("login")) {
         return;
     }
