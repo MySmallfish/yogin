@@ -1887,6 +1887,19 @@ const adminMachine = createMachine({
         data: {},
         error: ""
     },
+    on: {
+        NAVIGATE: {
+            target: "loading",
+            actions: "setRoute"
+        },
+        SET_CALENDAR: {
+            target: "loading",
+            actions: "setCalendar"
+        },
+        SET_CALENDAR_SEARCH: {
+            actions: "setCalendarSearch"
+        }
+    },
     states: {
         boot: {
             invoke: {

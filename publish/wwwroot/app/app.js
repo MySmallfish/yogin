@@ -595,20 +595,22 @@ const waiverTemplate = compileTemplate("waiver", `
     </div>
     <div class="waiver-section">
       <h3>{{t "waiver.section.signature" "Terms & signature"}}</h3>
-      <label class="checkbox-row">
-        <input type="checkbox" name="acknowledged" required />
-        <span>{{t "waiver.acknowledge" "I confirm the information above is accurate and complete."}}</span>
-      </label>
-      <label class="checkbox-row">
-        <input type="checkbox" name="agreeToTerms" required />
-        <span>
-          {{t "waiver.agree" "I agree to the terms and privacy policy."}}
-          <button type="button" class="link-button" id="open-terms">{{t "waiver.terms" "Read terms"}}</button>
-          <button type="button" class="link-button" id="open-privacy">{{t "waiver.privacy" "Privacy policy"}}</button>
-        </span>
-      </label>
-      <div class="form-grid">
-        <div class="span-2">
+      <div class="waiver-signature-grid">
+        <div class="waiver-checkboxes">
+          <label class="checkbox-row">
+            <input type="checkbox" name="acknowledged" required />
+            <span>{{t "waiver.acknowledge" "I confirm the information above is accurate and complete."}}</span>
+          </label>
+          <label class="checkbox-row">
+            <input type="checkbox" name="agreeToTerms" required />
+            <span>
+              {{t "waiver.agree" "I agree to the terms and privacy policy."}}
+              <button type="button" class="link-button" id="open-terms">{{t "waiver.terms" "Read terms"}}</button>
+              <button type="button" class="link-button" id="open-privacy">{{t "waiver.privacy" "Privacy policy"}}</button>
+            </span>
+          </label>
+        </div>
+        <div class="waiver-signature-block">
           <label>{{t "waiver.field.signature" "Signature"}}</label>
           <div class="signature-pad">
             <canvas id="waiver-signature" aria-label="{{t "waiver.signature.hint" "Draw your signature above."}}"></canvas>
@@ -618,14 +620,16 @@ const waiverTemplate = compileTemplate("waiver", `
             <span class="signature-hint">{{t "waiver.signature.hint" "Draw your signature above."}}</span>
           </div>
           <input type="hidden" name="signatureDataUrl" />
-        </div>
-        <div>
-          <label>{{t "waiver.field.signatureName" "Signature name"}}</label>
-          <input name="signatureName" value="{{signatureName}}" required />
-        </div>
-        <div>
-          <label>{{t "waiver.field.password" "Choose app password"}}</label>
-          <input name="password" type="password" placeholder="{{t "waiver.field.passwordHint" "Leave empty to keep current"}}" />
+          <div class="form-grid">
+            <div>
+              <label>{{t "waiver.field.signatureName" "Signature name"}}</label>
+              <input name="signatureName" value="{{signatureName}}" required />
+            </div>
+            <div>
+              <label>{{t "waiver.field.password" "Choose app password"}}</label>
+              <input name="password" type="password" placeholder="{{t "waiver.field.passwordHint" "Leave empty to keep current"}}" />
+            </div>
+          </div>
         </div>
       </div>
       <button type="submit">{{t "waiver.submit" "Submit waiver"}}</button>
