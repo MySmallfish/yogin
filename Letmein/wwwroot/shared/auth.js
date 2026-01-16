@@ -1,6 +1,7 @@
 ﻿import { apiGet, apiPost } from "./api.js";
 
 const storageKey = "letmein.session";
+const forceLogoutKey = "letmein.forceLogout";
 
 export function loadSessionHint() {
     const raw = localStorage.getItem(storageKey);
@@ -18,6 +19,16 @@ export function saveSessionHint(payload) {
 
 export function clearSessionHint() {
     localStorage.removeItem(storageKey);
+}
+
+export function setForceLogout() {
+    localStorage.setItem(forceLogoutKey, "1");
+}
+
+export function consumeForceLogout() {
+    if (!localStorage.getItem(forceLogoutKey)) return false;
+    localStorage.removeItem(forceLogoutKey);
+    return true;
 }
 
 export async function getSession() {
@@ -54,6 +65,7 @@ export async function logout() {
         // Ignore network failures so local logout can proceed.
     } finally {
         clearSessionHint();
+        setForceLogout();
     }
 }
 

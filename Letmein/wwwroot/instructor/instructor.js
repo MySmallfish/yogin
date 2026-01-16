@@ -1,5 +1,5 @@
 import { apiGet, apiPost, apiPut, apiDelete } from "../shared/api.js";
-import { login, logout, getSession, loadSessionHint } from "../shared/auth.js";
+import { login, logout, getSession, loadSessionHint, consumeForceLogout } from "../shared/auth.js";
 import { compileTemplate } from "../shared/templates.js";
 import { formatMoney, toDateInputValue } from "../shared/utils.js";
 
@@ -279,6 +279,10 @@ const state = {
 
 async function init() {
     try {
+        if (consumeForceLogout()) {
+            renderLogin();
+            return;
+        }
         const session = await getSession();
         const role = (session?.user?.role || "").toLowerCase();
         if (!["instructor", "admin"].includes(role)) {

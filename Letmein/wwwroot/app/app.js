@@ -1,7 +1,7 @@
 ﻿import { createMachine, createActor, fromPromise, assign } from "xstate";
 import Handlebars from "handlebars";
 import { apiGet, apiPost, apiPut } from "../shared/api.js";
-import { login, logout, register, getSession, loadSessionHint } from "../shared/auth.js";
+import { login, logout, register, getSession, loadSessionHint, consumeForceLogout } from "../shared/auth.js";
 import { setLocale, t, resolveLocale, getStoredLocale } from "../shared/i18n.js";
 import { compileTemplate } from "../shared/templates.js";
 import { formatDateTime, formatMoney, getQueryParam } from "../shared/utils.js";
@@ -735,14 +735,20 @@ const appMachine = createMachine({
             data: event.output,
             error: ""
         })),
-        setError: assign(({ context, event }) => ({
-            ...context,
-            error: event.error?.message || "Unable to load data"
-        }))
+        setError: assign(({ context, event }) => {
+            const message = event.error?.message;
+            return {
+                ...context,
+                error: message === "LOGOUT" ? "" : (message || "Unable to load data")
+            };
+        })
     },
     actors: {
         loadSession: fromPromise(async () => {
             await setLocale("app", resolveLocale(getStoredLocale("app"), "", navigator.language));
+            if (consumeForceLogout()) {
+                throw new Error("LOGOUT");
+            }
             try {
                 const session = await getSession();
                 const locale = resolveLocale(
