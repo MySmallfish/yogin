@@ -2467,7 +2467,6 @@ function render(state) {
                 }
             });
         }
-        return;
     }
 
     if (route === "payroll") {
@@ -2485,7 +2484,6 @@ function render(state) {
                 window.location.hash = `#/payroll${query ? `?${query}` : ""}`;
             });
         }
-        return;
     }
 
     if (route === "settings") {
@@ -5880,7 +5878,6 @@ function handleRouteChange() {
 
 window.addEventListener("hashchange", handleRouteChange);
 handleRouteChange();
-
 
 
 
