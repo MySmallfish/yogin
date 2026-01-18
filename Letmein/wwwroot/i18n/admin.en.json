@@ -217,6 +217,7 @@
     "session.registerValidation":  "Select a customer or enter name and email.",
     "session.registered":  "Customer registered.",
     "session.registerError":  "Unable to register customer.",
+    "session.healthOverrideTitle":  "Health waiver required",
     "session.healthOverrideConfirm":  "Health waiver not signed. Register anyway?",
     "session.descriptionLink":  "View description",
     "session.descriptionTitle":  "Description",

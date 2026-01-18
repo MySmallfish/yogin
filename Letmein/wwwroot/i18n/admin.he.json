@@ -167,6 +167,7 @@
     "session.registerValidation":  "בחר לקוח או הזן שם ומייל.",
     "session.registered":  "הלקוח נרשם.",
     "session.registerError":  "לא ניתן לרשום לקוח.",
+    "session.healthOverrideTitle":  "נדרש ויתור בריאות",
     "session.healthOverrideConfirm":  "לא נחתם ויתור בריאות. לרשום בכל זאת?",
     "session.requiredFields":  "נדרשים כותרת, שעה ומשך.",
     "session.createError":  "לא ניתן ליצור שיעור.",
