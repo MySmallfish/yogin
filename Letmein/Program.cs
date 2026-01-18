@@ -411,7 +411,7 @@ publicApi.MapGet("/studios/{slug}/schedule", async (string slug, DateOnly? from,
         var remoteBooked = remoteMap.TryGetValue(instance.Id, out var remoteCount) ? remoteCount : 0;
         var remoteCapacity = instance.RemoteCapacity;
 
-        return new
+        return (object)new
         {
             instance.Id,
             instance.EventSeriesId,
@@ -578,8 +578,37 @@ adminApi.MapDelete("/rooms/{id:guid}", async (ClaimsPrincipal user, Guid id, App
 adminApi.MapGet("/instructors", async (ClaimsPrincipal user, AppDbContext db) =>
 {
     var studioId = GetStudioId(user);
-    var instructors = await db.Instructors.AsNoTracking().Where(i => i.StudioId == studioId).OrderBy(i => i.DisplayName).ToListAsync();
-    return Results.Ok(instructors);
+    var instructors = await db.Instructors.AsNoTracking()
+        .Where(i => i.StudioId == studioId)
+        .OrderBy(i => i.DisplayName)
+        .ToListAsync();
+    var userIds = instructors.Where(i => i.UserId.HasValue).Select(i => i.UserId!.Value).ToList();
+    var userMap = await db.Users.AsNoTracking()
+        .Where(u => u.StudioId == studioId && userIds.Contains(u.Id))
+        .ToDictionaryAsync(u => u.Id, u => u);
+    var response = instructors.Select(instructor =>
+    {
+        AppUser? userRow = null;
+        if (instructor.UserId.HasValue)
+        {
+            userMap.TryGetValue(instructor.UserId.Value, out userRow);
+        }
+        return (object)new
+        {
+            instructor.Id,
+            instructor.DisplayName,
+            instructor.Bio,
+            instructor.UserId,
+            instructor.RateCents,
+            instructor.RateUnit,
+            instructor.RateCurrency,
+            email = userRow?.Email ?? "",
+            phone = userRow?.Phone ?? "",
+            avatarUrl = userRow?.AvatarUrl ?? "",
+            dateOfBirth = userRow?.DateOfBirth
+        };
+    });
+    return Results.Ok(response);
 });
 
 adminApi.MapPost("/instructors", async (ClaimsPrincipal user, InstructorRequest request, AppDbContext db) =>
@@ -678,7 +707,7 @@ adminApi.MapGet("/calendar", async (ClaimsPrincipal user, DateOnly? from, DateOn
         var booked = inPersonMap.TryGetValue(instance.Id, out var count) ? count : 0;
         var remoteBooked = remoteMap.TryGetValue(instance.Id, out var remoteCount) ? remoteCount : 0;
 
-        return new
+        return (object)new
         {
             instance.Id,
             instance.EventSeriesId,
@@ -698,9 +727,11 @@ adminApi.MapGet("/calendar", async (ClaimsPrincipal user, DateOnly? from, DateOn
             seriesTitle = series?.Title ?? "",
             seriesIcon = series?.Icon ?? "",
             seriesColor = series?.Color ?? "",
+            seriesDescription = series?.Description ?? "",
             instructorName = instructor?.DisplayName ?? "",
             roomName = room?.Name ?? "",
-            isHoliday = false
+            isHoliday = false,
+            isBirthday = false
         };
     }).ToList();
 
@@ -717,7 +748,7 @@ adminApi.MapGet("/calendar", async (ClaimsPrincipal user, DateOnly? from, DateOn
         response.AddRange(holidays.Select(holiday =>
         {
             var start = holiday.Date.ToDateTime(new TimeOnly(12, 0));
-            return new
+            return (object)new
             {
                 Id = Guid.NewGuid(),
                 EventSeriesId = Guid.Empty,
@@ -737,11 +768,21 @@ adminApi.MapGet("/calendar", async (ClaimsPrincipal user, DateOnly? from, DateOn
                 seriesTitle = holiday.Title,
                 seriesIcon = "",
                 seriesColor = holidayColor,
+                seriesDescription = "",
                 instructorName = "",
                 roomName = "",
-                isHoliday = true
+                isHoliday = true,
+                isBirthday = false
             };
         }));
+    }
+
+    var birthdayUsers = await db.Users.AsNoTracking()
+        .Where(u => u.StudioId == studioId && u.DateOfBirth != null && u.Role != UserRole.Customer)
+        .ToListAsync();
+    if (birthdayUsers.Count > 0)
+    {
+        response.AddRange(BuildBirthdayEvents(birthdayUsers, fromDate, toDate, tz, "#fde68a"));
     }
 
     return Results.Ok(response);
@@ -796,7 +837,9 @@ adminApi.MapPost("/event-instances", async (ClaimsPrincipal user, EventInstanceC
     var startLocal = request.Date.ToDateTime(TimeOnly.FromTimeSpan(request.StartTimeLocal));
     var startUtc = TimeZoneInfo.ConvertTimeToUtc(startLocal, tz);
     var endUtc = startUtc.AddMinutes(request.DurationMinutes);
-    var overlap = await HasSessionConflictAsync(db, studioId, startUtc, endUtc, request.RoomId, request.InstructorId, null);
+    var normalizedRoomId = request.RoomId == Guid.Empty ? null : request.RoomId;
+    var normalizedInstructorId = request.InstructorId == Guid.Empty ? null : request.InstructorId;
+    var overlap = await HasSessionConflictAsync(db, studioId, startUtc, endUtc, normalizedRoomId, normalizedInstructorId, null);
     if (overlap)
     {
         return Results.BadRequest(new { error = "Session overlaps with another scheduled session." });
@@ -808,8 +851,8 @@ adminApi.MapPost("/event-instances", async (ClaimsPrincipal user, EventInstanceC
         StudioId = studioId,
         Title = request.Title,
         Description = request.Description ?? "",
-        InstructorId = request.InstructorId,
-        RoomId = request.RoomId,
+        InstructorId = normalizedInstructorId,
+        RoomId = normalizedRoomId,
         DayOfWeek = (int)request.Date.DayOfWeek,
         StartTimeLocal = request.StartTimeLocal,
         DurationMinutes = request.DurationMinutes,
@@ -831,8 +874,8 @@ adminApi.MapPost("/event-instances", async (ClaimsPrincipal user, EventInstanceC
         Id = Guid.NewGuid(),
         StudioId = studioId,
         EventSeriesId = series.Id,
-        InstructorId = request.InstructorId,
-        RoomId = request.RoomId,
+        InstructorId = normalizedInstructorId,
+        RoomId = normalizedRoomId,
         StartUtc = startUtc,
         EndUtc = endUtc,
         Capacity = request.Capacity,
@@ -1055,7 +1098,7 @@ adminApi.MapGet("/event-instances/{id:guid}/roster", async (ClaimsPrincipal user
         }
         attendanceMap.TryGetValue(b.CustomerId, out var attendanceRow);
 
-        return new
+        return (object)new
         {
             bookingId = b.Id,
             customerId = b.CustomerId,
@@ -1064,6 +1107,7 @@ adminApi.MapGet("/event-instances/{id:guid}/roster", async (ClaimsPrincipal user
             isRemote = b.IsRemote,
             customerName = customer?.FullName ?? "",
             phone = customer?.Phone ?? "",
+            dateOfBirth = customer?.DateOfBirth,
             email = userRow?.Email ?? "",
             attendanceStatus = attendanceRow?.Status
         };
@@ -1134,10 +1178,18 @@ adminApi.MapPut("/event-instances/{id:guid}", async (ClaimsPrincipal user, Guid 
 
     var nextStartUtc = request.StartUtc ?? instance.StartUtc;
     var nextEndUtc = request.EndUtc ?? instance.EndUtc;
-    var nextInstructorId = request.InstructorId;
-    var nextRoomId = request.RoomId;
+    var requestedRoomId = request.RoomId == Guid.Empty ? null : request.RoomId;
+    var requestedInstructorId = request.InstructorId == Guid.Empty ? null : request.InstructorId;
+    var roomProvided = request.RoomId.HasValue;
+    var instructorProvided = request.InstructorId.HasValue;
+    var nextRoomId = roomProvided ? requestedRoomId : instance.RoomId;
+    var nextInstructorId = instructorProvided ? requestedInstructorId : instance.InstructorId;
     var nextStatus = request.Status ?? instance.Status;
-    if (nextStatus != EventStatus.Cancelled)
+    var scheduleChanged = nextStartUtc != instance.StartUtc ||
+        nextEndUtc != instance.EndUtc ||
+        nextRoomId != instance.RoomId ||
+        nextInstructorId != instance.InstructorId;
+    if (scheduleChanged && nextStatus != EventStatus.Cancelled)
     {
         var overlap = await HasSessionConflictAsync(db, studioId, nextStartUtc, nextEndUtc, nextRoomId, nextInstructorId, instance.Id);
         if (overlap)
@@ -1146,8 +1198,14 @@ adminApi.MapPut("/event-instances/{id:guid}", async (ClaimsPrincipal user, Guid 
         }
     }
 
-    instance.InstructorId = request.InstructorId;
-    instance.RoomId = request.RoomId;
+    if (instructorProvided)
+    {
+        instance.InstructorId = requestedInstructorId;
+    }
+    if (roomProvided)
+    {
+        instance.RoomId = requestedRoomId;
+    }
 
     if (request.StartUtc.HasValue)
     {
@@ -2137,7 +2195,7 @@ adminApi.MapGet("/users", async (ClaimsPrincipal user, AppDbContext db) =>
     {
         instructorMap.TryGetValue(u.Id, out var instructor);
         var roles = GetUserRoles(u);
-        return new
+        return (object)new
         {
             u.Id,
             u.Email,
@@ -2146,6 +2204,7 @@ adminApi.MapGet("/users", async (ClaimsPrincipal user, AppDbContext db) =>
             u.Address,
             u.Gender,
             u.IdNumber,
+            u.DateOfBirth,
             role = u.Role.ToString(),
             roles = roles.Select(r => r.ToString()).ToList(),
             u.IsActive,
@@ -2199,6 +2258,7 @@ adminApi.MapPost("/users", async (ClaimsPrincipal user, UserCreateRequest reques
         Address = request.Address?.Trim() ?? "",
         Gender = request.Gender?.Trim() ?? "",
         IdNumber = request.IdNumber?.Trim() ?? "",
+        DateOfBirth = request.DateOfBirth,
         IsActive = true
     };
     SetUserRoles(userRow, roles);
@@ -2254,6 +2314,7 @@ adminApi.MapPost("/users", async (ClaimsPrincipal user, UserCreateRequest reques
         userRow.Address,
         userRow.Gender,
         userRow.IdNumber,
+        userRow.DateOfBirth,
         role = userRow.Role.ToString(),
         roles = GetUserRoles(userRow).Select(r => r.ToString()).ToList(),
         userRow.IsActive,
@@ -2317,6 +2378,7 @@ adminApi.MapPut("/users/{id:guid}", async (ClaimsPrincipal user, Guid id, UserUp
     {
         userRow.IdNumber = request.IdNumber.Trim();
     }
+    userRow.DateOfBirth = request.DateOfBirth;
     SetUserRoles(userRow, roles);
     userRow.IsActive = request.IsActive;
 
@@ -2406,6 +2468,7 @@ adminApi.MapPut("/users/{id:guid}", async (ClaimsPrincipal user, Guid id, UserUp
         userRow.Address,
         userRow.Gender,
         userRow.IdNumber,
+        userRow.DateOfBirth,
         role = userRow.Role.ToString(),
         roles = GetUserRoles(userRow).Select(r => r.ToString()).ToList(),
         userRow.AvatarUrl,
@@ -3447,7 +3510,7 @@ instructorApi.MapGet("/calendar", async (ClaimsPrincipal user, DateOnly? from, D
         var booked = inPersonMap.TryGetValue(instance.Id, out var count) ? count : 0;
         var remoteBooked = remoteMap.TryGetValue(instance.Id, out var remoteCount) ? remoteCount : 0;
 
-        return new
+        return (object)new
         {
             instance.Id,
             instance.EventSeriesId,
@@ -3467,10 +3530,12 @@ instructorApi.MapGet("/calendar", async (ClaimsPrincipal user, DateOnly? from, D
             seriesTitle = series?.Title ?? "",
             seriesIcon = series?.Icon ?? "",
             seriesColor = series?.Color ?? "",
+            seriesDescription = series?.Description ?? "",
             instructorName = instanceInstructor?.DisplayName ?? "",
             roomName = room?.Name ?? "",
             isMine = instance.InstructorId == instructor.Id,
-            isHoliday = false
+            isHoliday = false,
+            isBirthday = false
         };
     }).ToList();
 
@@ -3487,7 +3552,7 @@ instructorApi.MapGet("/calendar", async (ClaimsPrincipal user, DateOnly? from, D
         response.AddRange(holidays.Select(holiday =>
         {
             var start = holiday.Date.ToDateTime(new TimeOnly(12, 0));
-            return new
+            return (object)new
             {
                 Id = Guid.NewGuid(),
                 EventSeriesId = Guid.Empty,
@@ -3507,12 +3572,22 @@ instructorApi.MapGet("/calendar", async (ClaimsPrincipal user, DateOnly? from, D
                 seriesTitle = holiday.Title,
                 seriesIcon = "",
                 seriesColor = holidayColor,
+                seriesDescription = "",
                 instructorName = "",
                 roomName = "",
                 isMine = false,
-                isHoliday = true
+                isHoliday = true,
+                isBirthday = false
             };
         }));
+    }
+
+    var birthdayUsers = await db.Users.AsNoTracking()
+        .Where(u => u.StudioId == studioId && u.DateOfBirth != null && u.Role != UserRole.Customer)
+        .ToListAsync();
+    if (birthdayUsers.Count > 0)
+    {
+        response.AddRange(BuildBirthdayEvents(birthdayUsers, fromDate, toDate, tz, "#fde68a"));
     }
 
     return Results.Ok(response);
@@ -3595,6 +3670,7 @@ instructorApi.MapGet("/instances/{id:guid}/roster", async (ClaimsPrincipal user,
             isRemote = b.IsRemote,
             customerName = customer?.FullName ?? "",
             phone = customer?.Phone ?? "",
+            dateOfBirth = customer?.DateOfBirth,
             email = userRow?.Email ?? "",
             attendanceStatus = attendanceRow?.Status
         };
@@ -3824,7 +3900,7 @@ guestApi.MapGet("/calendar", async (ClaimsPrincipal user, DateOnly? from, DateOn
         var booked = inPersonMap.TryGetValue(instance.Id, out var count) ? count : 0;
         var remoteBooked = remoteMap.TryGetValue(instance.Id, out var remoteCount) ? remoteCount : 0;
 
-        return new
+        return (object)new
         {
             instance.Id,
             instance.EventSeriesId,
@@ -3844,9 +3920,11 @@ guestApi.MapGet("/calendar", async (ClaimsPrincipal user, DateOnly? from, DateOn
             seriesTitle = series?.Title ?? "",
             seriesIcon = series?.Icon ?? "",
             seriesColor = series?.Color ?? "",
+            seriesDescription = series?.Description ?? "",
             instructorName = instanceInstructor?.DisplayName ?? "",
             roomName = room?.Name ?? "",
-            isHoliday = false
+            isHoliday = false,
+            isBirthday = false
         };
     }).ToList();
 
@@ -3863,7 +3941,7 @@ guestApi.MapGet("/calendar", async (ClaimsPrincipal user, DateOnly? from, DateOn
         response.AddRange(holidays.Select(holiday =>
         {
             var start = holiday.Date.ToDateTime(new TimeOnly(12, 0));
-            return new
+            return (object)new
             {
                 Id = Guid.NewGuid(),
                 EventSeriesId = Guid.Empty,
@@ -3883,11 +3961,21 @@ guestApi.MapGet("/calendar", async (ClaimsPrincipal user, DateOnly? from, DateOn
                 seriesTitle = holiday.Title,
                 seriesIcon = "",
                 seriesColor = holidayColor,
+                seriesDescription = "",
                 instructorName = "",
                 roomName = "",
-                isHoliday = true
+                isHoliday = true,
+                isBirthday = false
             };
         }));
+    }
+
+    var birthdayUsers = await db.Users.AsNoTracking()
+        .Where(u => u.StudioId == studioId && u.DateOfBirth != null && u.Role != UserRole.Customer)
+        .ToListAsync();
+    if (birthdayUsers.Count > 0)
+    {
+        response.AddRange(BuildBirthdayEvents(birthdayUsers, fromDate, toDate, tz, "#fde68a"));
     }
 
     return Results.Ok(response);
@@ -4574,6 +4662,87 @@ static List<string> ParseStringList(string? json)
         .Where(item => !string.IsNullOrWhiteSpace(item))
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .ToList();
+}
+
+static IEnumerable<object> BuildBirthdayEvents(
+    IEnumerable<AppUser> users,
+    DateOnly fromDate,
+    DateOnly toDate,
+    TimeZoneInfo timeZone,
+    string color)
+{
+    var results = new List<object>();
+    var startYear = fromDate.Year;
+    var endYear = toDate.Year;
+    foreach (var user in users)
+    {
+        if (user.DateOfBirth == null)
+        {
+            continue;
+        }
+        var dob = user.DateOfBirth.Value;
+        for (var year = startYear; year <= endYear; year += 1)
+        {
+            var date = ResolveBirthdayDate(dob, year);
+            if (!date.HasValue)
+            {
+                continue;
+            }
+            if (date.Value < fromDate || date.Value > toDate)
+            {
+                continue;
+            }
+            var startLocal = date.Value.ToDateTime(new TimeOnly(12, 0));
+            var startUtc = TimeZoneInfo.ConvertTimeToUtc(startLocal, timeZone);
+            results.Add(new
+            {
+                Id = Guid.NewGuid(),
+                EventSeriesId = Guid.Empty,
+                InstructorId = (Guid?)null,
+                RoomId = (Guid?)null,
+                StartUtc = startUtc,
+                EndUtc = startUtc,
+                Capacity = 0,
+                remoteCapacity = 0,
+                Status = EventStatus.Scheduled,
+                PriceCents = 0,
+                Currency = "ILS",
+                notes = "",
+                booked = 0,
+                remoteBooked = 0,
+                remoteInviteUrl = "",
+                seriesTitle = user.DisplayName,
+                seriesIcon = "",
+                seriesColor = color,
+                seriesDescription = "",
+                instructorName = "",
+                roomName = "",
+                isMine = false,
+                isHoliday = false,
+                isBirthday = true,
+                birthdayName = user.DisplayName
+            });
+        }
+    }
+    return results;
+}
+
+static DateOnly? ResolveBirthdayDate(DateOnly dob, int year)
+{
+    var month = dob.Month;
+    var day = dob.Day;
+    if (month == 2 && day == 29 && !DateTime.IsLeapYear(year))
+    {
+        day = 28;
+    }
+    try
+    {
+        return new DateOnly(year, month, day);
+    }
+    catch
+    {
+        return null;
+    }
 }
 
 record CalendarExportRow(

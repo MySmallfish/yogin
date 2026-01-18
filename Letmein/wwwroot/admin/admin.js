@@ -1,4 +1,4 @@
-﻿import { createMachine, createActor, fromPromise, assign } from "xstate";
+import { createMachine, createActor, fromPromise, assign } from "xstate";
 import Handlebars from "handlebars";
 import { apiGet, apiPost, apiPut, apiDelete } from "../shared/api.js";
 import { login, logout, getSession, loadSessionHint, consumeForceLogout } from "../shared/auth.js";
@@ -212,7 +212,7 @@ const calendarTemplate = compileTemplate("calendar", `
         {{#if day.hasEvents}}
           <div class="calendar-events">
             {{#each day.events}}
-              <div class="calendar-event {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}}" data-event="{{id}}" {{#unless isHoliday}}draggable="true"{{/unless}} style="{{eventStyle}}">
+              <div class="calendar-event {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}}" data-event="{{id}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
                 <div class="event-time">{{timeRange}}</div>
                 <div class="event-title">
                   {{#if seriesIcon}}<span class="event-icon">{{seriesIcon}}</span>{{/if}}
@@ -222,6 +222,9 @@ const calendarTemplate = compileTemplate("calendar", `
                 <div class="event-meta">{{booked}} / {{capacity}} - {{price}}</div>
                 {{#if isCancelled}}
                   <div class="event-meta">{{t "calendar.cancelled" "Cancelled"}}</div>
+                {{/if}}
+                {{#if isBirthday}}
+                  <div class="event-meta">{{t "calendar.birthday" "Birthday"}}</div>
                 {{/if}}
               </div>
             {{/each}}
@@ -242,7 +245,7 @@ const calendarTemplate = compileTemplate("calendar", `
             {{#if hasEvents}}
               <div class="calendar-day-events">
                 {{#each events}}
-                  <div class="calendar-event compact {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}}" data-event="{{id}}" {{#unless isHoliday}}draggable="true"{{/unless}} style="{{eventStyle}}">
+                  <div class="calendar-event compact {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}}" data-event="{{id}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
                     <div class="event-time">{{timeRange}}</div>
                     <div class="event-title">
                       {{#if seriesIcon}}<span class="event-icon">{{seriesIcon}}</span>{{/if}}
@@ -275,7 +278,7 @@ const calendarTemplate = compileTemplate("calendar", `
                 {{#if hasEvents}}
                   <div class="calendar-month-events">
                     {{#each eventsPreview}}
-                      <div class="calendar-event mini {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}}" data-event="{{id}}" {{#unless isHoliday}}draggable="true"{{/unless}} style="{{eventStyle}}">
+                      <div class="calendar-event mini {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}}" data-event="{{id}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
                         <span class="event-time">{{time}}</span>
                         <span class="event-title">
                           {{#if seriesIcon}}<span class="event-icon">{{seriesIcon}}</span>{{/if}}
@@ -310,7 +313,7 @@ const calendarTemplate = compileTemplate("calendar", `
             </thead>
             <tbody>
               {{#each list.items}}
-              <tr class="{{#if isHoliday}}holiday-row{{/if}}" data-event="{{id}}">
+              <tr class="{{#if isHoliday}}holiday-row{{/if}} {{#if isBirthday}}birthday-row{{/if}}" data-event="{{id}}">
                 <td>{{dateLabel}}</td>
                 <td>{{timeRange}}</td>
                 <td>
@@ -318,6 +321,7 @@ const calendarTemplate = compileTemplate("calendar", `
                     {{#if seriesIcon}}<span class="event-icon">{{seriesIcon}}</span>{{/if}}
                     {{seriesTitle}}
                     {{#if isHoliday}}<span class="customer-tag">{{t "calendar.holiday" "Holiday"}}</span>{{/if}}
+                    {{#if isBirthday}}<span class="customer-tag">{{t "calendar.birthday" "Birthday"}}</span>{{/if}}
                   </div>
                 </td>
                 <td>{{roomName}}</td>
@@ -367,6 +371,15 @@ const rosterTemplate = compileTemplate("roster", `
             <div class="customer-cell">
               <div class="customer-name">
                 {{customerName}}
+                {{#if isBirthday}}
+                  <span class="birthday-badge" title="{{t "roster.birthday" "Birthday"}}">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M6 10h12v8a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-8z"/>
+                      <path d="M4 10h16v2H4z"/>
+                      <path d="M9 7c0-1.1.9-2 2-2 .6 0 1.1.2 1.5.6.4-.4.9-.6 1.5-.6 1.1 0 2 .9 2 2 0 1.2-1 2.2-3.5 3.6C10 9.2 9 8.2 9 7z"/>
+                    </svg>
+                  </span>
+                {{/if}}
                 {{#if isRemote}}<span class="customer-tag">{{t "roster.remote" "Remote"}}</span>{{/if}}
               </div>
               <div class="contact-actions">
@@ -470,7 +483,20 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
         <div>
           <h3>{{seriesTitle}}</h3>
           <div class="muted">{{startLabel}} ({{timeRange}})</div>
-          <div class="meta">{{roomName}} - {{instructorName}}</div>
+          <div class="meta">
+            <span>{{roomName}}</span>
+            {{#if instructorName}}
+              <span class="meta-sep"> - </span>
+              {{#if hasInstructorDetails}}
+                <button class="link-button" type="button" id="open-instructor">{{instructorName}}</button>
+              {{else}}
+                <span>{{instructorName}}</span>
+              {{/if}}
+            {{/if}}
+          </div>
+          {{#if hasDescription}}
+            <button class="link-button" type="button" id="open-description">{{t "session.descriptionLink" "View description"}}</button>
+          {{/if}}
           <div class="meta" data-capacity-summary>{{capacitySummary}}</div>
         </div>
         <button class="modal-close" id="close-modal" type="button" aria-label="{{t "common.close" "Close"}}"></button>
@@ -582,6 +608,102 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
           <button class="secondary" id="duplicate-session">{{t "session.duplicate" "Duplicate"}}</button>
           <button id="save-instance">{{t "common.saveChanges" "Save changes"}}</button>
           <button class="secondary" id="edit-series">{{t "series.edit" "Edit series"}}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+`);
+
+const instructorModalTemplate = compileTemplate("instructor-modal", `
+  <div class="modal-overlay" id="instructor-modal">
+    <div class="modal modal-compact">
+      <div class="modal-header">
+        <div>
+          <h3>{{displayName}}</h3>
+          <div class="muted">{{t "instructor.subtitle" "Instructor details"}}</div>
+        </div>
+        <button class="modal-close" id="close-instructor" type="button" aria-label="{{t "common.close" "Close"}}"></button>
+      </div>
+      <div class="instructor-card">
+        <div class="instructor-avatar">
+          {{#if avatarUrl}}
+            <img src="{{avatarUrl}}" alt="{{displayName}} avatar" />
+          {{else}}
+            <span>{{initials}}</span>
+          {{/if}}
+        </div>
+        <div>
+          <div class="instructor-name">{{displayName}}</div>
+          {{#if bio}}
+            <div class="muted">{{bio}}</div>
+          {{/if}}
+          <div class="contact-actions instructor-actions">
+            {{#if hasPhone}}
+              <a class="contact-icon phone" href="{{phoneLink}}" title="{{t "contact.call" "Call"}}" aria-label="{{t "contact.call" "Call"}} {{displayName}}">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M22 16.9v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.18 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.72c.1.8.3 1.57.6 2.3a2 2 0 0 1-.45 2.11L8.1 9.9a16 16 0 0 0 6 6l1.77-1.15a2 2 0 0 1 2.11-.45c.73.3 1.5.5 2.3.6A2 2 0 0 1 22 16.9z"/>
+                </svg>
+              </a>
+            {{/if}}
+            {{#if hasEmail}}
+              <a class="contact-icon email" href="{{emailLink}}" title="{{t "contact.email" "Email"}}" aria-label="{{t "contact.email" "Email"}} {{displayName}}">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="3" y="5" width="18" height="14" rx="2"/>
+                  <path d="M3 7l9 6 9-6"/>
+                </svg>
+              </a>
+            {{/if}}
+            {{#if hasWhatsapp}}
+              <a class="contact-icon whatsapp" href="{{whatsappLink}}" target="_blank" rel="noreferrer" title="WhatsApp" aria-label="WhatsApp {{displayName}}">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M21 11.5a8.5 8.5 0 1 1-4.2-7.3A8.5 8.5 0 0 1 21 11.5z"/>
+                  <path d="M7 19l1-3"/>
+                </svg>
+              </a>
+            {{/if}}
+            {{#if hasPhone}}
+              <a class="contact-icon sms" href="{{smsLink}}" title="{{t "contact.sms" "SMS"}}" aria-label="{{t "contact.sms" "SMS"}} {{displayName}}">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z"/>
+                </svg>
+              </a>
+            {{/if}}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+`);
+
+const descriptionModalTemplate = compileTemplate("description-modal", `
+  <div class="modal-overlay" id="description-modal">
+    <div class="modal modal-compact">
+      <div class="modal-header">
+        <div>
+          <h3>{{title}}</h3>
+          <div class="muted">{{t "session.descriptionSubtitle" "Series description"}}</div>
+        </div>
+        <button class="modal-close" id="close-description" type="button" aria-label="{{t "common.close" "Close"}}"></button>
+      </div>
+      <div class="description-body">{{{html}}}</div>
+    </div>
+  </div>
+`);
+
+const confirmModalTemplate = compileTemplate("confirm-modal", `
+  <div class="modal-overlay" id="confirm-modal">
+    <div class="modal modal-compact">
+      <div class="modal-header">
+        <div>
+          <h3>{{title}}</h3>
+          <div class="muted">{{message}}</div>
+        </div>
+        <button class="modal-close" id="close-confirm" type="button" aria-label="{{t "common.close" "Close"}}"></button>
+      </div>
+      <div class="modal-footer">
+        <div class="modal-actions">
+          <button class="secondary" id="confirm-cancel">{{cancelLabel}}</button>
+          <button id="confirm-ok">{{confirmLabel}}</button>
         </div>
       </div>
     </div>
@@ -785,7 +907,7 @@ const seriesModalTemplate = compileTemplate("series-modal", `
         </div>
         <div>
           <label>{{t "series.description" "Description"}}</label>
-          <textarea name="description" rows="2">{{description}}</textarea>
+          <textarea name="description" rows="2" placeholder="{{t "series.descriptionHint" "Markdown text or URL"}}">{{description}}</textarea>
         </div>
         <div>
           <label>{{t "series.recurrence" "Recurrence (weeks)"}}</label>
@@ -1103,6 +1225,10 @@ const userModalTemplate = compileTemplate("user-modal", `
               <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
             {{/each}}
           </select>
+        </div>
+        <div>
+          <label>{{t "user.dateOfBirth" "Date of birth"}}</label>
+          <input name="dateOfBirth" type="date" value="{{dateOfBirth}}" />
         </div>
         <div>
           <label>{{t "user.idNumber" "ID number"}}</label>
@@ -2713,7 +2839,7 @@ function bindRouteActions(route, data, state) {
                 event.stopPropagation();
                 const id = card.getAttribute("data-event");
                 const item = itemMap.get(String(id));
-                if (!item || item.isHoliday) return;
+                if (!item || item.isHoliday || item.isBirthday) return;
                 openCalendarEventModal(item, data);
             });
         });
@@ -3450,9 +3576,14 @@ function applySidebarState(collapsed) {
     shell.classList.toggle("collapsed", collapsed);
     const toggle = document.getElementById("toggle-sidebar");
     if (toggle) {
-        toggle.textContent = collapsed
+        const label = collapsed
             ? t("nav.expand", "Expand")
             : t("nav.menu", "Menu");
+        toggle.setAttribute("aria-label", label);
+        const srLabel = toggle.querySelector(".sr-only");
+        if (srLabel) {
+            srLabel.textContent = label;
+        }
     }
 }
 
@@ -3519,6 +3650,24 @@ function showToast(message, type = "info") {
         clearTimeout(timeout);
         removeToast();
     });
+}
+
+function escapeHtml(value) {
+    return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+function renderMarkdown(value) {
+    if (!value) return "";
+    const escaped = escapeHtml(value);
+    const withLinks = escaped.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
+    const withBold = withLinks.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    const withItalic = withBold.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+    return withItalic.replace(/\n/g, "<br>");
 }
 
 function clearModalEscape() {
@@ -3605,6 +3754,7 @@ function fillUserForm(userItem) {
     setFieldValue("address", userItem.address);
     setFieldValue("gender", userItem.gender);
     setFieldValue("idNumber", userItem.idNumber);
+    setFieldValue("dateOfBirth", userItem.dateOfBirth);
     setFieldValue("role", userItem.role || "Admin");
     setFieldValue("isActive", userItem.isActive ? "true" : "false");
     setFieldValue("instructorDisplayName", userItem.instructorName || "");
@@ -3624,6 +3774,7 @@ function resetUserForm() {
     setFieldValue("address", "");
     setFieldValue("gender", "");
     setFieldValue("idNumber", "");
+    setFieldValue("dateOfBirth", "");
     setFieldValue("role", "Admin");
     setFieldValue("isActive", "true");
     setFieldValue("instructorDisplayName", "");
@@ -3652,6 +3803,7 @@ async function openCalendarEventModal(item, data) {
     const end = item.endUtc ? new Date(item.endUtc) : null;
     const timeRange = end ? `${formatTimeOnly(start, timeZone)} - ${formatTimeOnly(end, timeZone)}` : formatTimeOnly(start, timeZone);
     const startLabel = formatFullDate(start, timeZone);
+    const sessionDateKey = getDateKeyInTimeZone(start, timeZone);
 
     let roster = [];
     try {
@@ -3661,6 +3813,15 @@ async function openCalendarEventModal(item, data) {
     }
 
     const messageSubject = `${t("session.emailSubject", "Class registration:")} ${item.seriesTitle || t("session.sessionFallback", "Session")}`;
+    const isBirthdayForKey = (dateOfBirth, dateKey) => {
+        if (!dateOfBirth || !dateKey) return false;
+        const parts = String(dateOfBirth).split("-");
+        if (parts.length < 3) return false;
+        const month = parts[1];
+        const day = parts[2];
+        if (!month || !day) return false;
+        return `${month}-${day}` === dateKey.slice(5);
+    };
     const normalizeRosterRows = (rows) => rows.map(row => {
         const bookingStatusLabel = normalizeBookingStatus(row.bookingStatus);
         const attendanceLabel = normalizeAttendanceStatus(row.attendanceStatus);
@@ -3678,6 +3839,7 @@ async function openCalendarEventModal(item, data) {
         const isPresent = attendanceRaw === "Present" || attendanceRaw === 0;
         const isNoShow = attendanceRaw === "NoShow" || attendanceRaw === 1;
         const isRegistered = attendanceRaw === "Registered" || attendanceRaw === null || attendanceRaw === undefined;
+        const isBirthday = isBirthdayForKey(row.dateOfBirth, sessionDateKey);
         return {
             ...row,
             bookingStatusLabel,
@@ -3687,6 +3849,7 @@ async function openCalendarEventModal(item, data) {
             isRegistered,
             isPresent,
             isNoShow,
+            isBirthday,
             hasEmail: Boolean(email),
             hasPhone: Boolean(phone),
             hasWhatsapp: Boolean(phoneDigits),
@@ -3718,6 +3881,10 @@ async function openCalendarEventModal(item, data) {
             selected: instructor.id === item.instructorId
         }))
     ];
+    const instructorDetails = (data.instructors || []).find(instructor => String(instructor.id) === String(item.instructorId));
+    const descriptionValue = (item.seriesDescription || "").trim();
+    const hasDescription = descriptionValue.length > 0;
+    const descriptionIsUrl = /^https?:\/\//i.test(descriptionValue);
 
     const statuses = [
         {
@@ -3740,7 +3907,7 @@ async function openCalendarEventModal(item, data) {
         const bookedLabel = t("capacity.registered", "Registered");
         const remoteLabel = t("capacity.registeredRemote", "Registered remotely");
         if (remoteCapacityValue > 0) {
-            return `${bookedLabel}: ${bookedCount} / ${capacityValue} • ${remoteLabel}: ${remoteCount} / ${remoteCapacityValue}`;
+            return `${bookedLabel}: ${bookedCount} / ${capacityValue} | ${remoteLabel}: ${remoteCount} / ${remoteCapacityValue}`;
         }
         return `${bookedLabel}: ${bookedCount} / ${capacityValue}`;
     };
@@ -3768,7 +3935,9 @@ async function openCalendarEventModal(item, data) {
         capacitySummary,
         remoteCapacity: remoteCapacityValue,
         remoteInviteUrl: item.remoteInviteUrl || "",
-        hasRemoteCapacity: remoteCapacityValue > 0
+        hasRemoteCapacity: remoteCapacityValue > 0,
+        hasInstructorDetails: Boolean(instructorDetails),
+        hasDescription
     });
 
     const wrapper = document.createElement("div");
@@ -3793,6 +3962,22 @@ async function openCalendarEventModal(item, data) {
     const closeBtn = overlay.querySelector("#close-modal");
     if (closeBtn) {
         closeBtn.addEventListener("click", closeModal);
+    }
+
+    const instructorBtn = overlay.querySelector("#open-instructor");
+    if (instructorBtn && instructorDetails) {
+        instructorBtn.addEventListener("click", () => openInstructorModal(instructorDetails));
+    }
+
+    const descriptionBtn = overlay.querySelector("#open-description");
+    if (descriptionBtn && hasDescription) {
+        descriptionBtn.addEventListener("click", () => {
+            if (descriptionIsUrl) {
+                window.open(descriptionValue, "_blank", "noopener");
+                return;
+            }
+            openDescriptionModal(item.seriesTitle || t("session.descriptionTitle", "Description"), descriptionValue);
+        });
     }
 
     const editSeriesBtn = overlay.querySelector("#edit-series");
@@ -3893,19 +4078,80 @@ async function openCalendarEventModal(item, data) {
                 formValues[field] = element ? element.value : "";
             });
 
-            await apiPut(`/api/admin/event-instances/${item.id}`, {
-                status: formValues.status || statusValue,
-                roomId: formValues.roomId || null,
-                instructorId: formValues.instructorId || null,
-                capacity: Number(formValues.capacity || item.capacity),
-                remoteCapacity: Number(formValues.remoteCapacity || item.remoteCapacity || 0),
-                priceCents: Number(formValues.priceCents || item.priceCents),
-                currency: item.currency || "ILS",
-                remoteInviteUrl: formValues.remoteInviteUrl || ""
-            });
+            const normalizedRoomId = formValues.roomId || null;
+            const normalizedInstructorId = formValues.instructorId || null;
+            const capacityValue = Number(formValues.capacity || item.capacity);
+            const remoteCapacityValue = Number(formValues.remoteCapacity || item.remoteCapacity || 0);
+            const priceValue = Number(formValues.priceCents || item.priceCents);
+            const remoteInviteUrlValue = formValues.remoteInviteUrl || "";
 
-            closeModal();
-            actor.send({ type: "REFRESH" });
+            const hasSeriesChanges =
+                String(normalizedRoomId || "") !== String(item.roomId || "") ||
+                String(normalizedInstructorId || "") !== String(item.instructorId || "") ||
+                capacityValue !== Number(item.capacity || 0) ||
+                remoteCapacityValue !== Number(item.remoteCapacity || 0) ||
+                priceValue !== Number(item.priceCents || 0) ||
+                remoteInviteUrlValue !== (item.remoteInviteUrl || "");
+
+            const saveInstance = async (applyToSeries) => {
+                await apiPut(`/api/admin/event-instances/${item.id}`, {
+                    status: formValues.status || statusValue,
+                    roomId: normalizedRoomId || "00000000-0000-0000-0000-000000000000",
+                    instructorId: normalizedInstructorId || "00000000-0000-0000-0000-000000000000",
+                    capacity: capacityValue,
+                    remoteCapacity: remoteCapacityValue,
+                    priceCents: priceValue,
+                    currency: item.currency || "ILS",
+                    remoteInviteUrl: remoteInviteUrlValue
+                });
+
+                closeModal();
+                actor.send({ type: "REFRESH" });
+
+                if (applyToSeries) {
+                    try {
+                        const [seriesList, plans] = await Promise.all([
+                            apiGet("/api/admin/event-series"),
+                            apiGet("/api/admin/plans")
+                        ]);
+                        const series = (seriesList || []).find(entry => String(entry.id) === String(item.eventSeriesId));
+                        if (!series) {
+                            showToast(t("series.notFound", "Series not found."), "error");
+                            return;
+                        }
+                        const updatedSeries = {
+                            ...series,
+                            instructorId: normalizedInstructorId,
+                            roomId: normalizedRoomId,
+                            defaultCapacity: capacityValue,
+                            remoteCapacity: remoteCapacityValue,
+                            priceCents: priceValue,
+                            remoteInviteUrl: remoteInviteUrlValue
+                        };
+                        openSeriesModal(updatedSeries, {
+                            rooms: data.rooms || [],
+                            instructors: data.instructors || [],
+                            plans: plans || []
+                        });
+                    } catch (error) {
+                        showToast(error.message || t("series.loadError", "Unable to load series details."), "error");
+                    }
+                }
+            };
+
+            if (hasSeriesChanges) {
+                openConfirmModal({
+                    title: t("series.applyChangesTitle", "Apply changes to series?"),
+                    message: t("series.applyChangesMessage", "Apply these updates to the whole series or only this session."),
+                    confirmLabel: t("series.applyYes", "Yes, update series"),
+                    cancelLabel: t("series.applyNo", "No, only this session"),
+                    onConfirm: () => saveInstance(true),
+                    onCancel: () => saveInstance(false)
+                });
+                return;
+            }
+
+            await saveInstance(false);
         });
     }
 
@@ -4146,6 +4392,136 @@ async function openCalendarEventModal(item, data) {
                 registerBtn.disabled = false;
             }
         });
+    }
+}
+
+function openInstructorModal(instructor) {
+    if (!instructor) return;
+    const existing = document.getElementById("instructor-modal");
+    if (existing) {
+        clearModalEscape();
+        existing.remove();
+    }
+
+    const email = (instructor.email || "").trim();
+    const phone = (instructor.phone || "").trim();
+    const phoneDigits = phone.replace(/[^\d]/g, "");
+    const emailLink = email ? `mailto:${email}` : "";
+    const phoneLink = phone ? `tel:${phone}` : "";
+    const smsLink = phone ? `sms:${phone}` : "";
+    const whatsappLink = phoneDigits ? `https://wa.me/${phoneDigits}` : "";
+    const modalMarkup = instructorModalTemplate({
+        displayName: instructor.displayName || t("instructor.unknown", "Instructor"),
+        bio: instructor.bio || "",
+        avatarUrl: instructor.avatarUrl || "",
+        initials: getInitials(instructor.displayName || instructor.email),
+        hasEmail: Boolean(email),
+        hasPhone: Boolean(phone),
+        hasWhatsapp: Boolean(phoneDigits),
+        emailLink,
+        phoneLink,
+        smsLink,
+        whatsappLink
+    });
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = modalMarkup;
+    const overlay = wrapper.firstElementChild;
+    if (!overlay) return;
+    document.body.appendChild(overlay);
+    let cleanupEscape = () => {};
+    const closeModal = () => {
+        cleanupEscape();
+        overlay.remove();
+    };
+    cleanupEscape = bindModalEscape(closeModal);
+    overlay.addEventListener("click", (event) => {
+        if (event.target === overlay) {
+            closeModal();
+        }
+    });
+    const closeBtn = overlay.querySelector("#close-instructor");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", closeModal);
+    }
+}
+
+function openDescriptionModal(title, description) {
+    const existing = document.getElementById("description-modal");
+    if (existing) {
+        clearModalEscape();
+        existing.remove();
+    }
+    const modalMarkup = descriptionModalTemplate({
+        title: title || t("session.descriptionTitle", "Description"),
+        html: renderMarkdown(description || "")
+    });
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = modalMarkup;
+    const overlay = wrapper.firstElementChild;
+    if (!overlay) return;
+    document.body.appendChild(overlay);
+    let cleanupEscape = () => {};
+    const closeModal = () => {
+        cleanupEscape();
+        overlay.remove();
+    };
+    cleanupEscape = bindModalEscape(closeModal);
+    overlay.addEventListener("click", (event) => {
+        if (event.target === overlay) {
+            closeModal();
+        }
+    });
+    const closeBtn = overlay.querySelector("#close-description");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", closeModal);
+    }
+}
+
+function openConfirmModal({ title, message, confirmLabel, cancelLabel, onConfirm, onCancel }) {
+    const existing = document.getElementById("confirm-modal");
+    if (existing) {
+        clearModalEscape();
+        existing.remove();
+    }
+    const modalMarkup = confirmModalTemplate({
+        title: title || t("common.confirm", "Confirm"),
+        message: message || "",
+        confirmLabel: confirmLabel || t("common.yes", "Yes"),
+        cancelLabel: cancelLabel || t("common.no", "No")
+    });
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = modalMarkup;
+    const overlay = wrapper.firstElementChild;
+    if (!overlay) return;
+    document.body.appendChild(overlay);
+    let cleanupEscape = () => {};
+    const closeModal = (didConfirm) => {
+        cleanupEscape();
+        overlay.remove();
+        if (didConfirm) {
+            onConfirm?.();
+        } else {
+            onCancel?.();
+        }
+    };
+    cleanupEscape = bindModalEscape(() => closeModal(false));
+    overlay.addEventListener("click", (event) => {
+        if (event.target === overlay) {
+            closeModal(false);
+        }
+    });
+    const closeBtn = overlay.querySelector("#close-confirm");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", () => closeModal(false));
+    }
+    const confirmBtn = overlay.querySelector("#confirm-ok");
+    if (confirmBtn) {
+        confirmBtn.addEventListener("click", () => closeModal(true));
+    }
+    const cancelBtn = overlay.querySelector("#confirm-cancel");
+    if (cancelBtn) {
+        cancelBtn.addEventListener("click", () => closeModal(false));
+        cancelBtn.focus();
     }
 }
 
@@ -4854,6 +5230,7 @@ function openUserModal(userItem) {
         phone: userItem?.phone || "",
         address: userItem?.address || "",
         idNumber: userItem?.idNumber || "",
+        dateOfBirth: userItem?.dateOfBirth || "",
         genderOptions,
         roleOptions,
         isActive: userItem?.isActive !== false,
@@ -4995,6 +5372,7 @@ function openUserModal(userItem) {
             const address = getValue("address").trim();
             const gender = getValue("gender");
             const idNumber = getValue("idNumber").trim();
+            const dateOfBirth = getValue("dateOfBirth") || null;
             const roles = readRoles();
             const isActive = getValue("isActive") !== "false";
             const instructorDisplayName = getValue("instructorDisplayName");    
@@ -5023,6 +5401,7 @@ function openUserModal(userItem) {
                 address,
                 gender,
                 idNumber,
+                dateOfBirth,
                 role: primaryRole,
                 roles,
                 isActive,
@@ -5503,6 +5882,8 @@ function buildCalendarView(items, options) {
                 time: event.startTime,
                 title: event.seriesTitle,
                 isCancelled: event.isCancelled,
+                isBirthday: event.isBirthday,
+                isLocked: event.isLocked,
                 seriesIcon: event.seriesIcon,
                 eventStyle: event.eventStyle
             }));
@@ -5529,10 +5910,10 @@ function buildCalendarView(items, options) {
             const capacity = Number(event.capacity || 0);
             const remoteBooked = Number(event.remoteBooked || 0);
             const remoteCapacity = Number(event.remoteCapacity || 0);
-            const bookedSummary = event.isHoliday
+            const bookedSummary = event.isHoliday || event.isBirthday
                 ? t("calendar.list.na", "-")
                 : (remoteCapacity > 0
-                    ? `${booked} / ${capacity} • ${remoteBooked} / ${remoteCapacity}`
+                    ? `${booked} / ${capacity} � ${remoteBooked} / ${remoteCapacity}`
                     : `${booked} / ${capacity}`);
             const searchText = [
                 event.seriesTitle,
@@ -5631,11 +6012,19 @@ function buildEventMap(items, timeZone) {
         const end = item.endUtc ? new Date(item.endUtc) : null;
         const dateKey = getDateKeyInTimeZone(start, timeZone);
         const isHoliday = Boolean(item.isHoliday);
-        const startTime = isHoliday ? t("calendar.allDay", "All day") : formatTimeOnly(start, timeZone);
-        const endTime = isHoliday || !end ? "" : formatTimeOnly(end, timeZone);
+        const isBirthday = Boolean(item.isBirthday);
+        const isAllDay = isHoliday || isBirthday;
+        const startTime = isAllDay ? t("calendar.allDay", "All day") : formatTimeOnly(start, timeZone);
+        const endTime = isAllDay || !end ? "" : formatTimeOnly(end, timeZone);
         const timeRange = endTime ? `${startTime} - ${endTime}` : startTime;
         const statusLabel = normalizeStatus(item.status);
         const isCancelled = String(item.status) === "Cancelled" || item.status === 1;
+        const birthdayName = item.birthdayName || item.seriesTitle || "";
+        const birthdayTitle = birthdayName
+            ? `${t("calendar.birthday", "Birthday")}: ${birthdayName}`
+            : t("calendar.birthday", "Birthday");
+        const seriesTitle = isBirthday ? birthdayTitle : item.seriesTitle;
+        const seriesIcon = isBirthday ? "" : item.seriesIcon;
         const eventStyle = item.seriesColor ? `--series-color: ${item.seriesColor};` : "";
         const event = {
             ...item,
@@ -5646,6 +6035,10 @@ function buildEventMap(items, timeZone) {
             statusLabel,
             isCancelled,
             isHoliday,
+            isBirthday,
+            isLocked: isAllDay,
+            seriesTitle,
+            seriesIcon,
             price: formatMoney(item.priceCents, item.currency),
             eventStyle
         };
@@ -5748,7 +6141,7 @@ function bindCalendarInteractions(data, itemMap) {
             const dateKey = zone.getAttribute("data-date");
             if (!eventId || !dateKey) return;
             const item = itemMap.get(String(eventId));
-            if (!item || item.isHoliday) return;
+            if (!item || item.isHoliday || item.isBirthday) return;
             const currentKey = getDateKeyInTimeZone(new Date(item.startUtc), timeZone);
             if (currentKey === dateKey) return;
             try {
@@ -5878,7 +6271,3 @@ function handleRouteChange() {
 
 window.addEventListener("hashchange", handleRouteChange);
 handleRouteChange();
-
-
-
-

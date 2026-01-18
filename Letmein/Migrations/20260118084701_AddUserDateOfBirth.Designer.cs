@@ -3,6 +3,7 @@ using System;
 using Letmein.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Letmein.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260118084701_AddUserDateOfBirth")]
+    partial class AddUserDateOfBirth
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.10");
@@ -33,7 +36,6 @@ namespace Letmein.Migrations
 
                     b.Property<DateOnly?>("DateOfBirth")
                         .HasColumnType("TEXT");
-
 
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");

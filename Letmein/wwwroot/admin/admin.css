@@ -911,6 +911,10 @@ button.modal-close:hover {
   overflow: auto;
 }
 
+.modal-compact {
+  max-width: 560px;
+}
+
 .modal-header {
   display: flex;
   justify-content: space-between;
@@ -929,6 +933,93 @@ button.modal-close:hover {
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
+}
+
+.link-button {
+  border: none;
+  background: none;
+  color: var(--primary);
+  padding: 0;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.link-button:hover {
+  text-decoration: underline;
+}
+
+.meta-sep {
+  color: var(--muted);
+  margin: 0 4px;
+}
+
+.birthday-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.15);
+  color: #b45309;
+  margin-left: 6px;
+}
+
+.birthday-badge svg {
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+}
+
+.calendar-event.birthday {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(254, 243, 199, 0.7);
+}
+
+.calendar-list .birthday-row {
+  background: rgba(254, 243, 199, 0.45);
+}
+
+.instructor-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
+  align-items: center;
+}
+
+.instructor-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.08);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--primary);
+  overflow: hidden;
+}
+
+.instructor-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.instructor-name {
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+
+.instructor-actions {
+  margin-top: 8px;
+}
+
+.description-body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
 }
 
 .attachments {

@@ -14,6 +14,7 @@ public class AppUser
     public string Address { get; set; } = "";
     public string Gender { get; set; } = "";
     public string IdNumber { get; set; } = "";
+    public DateOnly? DateOfBirth { get; set; }
     public string? PreferredLocale { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
