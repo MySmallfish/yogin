@@ -1798,6 +1798,11 @@ adminApi.MapPost("/customers", async (ClaimsPrincipal user, CustomerCreateReques
         Email = email,
         Role = UserRole.Customer,
         DisplayName = request.FullName.Trim(),
+        Phone = request.Phone?.Trim() ?? "",
+        City = request.City?.Trim() ?? "",
+        Address = request.Address?.Trim() ?? "",
+        Gender = request.Gender?.Trim() ?? "",
+        IdNumber = request.IdNumber?.Trim() ?? "",
         IsActive = true
     };
 
@@ -1961,6 +1966,11 @@ adminApi.MapPut("/customers/{id:guid}", async (ClaimsPrincipal user, Guid id, Cu
 
     userRow.Email = email;
     userRow.DisplayName = customer.FullName;
+    userRow.Phone = customer.Phone;
+    userRow.City = customer.City;
+    userRow.Address = customer.Address;
+    userRow.Gender = customer.Gender;
+    userRow.IdNumber = customer.IdNumber;
     userRow.IsActive = !customer.IsArchived;
 
     db.Customers.Update(customer);
@@ -2013,6 +2023,31 @@ adminApi.MapGet("/customers/{id:guid}/attachments", async (ClaimsPrincipal user,
         .ToListAsync();
 
     return Results.Ok(attachments);
+});
+
+adminApi.MapPost("/customers/{id:guid}/reset-password", async (ClaimsPrincipal user, Guid id, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var customer = await db.Customers.FirstOrDefaultAsync(c => c.Id == id && c.StudioId == studioId);
+    if (customer == null)
+    {
+        return Results.NotFound();
+    }
+
+    var userRow = await db.Users.FirstOrDefaultAsync(u => u.Id == customer.UserId && u.StudioId == studioId);
+    if (userRow == null)
+    {
+        return Results.NotFound(new { error = "User not found" });
+    }
+
+    var tempPassword = GenerateTempPassword();
+    var hasher = new PasswordHasher<AppUser>();
+    userRow.PasswordHash = hasher.HashPassword(userRow, tempPassword);
+    db.Users.Update(userRow);
+    await db.SaveChangesAsync();
+    await LogAuditAsync(db, user, "Update", "User", userRow.Id.ToString(), $"Reset password for {userRow.DisplayName}");
+
+    return Results.Ok(new { tempPassword });
 });
 
 adminApi.MapPost("/customers/{id:guid}/attachments", async (ClaimsPrincipal user, Guid id, HttpRequest request, AppDbContext db, IFileStorageProvider storage) =>
@@ -2223,6 +2258,7 @@ adminApi.MapGet("/users", async (ClaimsPrincipal user, AppDbContext db) =>
             u.Email,
             u.DisplayName,
             u.Phone,
+            u.City,
             u.Address,
             u.Gender,
             u.IdNumber,
@@ -2277,6 +2313,7 @@ adminApi.MapPost("/users", async (ClaimsPrincipal user, UserCreateRequest reques
         Email = email,
         DisplayName = request.DisplayName.Trim(),
         Phone = request.Phone?.Trim() ?? "",
+        City = request.City?.Trim() ?? "",
         Address = request.Address?.Trim() ?? "",
         Gender = request.Gender?.Trim() ?? "",
         IdNumber = request.IdNumber?.Trim() ?? "",
@@ -2333,6 +2370,7 @@ adminApi.MapPost("/users", async (ClaimsPrincipal user, UserCreateRequest reques
         userRow.Email,
         userRow.DisplayName,
         userRow.Phone,
+        userRow.City,
         userRow.Address,
         userRow.Gender,
         userRow.IdNumber,
@@ -2387,6 +2425,10 @@ adminApi.MapPut("/users/{id:guid}", async (ClaimsPrincipal user, Guid id, UserUp
     if (request.Phone != null)
     {
         userRow.Phone = request.Phone.Trim();
+    }
+    if (request.City != null)
+    {
+        userRow.City = request.City.Trim();
     }
     if (request.Address != null)
     {
@@ -2487,6 +2529,7 @@ adminApi.MapPut("/users/{id:guid}", async (ClaimsPrincipal user, Guid id, UserUp
         userRow.Email,
         userRow.DisplayName,
         userRow.Phone,
+        userRow.City,
         userRow.Address,
         userRow.Gender,
         userRow.IdNumber,
@@ -3067,6 +3110,7 @@ appApi.MapPut("/me/profile", async (ClaimsPrincipal user, ProfileUpdateRequest r
         }
         userRow.DisplayName = customer.FullName;
         userRow.Phone = customer.Phone;
+        userRow.City = customer.City;
         userRow.Address = customer.Address;
         userRow.Gender = customer.Gender;
         userRow.IdNumber = customer.IdNumber;
@@ -3153,6 +3197,7 @@ appApi.MapPost("/me/health-declaration", async (ClaimsPrincipal user, HealthDecl
     userRow.Email = email;
     userRow.DisplayName = fullName;
     userRow.Phone = customer.Phone;
+    userRow.City = customer.City;
     userRow.Address = customer.Address;
     userRow.Gender = customer.Gender;
     userRow.IdNumber = customer.IdNumber;

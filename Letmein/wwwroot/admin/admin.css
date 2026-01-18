@@ -1232,32 +1232,50 @@ button.modal-close:hover {
 }
 
 .role-options {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
 }
 
 .role-pill {
-  display: flex;
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
   cursor: pointer;
   font-size: 13px;
-  color: var(--slate);
-  transition: all 0.2s ease;
 }
 
 .role-pill input {
-  accent-color: var(--accent);
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
 }
 
-.role-pill:hover {
+.role-pill span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--slate);
+  transition: all 0.2s ease;
+  min-width: 92px;
+}
+
+.role-pill:hover span {
   border-color: rgba(245, 158, 11, 0.45);
   background: rgba(245, 158, 11, 0.08);
+  color: var(--ink);
+}
+
+.role-pill input:checked + span {
+  border-color: rgba(245, 158, 11, 0.55);
+  background: rgba(245, 158, 11, 0.22);
+  color: var(--ink);
+  box-shadow: 0 8px 16px rgba(245, 158, 11, 0.18);
 }
 
 .registration-form {

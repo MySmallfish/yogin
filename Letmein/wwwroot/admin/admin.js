@@ -1033,12 +1033,6 @@ const customerModalTemplate = compileTemplate("customer-modal", `
             <option value="true" {{#if isArchived}}selected{{/if}}>{{t "common.yes" "Yes"}}</option>
           </select>
         </div>
-        {{#unless isEdit}}
-        <div>
-          <label>{{t "customer.password" "Password (optional)"}}</label>
-          <input name="password" type="password" placeholder="{{t "customer.passwordHint" "Leave empty for temp password"}}" />
-        </div>
-        {{/unless}}
       </div>
       <div class="attachments">
         <h4>{{t "customer.attachments" "Attachments"}}</h4>
@@ -1068,6 +1062,9 @@ const customerModalTemplate = compileTemplate("customer-modal", `
       <div class="modal-footer">
         <div class="meta">{{footerNote}}</div>
         <div class="modal-actions">
+          {{#if isEdit}}
+            <button class="secondary" id="reset-customer-password">{{t "customer.resetPassword" "Reset password"}}</button>
+          {{/if}}
           <button id="save-customer">{{saveLabel}}</button>
         </div>
       </div>
@@ -1219,6 +1216,10 @@ const userModalTemplate = compileTemplate("user-modal", `
           <input name="phone" type="tel" value="{{phone}}" />
         </div>
         <div>
+          <label>{{t "user.city" "City"}}</label>
+          <input name="city" value="{{city}}" />
+        </div>
+        <div>
           <label>{{t "user.gender" "Gender"}}</label>
           <select name="gender">
             {{#each genderOptions}}
@@ -1265,8 +1266,8 @@ const userModalTemplate = compileTemplate("user-modal", `
           <textarea name="instructorBio" rows="2" placeholder="{{t "user.instructorBioHint" "Short bio"}}">{{instructorBio}}</textarea>
         </div>
         <div class="instructor-fields">
-          <label>{{t "user.instructorRate" "Payroll rate (cents)"}}</label>
-          <input name="instructorRateCents" type="number" min="0" value="{{instructorRateCents}}" />
+          <label>{{t "user.instructorRate" "Payroll rate (NIS)"}}</label>
+          <input name="instructorRate" type="number" min="0" step="0.01" value="{{instructorRate}}" />
         </div>
         <div class="instructor-fields">
           <label>{{t "user.instructorRateUnit" "Rate unit"}}</label>
@@ -1278,11 +1279,7 @@ const userModalTemplate = compileTemplate("user-modal", `
         </div>
         <div class="instructor-fields">
           <label>{{t "user.instructorRateCurrency" "Rate currency"}}</label>
-          <input name="instructorRateCurrency" value="{{instructorRateCurrency}}" />
-        </div>
-        <div>
-          <label>{{t "user.password" "Password (optional)"}}</label>
-          <input name="password" type="password" placeholder="{{t "user.passwordHint" "Leave empty to keep current"}}" />
+          <input name="instructorRateCurrency" value="{{instructorRateCurrency}}" readonly />
         </div>
       </div>
       <div class="attachments">
@@ -1311,6 +1308,9 @@ const userModalTemplate = compileTemplate("user-modal", `
       <div class="modal-footer">
         <div class="meta">{{footerNote}}</div>
         <div class="modal-actions">
+          {{#if isEdit}}
+            <button class="secondary" id="reset-user-password">{{t "user.resetPassword" "Reset password"}}</button>
+          {{/if}}
           <button id="save-user">{{saveLabel}}</button>
         </div>
       </div>
@@ -3693,6 +3693,15 @@ function bindModalEscape(closeModal) {
     };
 }
 
+function bindModalBackdrop(overlay) {
+    if (!overlay) return;
+    overlay.addEventListener("click", (event) => {
+        if (event.target === overlay) {
+            event.preventDefault();
+        }
+    });
+}
+
 function setFieldValue(name, value) {
     const element = document.querySelector(`[name="${name}"]`);
     if (!element) return;
@@ -3716,7 +3725,6 @@ function fillCustomerForm(customer) {
     const tags = customer.tags ?? formatTags(customer.tagsJson);
     setFieldValue("tags", tags);
     setFieldValue("isArchived", customer.isArchived ? "true" : "false");
-    setFieldValue("password", "");
     const saveBtn = document.getElementById("save-customer");
     if (saveBtn) {
         saveBtn.textContent = t("customer.update", "Update customer");
@@ -3739,7 +3747,6 @@ function resetCustomerForm() {
     setFieldValue("signedHealthView", "false");
     setFieldValue("tags", "");
     setFieldValue("isArchived", "false");
-    setFieldValue("password", "");
     const saveBtn = document.getElementById("save-customer");
     if (saveBtn) {
         saveBtn.textContent = t("customer.create", "Create customer");
@@ -3751,6 +3758,7 @@ function fillUserForm(userItem) {
     setFieldValue("displayName", userItem.displayName);
     setFieldValue("email", userItem.email);
     setFieldValue("phone", userItem.phone);
+    setFieldValue("city", userItem.city);
     setFieldValue("address", userItem.address);
     setFieldValue("gender", userItem.gender);
     setFieldValue("idNumber", userItem.idNumber);
@@ -3759,7 +3767,9 @@ function fillUserForm(userItem) {
     setFieldValue("isActive", userItem.isActive ? "true" : "false");
     setFieldValue("instructorDisplayName", userItem.instructorName || "");
     setFieldValue("instructorBio", userItem.instructorBio || "");
-    setFieldValue("password", "");
+    setFieldValue("instructorRate", Number(userItem.instructorRateCents || 0) / 100);
+    setFieldValue("instructorRateUnit", userItem.instructorRateUnit || "Session");
+    setFieldValue("instructorRateCurrency", userItem.instructorRateCurrency || "ILS");
     const saveBtn = document.getElementById("save-user");
     if (saveBtn) {
         saveBtn.textContent = t("user.update", "Update user");
@@ -3771,6 +3781,7 @@ function resetUserForm() {
     setFieldValue("displayName", "");
     setFieldValue("email", "");
     setFieldValue("phone", "");
+    setFieldValue("city", "");
     setFieldValue("address", "");
     setFieldValue("gender", "");
     setFieldValue("idNumber", "");
@@ -3779,7 +3790,9 @@ function resetUserForm() {
     setFieldValue("isActive", "true");
     setFieldValue("instructorDisplayName", "");
     setFieldValue("instructorBio", "");
-    setFieldValue("password", "");
+    setFieldValue("instructorRate", "0");
+    setFieldValue("instructorRateUnit", "Session");
+    setFieldValue("instructorRateCurrency", "ILS");
     const saveBtn = document.getElementById("save-user");
     if (saveBtn) {
         saveBtn.textContent = t("user.create", "Create user");
@@ -3953,11 +3966,7 @@ async function openCalendarEventModal(item, data) {
         overlay.remove();
     };
     cleanupEscape = bindModalEscape(closeModal);
-    overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-            closeModal();
-        }
-    });
+    bindModalBackdrop(overlay);
 
     const closeBtn = overlay.querySelector("#close-modal");
     if (closeBtn) {
@@ -4358,7 +4367,12 @@ async function openCalendarEventModal(item, data) {
             } catch (error) {
                 const message = error.message || "";
                 if (message === "Health declaration required" && isAdmin) {
-                    const confirmOverride = window.confirm(t("session.healthOverrideConfirm", "Health waiver not signed. Register anyway?"));
+                    const confirmOverride = await confirmWithModal({
+                        title: t("session.healthOverrideTitle", "Health waiver required"),
+                        message: t("session.healthOverrideConfirm", "Health waiver not signed. Register anyway?"),
+                        confirmLabel: t("common.yes", "Yes"),
+                        cancelLabel: t("common.no", "No")
+                    });
                     if (confirmOverride) {
                         try {
                             const result = await sendRegistration(true);
@@ -4434,11 +4448,7 @@ function openInstructorModal(instructor) {
         overlay.remove();
     };
     cleanupEscape = bindModalEscape(closeModal);
-    overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-            closeModal();
-        }
-    });
+    bindModalBackdrop(overlay);
     const closeBtn = overlay.querySelector("#close-instructor");
     if (closeBtn) {
         closeBtn.addEventListener("click", closeModal);
@@ -4466,11 +4476,7 @@ function openDescriptionModal(title, description) {
         overlay.remove();
     };
     cleanupEscape = bindModalEscape(closeModal);
-    overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-            closeModal();
-        }
-    });
+    bindModalBackdrop(overlay);
     const closeBtn = overlay.querySelector("#close-description");
     if (closeBtn) {
         closeBtn.addEventListener("click", closeModal);
@@ -4505,11 +4511,7 @@ function openConfirmModal({ title, message, confirmLabel, cancelLabel, onConfirm
         }
     };
     cleanupEscape = bindModalEscape(() => closeModal(false));
-    overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-            closeModal(false);
-        }
-    });
+    bindModalBackdrop(overlay);
     const closeBtn = overlay.querySelector("#close-confirm");
     if (closeBtn) {
         closeBtn.addEventListener("click", () => closeModal(false));
@@ -4523,6 +4525,16 @@ function openConfirmModal({ title, message, confirmLabel, cancelLabel, onConfirm
         cancelBtn.addEventListener("click", () => closeModal(false));
         cancelBtn.focus();
     }
+}
+
+function confirmWithModal(options) {
+    return new Promise(resolve => {
+        openConfirmModal({
+            ...options,
+            onConfirm: () => resolve(true),
+            onCancel: () => resolve(false)
+        });
+    });
 }
 
 function openSessionModal(data, options = {}) {
@@ -4553,11 +4565,7 @@ function openSessionModal(data, options = {}) {
         overlay.remove();
     };
     cleanupEscape = bindModalEscape(closeModal);
-    overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-            closeModal();
-        }
-    });
+    bindModalBackdrop(overlay);
 
     const closeBtn = overlay.querySelector("#close-session");
     if (closeBtn) {
@@ -4716,11 +4724,7 @@ async function openBulkRegistrationModal(selectedCustomers, data) {
         overlay.remove();
     };
     cleanupEscape = bindModalEscape(closeModal);
-    overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-            closeModal();
-        }
-    });
+    bindModalBackdrop(overlay);
 
     const closeBtn = overlay.querySelector("#close-bulk-registration");
     if (closeBtn) {
@@ -4775,11 +4779,7 @@ function openProfileModal(user, studio) {
     };
     cleanupEscape = bindModalEscape(closeModal);
 
-    overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-            closeModal();
-        }
-    });
+    bindModalBackdrop(overlay);
 
     const closeBtn = overlay.querySelector("#close-profile");
     if (closeBtn) {
@@ -4913,11 +4913,7 @@ function openCustomerModal(customer, data) {
         overlay.remove();
     };
     cleanupEscape = bindModalEscape(closeModal);
-    overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-            closeModal();
-        }
-    });
+    bindModalBackdrop(overlay);
 
     const closeBtn = overlay.querySelector("#close-customer");
     if (closeBtn) {
@@ -5005,6 +5001,39 @@ function openCustomerModal(customer, data) {
         });
     }
 
+    const resetPasswordBtn = overlay.querySelector("#reset-customer-password");
+    if (resetPasswordBtn && isEdit && customer?.id) {
+        resetPasswordBtn.addEventListener("click", async () => {
+            const confirmed = await confirmWithModal({
+                title: t("customer.resetPasswordTitle", "Reset customer password"),
+                message: t("customer.resetPasswordConfirm", "Generate a new temporary password for this customer?"),
+                confirmLabel: t("common.yes", "Yes"),
+                cancelLabel: t("common.no", "No")
+            });
+            if (!confirmed) return;
+            resetPasswordBtn.disabled = true;
+            try {
+                const result = await apiPost(`/api/admin/customers/${customer.id}/reset-password`, {});
+                const tempPassword = result?.tempPassword || "";
+                if (tempPassword) {
+                    try {
+                        await navigator.clipboard.writeText(tempPassword);
+                        showToast(t("customer.resetPasswordCopied", "Temporary password copied."), "success");
+                    } catch {
+                        showToast(`${t("customer.resetPasswordTemp", "Temporary password")}: ${tempPassword}`, "success");
+                    }
+                    openDescriptionModal(t("customer.resetPasswordTitle", "Temporary password"), tempPassword);
+                } else {
+                    showToast(t("customer.resetPasswordSuccess", "Password reset."), "success");
+                }
+            } catch (error) {
+                showToast(error.message || t("customer.resetPasswordError", "Unable to reset password."), "error");
+            } finally {
+                resetPasswordBtn.disabled = false;
+            }
+        });
+    }
+
     const saveBtn = overlay.querySelector("#save-customer");
     if (saveBtn) {
         saveBtn.addEventListener("click", async () => {
@@ -5024,7 +5053,6 @@ function openCustomerModal(customer, data) {
             const statusId = getValue("statusId") || null;
             const tags = serializeTags(getValue("tags"));
             const isArchived = getValue("isArchived") === "true";
-            const password = getValue("password");
 
             if (!fullName || !email) {
                 showToast(t("customer.required", "Full name and email are required."), "error");
@@ -5065,8 +5093,7 @@ function openCustomerModal(customer, data) {
                         occupation,
                         signedHealthView,
                         statusId,
-                        tags,
-                        password: password || null
+                        tags
                     });
                 }
                 closeModal();
@@ -5113,11 +5140,7 @@ function openCustomerStatusModal(statuses) {
         overlay.remove();
     };
     cleanupEscape = bindModalEscape(closeModal);
-    overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-            closeModal();
-        }
-    });
+    bindModalBackdrop(overlay);
 
     const closeBtn = overlay.querySelector("#close-statuses");
     if (closeBtn) {
@@ -5209,6 +5232,7 @@ function openUserModal(userItem) {
         { value: "Month", label: t("payroll.unit.month", "Per month") }
     ];
     const selectedRateUnit = userItem?.instructorRateUnit || "Session";
+    const instructorRate = Number(userItem?.instructorRateCents || 0) / 100;
     const genderValue = (userItem?.gender || "").trim();
     const genderOptions = [
         { value: "", label: t("common.select", "Select"), selected: !genderValue },
@@ -5228,6 +5252,7 @@ function openUserModal(userItem) {
         displayName: userItem?.displayName || "",
         email: userItem?.email || "",
         phone: userItem?.phone || "",
+        city: userItem?.city || "",
         address: userItem?.address || "",
         idNumber: userItem?.idNumber || "",
         dateOfBirth: userItem?.dateOfBirth || "",
@@ -5236,7 +5261,7 @@ function openUserModal(userItem) {
         isActive: userItem?.isActive !== false,
         instructorDisplayName: userItem?.instructorName || "",
         instructorBio: userItem?.instructorBio || "",
-        instructorRateCents: userItem?.instructorRateCents ?? 0,
+        instructorRate,
         rateUnitOptions: rateUnitOptions.map(option => ({
             ...option,
             selected: option.value === selectedRateUnit
@@ -5259,11 +5284,7 @@ function openUserModal(userItem) {
         overlay.remove();
     };
     cleanupEscape = bindModalEscape(closeModal);
-    overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-            closeModal();
-        }
-    });
+    bindModalBackdrop(overlay);
 
     const closeBtn = overlay.querySelector("#close-user");
     if (closeBtn) {
@@ -5362,6 +5383,39 @@ function openUserModal(userItem) {
         });
     }
 
+    const resetPasswordBtn = overlay.querySelector("#reset-user-password");
+    if (resetPasswordBtn && isEdit && userItem?.id) {
+        resetPasswordBtn.addEventListener("click", async () => {
+            const confirmed = await confirmWithModal({
+                title: t("user.resetPasswordTitle", "Reset user password"),
+                message: t("user.resetPasswordConfirm", "Generate a new temporary password for this user?"),
+                confirmLabel: t("common.yes", "Yes"),
+                cancelLabel: t("common.no", "No")
+            });
+            if (!confirmed) return;
+            resetPasswordBtn.disabled = true;
+            try {
+                const result = await apiPost(`/api/admin/users/${userItem.id}/invite`, { sendEmail: false });
+                const tempPassword = result?.tempPassword || "";
+                if (tempPassword) {
+                    try {
+                        await navigator.clipboard.writeText(tempPassword);
+                        showToast(t("user.resetPasswordCopied", "Temporary password copied."), "success");
+                    } catch {
+                        showToast(`${t("user.resetPasswordTemp", "Temporary password")}: ${tempPassword}`, "success");
+                    }
+                    openDescriptionModal(t("user.resetPasswordTitle", "Temporary password"), tempPassword);
+                } else {
+                    showToast(t("user.resetPasswordSuccess", "Password reset."), "success");
+                }
+            } catch (error) {
+                showToast(error.message || t("user.resetPasswordError", "Unable to reset password."), "error");
+            } finally {
+                resetPasswordBtn.disabled = false;
+            }
+        });
+    }
+
     const saveBtn = overlay.querySelector("#save-user");
     if (saveBtn) {
         saveBtn.addEventListener("click", async () => {
@@ -5369,6 +5423,7 @@ function openUserModal(userItem) {
             const displayName = getValue("displayName").trim();
             const email = getValue("email").trim();
             const phone = getValue("phone").trim();
+            const city = getValue("city").trim();
             const address = getValue("address").trim();
             const gender = getValue("gender");
             const idNumber = getValue("idNumber").trim();
@@ -5377,10 +5432,10 @@ function openUserModal(userItem) {
             const isActive = getValue("isActive") !== "false";
             const instructorDisplayName = getValue("instructorDisplayName");    
             const instructorBio = getValue("instructorBio");
-            const instructorRateCents = Number(getValue("instructorRateCents") || 0);
+            const instructorRate = Number(getValue("instructorRate") || 0);
             const instructorRateUnit = getValue("instructorRateUnit") || "Session";
             const instructorRateCurrency = getValue("instructorRateCurrency").trim();
-            const password = getValue("password");
+            const instructorRateCents = Number.isFinite(instructorRate) ? Math.round(instructorRate * 100) : 0;
 
             if (!displayName || !email) {
                 showToast(t("user.required", "Display name and email are required."), "error");
@@ -5398,6 +5453,7 @@ function openUserModal(userItem) {
                 displayName,
                 email,
                 phone,
+                city,
                 address,
                 gender,
                 idNumber,
@@ -5407,10 +5463,9 @@ function openUserModal(userItem) {
                 isActive,
                 instructorDisplayName: instructorDisplayName || null,
                 instructorBio: instructorBio || null,
-                instructorRateCents: Number.isFinite(instructorRateCents) ? instructorRateCents : 0,
+                instructorRateCents,
                 instructorRateUnit,
-                instructorRateCurrency: instructorRateCurrency || "ILS",
-                password: password || null
+                instructorRateCurrency: instructorRateCurrency || "ILS"
             };
 
             try {
@@ -5453,11 +5508,7 @@ function openGuestModal() {
         overlay.remove();
     };
     cleanupEscape = bindModalEscape(closeModal);
-    overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-            closeModal();
-        }
-    });
+    bindModalBackdrop(overlay);
 
     const closeBtn = overlay.querySelector("#close-guest");
     if (closeBtn) {
@@ -5523,11 +5574,7 @@ function openRoomModal(room) {
         overlay.remove();
     };
     cleanupEscape = bindModalEscape(closeModal);
-    overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-            closeModal();
-        }
-    });
+    bindModalBackdrop(overlay);
 
     const closeBtn = overlay.querySelector("#close-room");
     if (closeBtn) {
@@ -5613,11 +5660,7 @@ function openPlanModal(plan) {
         overlay.remove();
     };
     cleanupEscape = bindModalEscape(closeModal);
-    overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-            closeModal();
-        }
-    });
+    bindModalBackdrop(overlay);
 
     const closeBtn = overlay.querySelector("#close-plan");
     if (closeBtn) {
@@ -5747,11 +5790,7 @@ function openSeriesModal(series, data) {
         overlay.remove();
     };
     cleanupEscape = bindModalEscape(closeModal);
-    overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-            closeModal();
-        }
-    });
+    bindModalBackdrop(overlay);
 
     const closeBtn = overlay.querySelector("#close-series");
     if (closeBtn) {
