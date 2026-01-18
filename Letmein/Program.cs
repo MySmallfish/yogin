@@ -578,34 +578,56 @@ adminApi.MapDelete("/rooms/{id:guid}", async (ClaimsPrincipal user, Guid id, App
 adminApi.MapGet("/instructors", async (ClaimsPrincipal user, AppDbContext db) =>
 {
     var studioId = GetStudioId(user);
-    var instructors = await db.Instructors.AsNoTracking()
-        .Where(i => i.StudioId == studioId)
-        .OrderBy(i => i.DisplayName)
+    var users = await db.Users.AsNoTracking()
+        .Where(u => u.StudioId == studioId)
         .ToListAsync();
-    var userIds = instructors.Where(i => i.UserId.HasValue).Select(i => i.UserId!.Value).ToList();
-    var userMap = await db.Users.AsNoTracking()
-        .Where(u => u.StudioId == studioId && userIds.Contains(u.Id))
-        .ToDictionaryAsync(u => u.Id, u => u);
-    var response = instructors.Select(instructor =>
+    var instructorUsers = users
+        .Where(u => GetUserRoles(u).Contains(UserRole.Instructor))
+        .OrderBy(u => u.DisplayName)
+        .ToList();
+
+    var instructorMap = await db.Instructors
+        .Where(i => i.StudioId == studioId && i.UserId != null)
+        .ToDictionaryAsync(i => i.UserId!.Value, i => i);
+
+    var missing = instructorUsers.Where(u => !instructorMap.ContainsKey(u.Id)).ToList();
+    if (missing.Count > 0)
     {
-        AppUser? userRow = null;
-        if (instructor.UserId.HasValue)
+        foreach (var userRow in missing)
         {
-            userMap.TryGetValue(instructor.UserId.Value, out userRow);
+            var instructor = new Instructor
+            {
+                Id = Guid.NewGuid(),
+                StudioId = studioId,
+                UserId = userRow.Id,
+                DisplayName = userRow.DisplayName,
+                Bio = "",
+                RateCents = 0,
+                RateUnit = PayrollRateUnit.Session,
+                RateCurrency = "ILS"
+            };
+            db.Instructors.Add(instructor);
+            instructorMap[userRow.Id] = instructor;
         }
+        await db.SaveChangesAsync();
+    }
+
+    var response = instructorUsers.Select(userRow =>
+    {
+        instructorMap.TryGetValue(userRow.Id, out var instructor);
         return (object)new
         {
-            instructor.Id,
-            instructor.DisplayName,
-            instructor.Bio,
-            instructor.UserId,
-            instructor.RateCents,
-            instructor.RateUnit,
-            instructor.RateCurrency,
-            email = userRow?.Email ?? "",
-            phone = userRow?.Phone ?? "",
-            avatarUrl = userRow?.AvatarUrl ?? "",
-            dateOfBirth = userRow?.DateOfBirth
+            Id = instructor?.Id ?? Guid.Empty,
+            DisplayName = instructor?.DisplayName ?? userRow.DisplayName,
+            Bio = instructor?.Bio ?? "",
+            UserId = userRow.Id,
+            RateCents = instructor?.RateCents ?? 0,
+            RateUnit = instructor?.RateUnit ?? PayrollRateUnit.Session,
+            RateCurrency = instructor?.RateCurrency ?? "ILS",
+            email = userRow.Email ?? "",
+            phone = userRow.Phone ?? "",
+            avatarUrl = userRow.AvatarUrl ?? "",
+            dateOfBirth = userRow.DateOfBirth
         };
     });
     return Results.Ok(response);
