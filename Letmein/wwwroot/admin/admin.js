@@ -4358,12 +4358,7 @@ async function openCalendarEventModal(item, data) {
             } catch (error) {
                 const message = error.message || "";
                 if (message === "Health declaration required" && isAdmin) {
-                    const confirmOverride = await confirmWithModal({
-                        title: t("session.healthOverrideTitle", "Health waiver required"),
-                        message: t("session.healthOverrideConfirm", "Health waiver not signed. Register anyway?"),
-                        confirmLabel: t("common.yes", "Yes"),
-                        cancelLabel: t("common.no", "No")
-                    });
+                    const confirmOverride = window.confirm(t("session.healthOverrideConfirm", "Health waiver not signed. Register anyway?"));
                     if (confirmOverride) {
                         try {
                             const result = await sendRegistration(true);
@@ -4528,19 +4523,6 @@ function openConfirmModal({ title, message, confirmLabel, cancelLabel, onConfirm
         cancelBtn.addEventListener("click", () => closeModal(false));
         cancelBtn.focus();
     }
-}
-
-function confirmWithModal({ title, message, confirmLabel, cancelLabel }) {
-    return new Promise(resolve => {
-        openConfirmModal({
-            title,
-            message,
-            confirmLabel,
-            cancelLabel,
-            onConfirm: () => resolve(true),
-            onCancel: () => resolve(false)
-        });
-    });
 }
 
 function openSessionModal(data, options = {}) {
