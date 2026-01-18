@@ -120,6 +120,7 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
+    EnsureUserCityColumn(db, app.Logger);
 }
 
 
@@ -215,6 +216,40 @@ app.MapPost("/api/auth/login", async (LoginRequest request, AppDbContext db, Htt
         customerId
     });
 });
+
+static void EnsureUserCityColumn(AppDbContext db, ILogger logger)
+{
+    try
+    {
+        using var connection = db.Database.GetDbConnection();
+        connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "PRAGMA table_info('Users');";
+        using var reader = command.ExecuteReader();
+        var hasCity = false;
+        while (reader.Read())
+        {
+            var name = reader["name"]?.ToString();
+            if (string.Equals(name, "City", StringComparison.OrdinalIgnoreCase))
+            {
+                hasCity = true;
+                break;
+            }
+        }
+        reader.Close();
+        if (!hasCity)
+        {
+            using var alter = connection.CreateCommand();
+            alter.CommandText = "ALTER TABLE Users ADD COLUMN City TEXT NOT NULL DEFAULT '';";
+            alter.ExecuteNonQuery();
+            logger.LogInformation("Added missing City column to Users table.");
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Failed ensuring Users.City column.");
+    }
+}
 
 app.MapPost("/api/auth/register", async (RegisterRequest request, AppDbContext db, HttpContext httpContext) =>
 {
