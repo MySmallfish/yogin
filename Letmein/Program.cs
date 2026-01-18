@@ -26,6 +26,14 @@ if (!string.IsNullOrWhiteSpace(homePath) &&
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(connectionString));
 
+var logsPath = Path.Combine(builder.Environment.ContentRootPath, "logs");
+if (!string.IsNullOrWhiteSpace(homePath))
+{
+    logsPath = Path.Combine(homePath, "logs");
+}
+Directory.CreateDirectory(logsPath);
+builder.Logging.AddProvider(new FileLoggerProvider(logsPath));
+
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
@@ -93,6 +101,20 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (Exception ex)
+    {
+        var logger = context.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("Unhandled");
+        logger.LogError(ex, "Unhandled exception");
+        throw;
+    }
+});
 
 using (var scope = app.Services.CreateScope())
 {
