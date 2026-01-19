@@ -2594,7 +2594,7 @@ function render(state) {
     if (route === "plans") {
         const plans = (data.plans || []).map(plan => ({
             ...plan,
-            price: formatMoney(plan.priceCents, plan.currency),
+            price: formatPlainPrice(plan.priceCents),
             typeLabel: formatPlanType(plan.type),
             activeLabel: plan.active ? t("common.yes", "Yes") : t("common.no", "No")
         }));

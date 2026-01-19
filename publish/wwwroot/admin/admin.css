@@ -571,8 +571,8 @@ button.modal-close:hover {
 }
 
 .circle-button {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   padding: 0;
   border-radius: 999px;
   border: 1px solid var(--line);
@@ -714,6 +714,8 @@ button.modal-close:hover {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  height: 40px;
+  min-width: 32px;
 }
 
 .calendar-views button.active {
@@ -729,12 +731,18 @@ button.modal-close:hover {
 
 .calendar-nav input[type="date"] {
   max-width: 170px;
+  height: 40px;
 }
 
 .calendar-actions {
   display: flex;
   gap: 8px;
   align-items: center;
+}
+
+.calendar-actions button {
+  height: 40px;
+  min-width: 32px;
 }
 
 .calendar-export {
@@ -777,6 +785,7 @@ button.modal-close:hover {
   border: 1px solid var(--line);
   padding: 8px 14px;
   background: white;
+  height: 40px;
 }
 
 .calendar-range {
@@ -1402,13 +1411,18 @@ button.modal-close:hover {
 .birthday-chevron {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   margin-inline-start: 6px;
-  color: var(--muted);
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+  color: var(--slate);
 }
 
 .birthday-chevron svg {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   stroke: currentColor;
   fill: none;
   stroke-width: 2;
