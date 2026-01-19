@@ -4721,7 +4721,7 @@ async function duplicateSessionFromItem(item, data) {
         price: toCurrencyUnits(item.priceCents || series?.priceCents || 0),
         currency: item.currency || series?.currency || "ILS",
         remoteInviteUrl: item.remoteInviteUrl || series?.remoteInviteUrl || "",
-        cancellationWindowHours: Number(item.cancellationWindowHours ?? series?.cancellationWindowHours || 0),
+        cancellationWindowHours: Number(item.cancellationWindowHours ?? series?.cancellationWindowHours ?? 0),
         allowedPlanIds: Array.isArray(item.allowedPlanIds) ? item.allowedPlanIds : parseGuidListJson(series?.allowedPlanIdsJson)
     };
     openSessionModal(data, { date, prefill, type: "one-time" });
