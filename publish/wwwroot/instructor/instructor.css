@@ -132,6 +132,11 @@ html[lang^="he"] .portal-title h1 {
   background: rgba(245, 158, 11, 0.16);
 }
 
+.calendar-event.birthday {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(254, 243, 199, 0.7);
+}
+
 @media (max-width: 900px) {
   .portal-shell {
     padding: 24px;

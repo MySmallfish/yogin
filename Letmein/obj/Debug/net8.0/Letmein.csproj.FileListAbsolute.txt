@@ -130,3 +130,4 @@ C:\dev\letmein\Letmein\obj\Debug\net8.0\refint\Letmein.dll
 C:\dev\letmein\Letmein\obj\Debug\net8.0\Letmein.pdb
 C:\dev\letmein\Letmein\obj\Debug\net8.0\Letmein.genruntimeconfig.cache
 C:\dev\letmein\Letmein\obj\Debug\net8.0\ref\Letmein.dll
+C:\dev\letmein\Letmein\obj\Debug\net8.0\Letmein.sourcelink.json

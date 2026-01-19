@@ -7,6 +7,10 @@ public class EventInstance
     public Guid EventSeriesId { get; set; }
     public Guid? InstructorId { get; set; }
     public Guid? RoomId { get; set; }
+    public string? Title { get; set; }
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+    public string? Color { get; set; }
     public DateTime StartUtc { get; set; }
     public DateTime EndUtc { get; set; }
     public int Capacity { get; set; }
@@ -16,6 +20,7 @@ public class EventInstance
     public string RemoteInviteUrl { get; set; } = "";
     public int CancellationWindowHours { get; set; }
     public string Notes { get; set; } = "";
+    public string? AllowedPlanIdsJson { get; set; }
     public EventStatus Status { get; set; } = EventStatus.Scheduled;
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 }

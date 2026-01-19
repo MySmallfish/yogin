@@ -87,7 +87,7 @@ public class BookingService
                 return (false, "Plan not available", null, null);
             }
 
-            var eligibility = await CheckMembershipEligibilityAsync(studio, customer, membership, plan, instance, ct);
+            var eligibility = await CheckMembershipEligibilityAsync(studio, customer, membership, plan, instance, isRemote, ct);
             if (!eligibility.ok)
             {
                 return (false, eligibility.error, null, null);
@@ -96,7 +96,9 @@ public class BookingService
 
         var series = await _db.EventSeries.AsNoTracking()
             .FirstOrDefaultAsync(s => s.Id == instance.EventSeriesId && s.StudioId == studio.Id, ct);
-        var allowedPlanIds = ParseGuidList(series?.AllowedPlanIdsJson);
+        var allowedPlanIds = !string.IsNullOrWhiteSpace(instance.AllowedPlanIdsJson)
+            ? ParseGuidList(instance.AllowedPlanIdsJson)
+            : ParseGuidList(series?.AllowedPlanIdsJson);
         if (allowedPlanIds.Count > 0)
         {
             if (plan == null)
@@ -199,8 +201,32 @@ public class BookingService
         Membership membership,
         Plan plan,
         EventInstance instance,
+        bool isRemote,
         CancellationToken ct)
     {
+        if (plan.RemoteOnly && !isRemote)
+        {
+            return (false, "Plan is limited to remote attendance");
+        }
+
+        if (membership.EndUtc.HasValue && instance.StartUtc >= membership.EndUtc.Value)
+        {
+            return (false, "Membership expired");
+        }
+
+        if (plan.DailyLimit.HasValue && plan.DailyLimit.Value > 0)
+        {
+            var (dayStartUtc, dayEndUtc) = GetDayWindowUtc(studio, instance.StartUtc);
+            var count = await _db.Bookings
+                .Where(b => b.StudioId == studio.Id && b.CustomerId == customer.Id && b.MembershipId == membership.Id && b.Status == BookingStatus.Confirmed)
+                .Join(_db.EventInstances, b => b.EventInstanceId, i => i.Id, (b, i) => new { Booking = b, Instance = i })
+                .CountAsync(x => x.Instance.StartUtc >= dayStartUtc && x.Instance.StartUtc < dayEndUtc, ct);
+            if (count >= plan.DailyLimit.Value)
+            {
+                return (false, "Daily limit reached");
+            }
+        }
+
         switch (plan.Type)
         {
             case PlanType.Unlimited:
@@ -238,6 +264,15 @@ public class BookingService
         var startUtc = TimeZoneInfo.ConvertTimeToUtc(weekStartLocal, tz);
         var endUtc = TimeZoneInfo.ConvertTimeToUtc(weekEndLocal, tz);
         return (startUtc, endUtc);
+    }
+
+    private static (DateTime startUtc, DateTime endUtc) GetDayWindowUtc(Studio studio, DateTime instanceStartUtc)
+    {
+        var tz = ResolveTimeZone(studio.Timezone);
+        var local = TimeZoneInfo.ConvertTimeFromUtc(instanceStartUtc, tz).Date;
+        var dayStartUtc = TimeZoneInfo.ConvertTimeToUtc(local, tz);
+        var dayEndUtc = TimeZoneInfo.ConvertTimeToUtc(local.AddDays(1), tz);
+        return (dayStartUtc, dayEndUtc);
     }
 
     private static TimeZoneInfo ResolveTimeZone(string timeZoneId)

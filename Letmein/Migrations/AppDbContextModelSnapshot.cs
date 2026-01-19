@@ -38,6 +38,9 @@ namespace Letmein.Migrations
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateOnly?>("DateOfBirth")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -388,11 +391,17 @@ namespace Letmein.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("AllowedPlanIdsJson")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("CancellationWindowHours")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Capacity")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Color")
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
@@ -401,10 +410,16 @@ namespace Letmein.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("EndUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("EventSeriesId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Icon")
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("InstructorId")
@@ -434,6 +449,9 @@ namespace Letmein.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<Guid>("StudioId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -780,6 +798,9 @@ namespace Letmein.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("DailyLimit")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -790,10 +811,16 @@ namespace Letmein.Migrations
                     b.Property<int>("PunchCardUses")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("RemoteOnly")
+                        .HasColumnType("INTEGER");
+
                     b.Property<Guid>("StudioId")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ValidityDays")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("WeeklyLimit")

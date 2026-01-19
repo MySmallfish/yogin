@@ -40,6 +40,10 @@ public record EventSeriesRequest(
 public record EventInstanceUpdateRequest(
     Guid? InstructorId,
     Guid? RoomId,
+    string? Title,
+    string? Description,
+    string? Icon,
+    string? Color,
     DateTime? StartUtc,
     DateTime? EndUtc,
     int? Capacity,
@@ -47,6 +51,7 @@ public record EventInstanceUpdateRequest(
     int? PriceCents,
     string? Currency,
     string? RemoteInviteUrl,
+    string? AllowedPlanIdsJson,
     int? CancellationWindowHours,
     string? Notes,
     EventStatus? Status);
@@ -71,7 +76,7 @@ public record EventInstanceCreateRequest(
     string? Notes,
     EventStatus Status);
 
-public record PlanRequest(string Name, PlanType Type, int WeeklyLimit, int PunchCardUses, int PriceCents, string Currency, bool Active);
+public record PlanRequest(string Name, PlanType Type, int WeeklyLimit, int PunchCardUses, int PriceCents, string Currency, bool RemoteOnly, int? ValidityDays, int? DailyLimit, bool Active);
 
 public record CouponRequest(string Code, DiscountType DiscountType, int DiscountValue, int MaxUses, DateTime? ValidFromUtc, DateTime? ValidToUtc, bool Active);
 

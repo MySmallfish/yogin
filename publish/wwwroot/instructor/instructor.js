@@ -71,7 +71,7 @@ const calendarTemplate = compileTemplate("instructor-calendar", `
         {{#if day.hasEvents}}
           <div class="calendar-events">
             {{#each day.events}}
-              <div class="calendar-event {{#if isCancelled}}cancelled{{/if}} {{#if isMine}}mine{{else}}muted{{/if}} {{#if isHoliday}}holiday{{/if}}" data-event="{{id}}">
+              <div class="calendar-event {{#if isCancelled}}cancelled{{/if}} {{#if isMine}}mine{{else}}muted{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}}" data-event="{{id}}">
                 <div class="event-time">{{timeRange}}</div>
                 <div class="event-title">{{seriesTitle}}</div>
                 <div class="event-meta">{{roomName}} · {{instructorName}}</div>
@@ -95,7 +95,7 @@ const calendarTemplate = compileTemplate("instructor-calendar", `
             <div class="calendar-day-events">
               {{#if hasEvents}}
                 {{#each events}}
-                  <div class="calendar-event compact {{#if isCancelled}}cancelled{{/if}} {{#if isMine}}mine{{else}}muted{{/if}} {{#if isHoliday}}holiday{{/if}}" data-event="{{id}}">
+                  <div class="calendar-event compact {{#if isCancelled}}cancelled{{/if}} {{#if isMine}}mine{{else}}muted{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}}" data-event="{{id}}">
                     <div class="event-time">{{timeRange}}</div>
                     <div class="event-title">{{seriesTitle}}</div>
                     <div class="event-meta">{{instructorName}}</div>
@@ -123,7 +123,7 @@ const calendarTemplate = compileTemplate("instructor-calendar", `
                 <div class="calendar-month-day-header">{{label}}</div>
                 <div class="calendar-month-events">
                   {{#each eventsPreview}}
-                    <div class="calendar-event mini {{#if isCancelled}}cancelled{{/if}} {{#if isMine}}mine{{else}}muted{{/if}} {{#if isHoliday}}holiday{{/if}}" data-event="{{id}}">
+                    <div class="calendar-event mini {{#if isCancelled}}cancelled{{/if}} {{#if isMine}}mine{{else}}muted{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}}" data-event="{{id}}">
                       <span>{{time}}</span>
                       <span>{{title}}</span>
                     </div>
@@ -403,7 +403,7 @@ function bindCalendarActions(viewState) {
             const eventId = card.getAttribute("data-event");
             if (!eventId) return;
             const item = itemMap.get(eventId);
-            if (!item || item.isHoliday) return;
+            if (!item || item.isHoliday || item.isBirthday) return;
             await openEventModal(item);
         });
     });
@@ -626,7 +626,9 @@ function buildCalendarView(items, options) {
                 time: event.startTime,
                 title: event.seriesTitle,
                 isCancelled: event.isCancelled,
-                isMine: event.isMine
+                isMine: event.isMine,
+                isHoliday: event.isHoliday,
+                isBirthday: event.isBirthday
             }));
             days.push({
                 label: date.getDate(),
@@ -661,10 +663,16 @@ function buildEventMap(items, timeZone) {
         const start = new Date(item.startUtc);
         const end = item.endUtc ? new Date(item.endUtc) : null;
         const dateKey = getDateKeyInTimeZone(start, timeZone);
-        const startTime = formatTimeOnly(start, timeZone);
-        const endTime = end ? formatTimeOnly(end, timeZone) : "";
+        const isHoliday = Boolean(item.isHoliday);
+        const isBirthday = Boolean(item.isBirthday);
+        const isAllDay = isHoliday || isBirthday;
+        const startTime = isAllDay ? "All day" : formatTimeOnly(start, timeZone);
+        const endTime = isAllDay || !end ? "" : formatTimeOnly(end, timeZone);
         const timeRange = endTime ? `${startTime} - ${endTime}` : startTime;
         const statusLabel = normalizeStatus(item.status);
+        const birthdayName = item.birthdayName || item.seriesTitle || "";
+        const birthdayTitle = birthdayName ? `Birthday: ${birthdayName}` : "Birthday";
+        const seriesTitle = isBirthday ? birthdayTitle : item.seriesTitle;
         const event = {
             ...item,
             dateKey,
@@ -673,6 +681,9 @@ function buildEventMap(items, timeZone) {
             timeRange,
             statusLabel,
             isCancelled: statusLabel === "Cancelled",
+            isHoliday,
+            isBirthday,
+            seriesTitle,
             price: formatMoney(item.priceCents, item.currency)
         };
         const list = map.get(dateKey) || [];

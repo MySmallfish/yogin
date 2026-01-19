@@ -10,6 +10,9 @@ public class Plan
     public int PunchCardUses { get; set; } = 0;
     public int PriceCents { get; set; } = 12000;
     public string Currency { get; set; } = "ILS";
+    public bool RemoteOnly { get; set; }
+    public int? ValidityDays { get; set; }
+    public int? DailyLimit { get; set; }
     public bool Active { get; set; } = true;
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 }

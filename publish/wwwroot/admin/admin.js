@@ -173,20 +173,47 @@ const loginTemplate = compileTemplate("login", `
 const calendarTemplate = compileTemplate("calendar", `
   <div class="calendar-toolbar">
     <div class="calendar-views">
-      <button class="secondary {{#if isDay}}active{{/if}}" data-view="day">{{t "calendar.day" "Day"}}</button>
-      <button class="secondary {{#if isWeek}}active{{/if}}" data-view="week">{{t "calendar.week" "Week"}}</button>
-      <button class="secondary {{#if isMonth}}active{{/if}}" data-view="month">{{t "calendar.month" "Month"}}</button>
-      <button class="secondary {{#if isList}}active{{/if}}" data-view="list">{{t "calendar.list" "List"}}</button>
+      <button class="secondary view-btn {{#if isDay}}active{{/if}}" data-view="day">
+        <span class="icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 6H4v10h16V8z"/></svg>
+        </span>
+        {{t "calendar.day" "Day"}}
+      </button>
+      <button class="secondary view-btn {{#if isWeek}}active{{/if}}" data-view="week">
+        <span class="icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M3 5h18a2 2 0 0 1 2 2v2H1V7a2 2 0 0 1 2-2zm-2 6h22v6a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-6zm4 2v2h4v-2H5zm6 0v2h4v-2h-4zm6 0v2h2v-2h-2z"/></svg>
+        </span>
+        {{t "calendar.week" "Week"}}
+      </button>
+      <button class="secondary view-btn {{#if isMonth}}active{{/if}}" data-view="month">
+        <span class="icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v3H2V6a2 2 0 0 1 2-2h3V2zm15 9H2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-9z"/></svg>
+        </span>
+        {{t "calendar.month" "Month"}}
+      </button>
+      <button class="secondary view-btn {{#if isList}}active{{/if}}" data-view="list">
+        <span class="icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 6h3v3H4V6zm5 1h11v1H9V7zm-5 6h3v3H4v-3zm5 1h11v1H9v-1zm-5 6h3v3H4v-3zm5 1h11v1H9v-1z"/></svg>
+        </span>
+        {{t "calendar.list" "List"}}
+      </button>
     </div>
     <div class="calendar-nav">
-      <button class="secondary" data-nav="prev">{{t "calendar.prev" "Prev"}}</button>
+      <button class="icon-button circle-button" data-nav="prev" aria-label="{{t "calendar.prev" "Prev"}}">
+        <span class="icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
+        </span>
+      </button>
+      <button class="secondary" id="calendar-today">{{t "calendar.today" "Today"}}</button>
       <input type="date" id="calendar-date" value="{{focusDate}}" />
-      <button class="secondary" data-nav="next">{{t "calendar.next" "Next"}}</button>
+      <button class="icon-button circle-button" data-nav="next" aria-label="{{t "calendar.next" "Next"}}">
+        <span class="icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+        </span>
+      </button>
     </div>
     <div class="calendar-actions">
-      {{#if isList}}
-        <input type="search" id="calendar-search" placeholder="{{t "calendar.search" "Search sessions"}}" value="{{search}}" />
-      {{/if}}
+      <input type="search" id="calendar-search" placeholder="{{t "calendar.search" "Search sessions"}}" value="{{search}}" />
       <div class="calendar-export" aria-label="{{t "calendar.export" "Export"}}">
         <button class="icon-button export-btn" data-export="outlook" title="{{t "calendar.exportOutlook" "Outlook (.ics)"}}" aria-label="{{t "calendar.exportOutlook" "Outlook (.ics)"}}">
           <span class="icon" aria-hidden="true">
@@ -201,9 +228,16 @@ const calendarTemplate = compileTemplate("calendar", `
           <span class="sr-only">{{t "calendar.exportExcel" "Excel (.csv)"}}</span>
         </button>
       </div>
-      <button id="add-session">{{t "calendar.addSession" "Add session"}}</button>
+      <button id="add-session">
+        <span class="icon" aria-hidden="true">+</span>
+        {{t "calendar.addSession" "Add session"}}
+      </button>
     </div>
-    <div class="calendar-range">{{rangeLabel}}</div>
+    <div class="calendar-range">
+      {{#if weekNumberLabel}}<span class="calendar-week-number">{{weekNumberLabel}}</span>{{/if}}
+      <span>{{rangeLabel}}</span>
+      {{#if hebrewDateLabel}}<span class="calendar-hebrew">{{hebrewDateLabel}}</span>{{/if}}
+    </div>
   </div>
   <div class="calendar-body">
     {{#if isDay}}
@@ -212,16 +246,27 @@ const calendarTemplate = compileTemplate("calendar", `
         {{#if day.hasEvents}}
           <div class="calendar-events">
             {{#each day.events}}
-              <div class="calendar-event {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}}" data-event="{{id}}" {{#unless isHoliday}}draggable="true"{{/unless}} style="{{eventStyle}}">
+              <div class="calendar-event {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}}" data-event="{{id}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
+                <button class="event-actions" type="button" aria-label="{{t "calendar.actions" "Actions"}}">
+                  <span class="icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M5 12a2 2 0 1 0 0 0zm7 0a2 2 0 1 0 0 0zm7 0a2 2 0 1 0 0 0z"/></svg>
+                  </span>
+                </button>
                 <div class="event-time">{{timeRange}}</div>
                 <div class="event-title">
                   {{#if seriesIcon}}<span class="event-icon">{{seriesIcon}}</span>{{/if}}
                   {{seriesTitle}}
                 </div>
                 <div class="event-meta">{{roomName}} - {{instructorName}}</div>
-                <div class="event-meta">{{booked}} / {{capacity}} - {{price}}</div>
+                <div class="event-meta event-meta-compact">
+                  <span>{{registeredSummary}}</span>
+                  {{#if remoteSummary}}<span class="remote-summary">{{remoteSummary}}</span>{{/if}}
+                </div>
                 {{#if isCancelled}}
                   <div class="event-meta">{{t "calendar.cancelled" "Cancelled"}}</div>
+                {{/if}}
+                {{#if isBirthday}}
+                  <div class="event-meta">{{t "calendar.birthday" "Birthday"}}</div>
                 {{/if}}
               </div>
             {{/each}}
@@ -242,7 +287,12 @@ const calendarTemplate = compileTemplate("calendar", `
             {{#if hasEvents}}
               <div class="calendar-day-events">
                 {{#each events}}
-                  <div class="calendar-event compact {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}}" data-event="{{id}}" {{#unless isHoliday}}draggable="true"{{/unless}} style="{{eventStyle}}">
+                  <div class="calendar-event compact {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}}" data-event="{{id}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
+                    <button class="event-actions" type="button" aria-label="{{t "calendar.actions" "Actions"}}">
+                      <span class="icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M5 12a2 2 0 1 0 0 0zm7 0a2 2 0 1 0 0 0zm7 0a2 2 0 1 0 0 0z"/></svg>
+                      </span>
+                    </button>
                     <div class="event-time">{{timeRange}}</div>
                     <div class="event-title">
                       {{#if seriesIcon}}<span class="event-icon">{{seriesIcon}}</span>{{/if}}
@@ -250,6 +300,10 @@ const calendarTemplate = compileTemplate("calendar", `
                     </div>
                     <div class="event-meta">{{roomName}}</div>
                     <div class="event-meta">{{instructorName}}</div>
+                    <div class="event-meta event-meta-compact">
+                      <span>{{registeredSummary}}</span>
+                      {{#if remoteSummary}}<span class="remote-summary">{{remoteSummary}}</span>{{/if}}
+                    </div>
                   </div>
                 {{/each}}
               </div>
@@ -275,7 +329,7 @@ const calendarTemplate = compileTemplate("calendar", `
                 {{#if hasEvents}}
                   <div class="calendar-month-events">
                     {{#each eventsPreview}}
-                      <div class="calendar-event mini {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}}" data-event="{{id}}" {{#unless isHoliday}}draggable="true"{{/unless}} style="{{eventStyle}}">
+                      <div class="calendar-event mini {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}}" data-event="{{id}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
                         <span class="event-time">{{time}}</span>
                         <span class="event-title">
                           {{#if seriesIcon}}<span class="event-icon">{{seriesIcon}}</span>{{/if}}
@@ -306,11 +360,12 @@ const calendarTemplate = compileTemplate("calendar", `
                 <th>{{t "calendar.list.room" "Room"}}</th>
                 <th>{{t "calendar.list.instructor" "Instructor"}}</th>
                 <th>{{t "calendar.list.booked" "Booked"}}</th>
+                <th>{{t "calendar.list.remote" "Remote"}}</th>
               </tr>
             </thead>
             <tbody>
               {{#each list.items}}
-              <tr class="{{#if isHoliday}}holiday-row{{/if}}" data-event="{{id}}">
+              <tr class="{{#if isHoliday}}holiday-row{{/if}} {{#if isBirthday}}birthday-row{{/if}}" data-event="{{id}}">
                 <td>{{dateLabel}}</td>
                 <td>{{timeRange}}</td>
                 <td>
@@ -318,11 +373,13 @@ const calendarTemplate = compileTemplate("calendar", `
                     {{#if seriesIcon}}<span class="event-icon">{{seriesIcon}}</span>{{/if}}
                     {{seriesTitle}}
                     {{#if isHoliday}}<span class="customer-tag">{{t "calendar.holiday" "Holiday"}}</span>{{/if}}
+                    {{#if isBirthday}}<span class="customer-tag">{{t "calendar.birthday" "Birthday"}}</span>{{/if}}
                   </div>
                 </td>
                 <td>{{roomName}}</td>
                 <td>{{instructorName}}</td>
                 <td>{{bookedSummary}}</td>
+                <td>{{remoteSummary}}</td>
               </tr>
               {{/each}}
             </tbody>
@@ -332,6 +389,24 @@ const calendarTemplate = compileTemplate("calendar", `
         {{/if}}
       </div>
     {{/if}}
+  </div>
+  <div class="calendar-stats">
+    <div class="stat-card">
+      <div class="stat-label">{{t "calendar.stats.sessionsPerDay" "Sessions / day"}}</div>
+      <div class="stat-value">{{stats.sessionsPerDay}}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">{{t "calendar.stats.totalRegistered" "Total registered"}}</div>
+      <div class="stat-value">{{stats.totalRegistered}}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">{{t "calendar.stats.instructors" "Instructors"}}</div>
+      <div class="stat-value">{{stats.instructors}}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">{{t "calendar.stats.newCustomers" "New customer registrations"}}</div>
+      <div class="stat-value">{{stats.newCustomers}}</div>
+    </div>
   </div>
 `);
 const rosterTemplate = compileTemplate("roster", `
@@ -367,6 +442,15 @@ const rosterTemplate = compileTemplate("roster", `
             <div class="customer-cell">
               <div class="customer-name">
                 {{customerName}}
+                {{#if isBirthday}}
+                  <span class="birthday-badge" title="{{t "roster.birthday" "Birthday"}}">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M6 10h12v8a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-8z"/>
+                      <path d="M4 10h16v2H4z"/>
+                      <path d="M9 7c0-1.1.9-2 2-2 .6 0 1.1.2 1.5.6.4-.4.9-.6 1.5-.6 1.1 0 2 .9 2 2 0 1.2-1 2.2-3.5 3.6C10 9.2 9 8.2 9 7z"/>
+                    </svg>
+                  </span>
+                {{/if}}
                 {{#if isRemote}}<span class="customer-tag">{{t "roster.remote" "Remote"}}</span>{{/if}}
               </div>
               <div class="contact-actions">
@@ -470,7 +554,20 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
         <div>
           <h3>{{seriesTitle}}</h3>
           <div class="muted">{{startLabel}} ({{timeRange}})</div>
-          <div class="meta">{{roomName}} - {{instructorName}}</div>
+          <div class="meta">
+            <span>{{roomName}}</span>
+            {{#if instructorName}}
+              <span class="meta-sep"> - </span>
+              {{#if hasInstructorDetails}}
+                <button class="link-button" type="button" id="open-instructor">{{instructorName}}</button>
+              {{else}}
+                <span>{{instructorName}}</span>
+              {{/if}}
+            {{/if}}
+          </div>
+          {{#if hasDescription}}
+            <button class="link-button" type="button" id="open-description">{{t "session.descriptionLink" "View description"}}</button>
+          {{/if}}
           <div class="meta" data-capacity-summary>{{capacitySummary}}</div>
         </div>
         <button class="modal-close" id="close-modal" type="button" aria-label="{{t "common.close" "Close"}}"></button>
@@ -478,6 +575,18 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
       <div class="modal-columns">
         <div class="modal-column modal-column-details">
           <div class="form-grid">
+            <div class="span-2">
+              <label>{{t "session.title" "Title"}}</label>
+              <input name="title" value="{{seriesTitle}}" />
+            </div>
+            <div class="span-2 markdown-field">
+              <div class="markdown-header">
+                <label>{{t "session.description" "Description"}}</label>
+                <button class="secondary markdown-toggle" type="button" data-markdown-toggle="session-description">{{t "common.preview" "Preview"}}</button>
+              </div>
+              <textarea name="description" rows="3" data-markdown-source="session-description" placeholder="{{t "series.descriptionHint" "Markdown text or URL"}}">{{seriesDescription}}</textarea>
+              <div class="markdown-preview hidden" data-markdown-preview="session-description"></div>
+            </div>
             <div>
               <label>{{t "session.status" "Status"}}</label>
               <select name="status">
@@ -511,12 +620,25 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
               <input type="number" name="remoteCapacity" value="{{remoteCapacity}}" />
             </div>
             <div>
-              <label>{{t "session.price" "Price (cents)"}}</label>
-              <input type="number" name="priceCents" value="{{priceCents}}" />  
+              <label>{{t "session.price" "Price (NIS)"}}</label>
+              <input type="number" step="0.01" name="price" value="{{price}}" />
             </div>
             <div>
               <label>{{t "session.zoomInvite" "Zoom invite link"}}</label>
               <input name="remoteInviteUrl" value="{{remoteInviteUrl}}" placeholder="https://zoom.us/j/..." />
+            </div>
+            <div class="span-2">
+              <label>{{t "series.allowedPlans" "Allowed plans"}}</label>
+              <div class="plan-options">
+                {{#each plans}}
+                  <label class="checkbox">
+                    <input type="checkbox" name="instancePlanIds" value="{{id}}" {{#if selected}}checked{{/if}} />
+                    <span>{{name}}</span>
+                    <span class="meta">{{price}}</span>
+                  </label>
+                {{/each}}
+              </div>
+              <div class="meta">{{t "series.allowedPlansHint" "Leave empty to allow all plans + drop-ins."}}</div>
             </div>
           </div>
         </div>
@@ -546,18 +668,6 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
                 </datalist>
               </div>
               <div>
-                <label>{{t "session.customerName" "Full name"}}</label>
-                <input name="fullName" placeholder="{{t "session.customerNamePlaceholder" "New customer name"}}" />
-              </div>
-              <div>
-                <label>{{t "session.customerEmail" "Email"}}</label>
-                <input name="email" type="email" placeholder="{{t "session.customerEmailPlaceholder" "name@email.com"}}" />
-              </div>
-              <div>
-                <label>{{t "session.customerPhone" "Phone"}}</label>
-                <input name="phone" type="tel" placeholder="{{t "session.customerPhonePlaceholder" "+1 555 123 4567"}}" />
-              </div>
-              <div>
                 <label>{{t "session.attendance" "Attendance"}}</label>
                 <select name="attendanceType">
                   <option value="in-person">{{t "session.attendance.inPerson" "In-studio"}}</option>
@@ -566,9 +676,13 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
                   {{/if}}
                 </select>
               </div>
+              <div class="span-2">
+                <label>{{t "session.addCustomer" "Add customer"}}</label>
+                <button class="secondary" type="button" id="add-customer-modal">{{t "customer.addTitle" "Add customer"}}</button>
+              </div>
             </div>
             <div class="modal-footer">
-              <div class="meta">{{t "session.addCustomerHint" "Select an existing customer or create a new one."}}</div>
+              <div class="meta">{{t "session.addCustomerHint" "Select an existing customer or add a new one."}}</div>
               <div class="modal-actions">
                 <button id="register-customer">{{t "session.registerCustomer" "Register customer"}}</button>
               </div>
@@ -582,6 +696,102 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
           <button class="secondary" id="duplicate-session">{{t "session.duplicate" "Duplicate"}}</button>
           <button id="save-instance">{{t "common.saveChanges" "Save changes"}}</button>
           <button class="secondary" id="edit-series">{{t "series.edit" "Edit series"}}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+`);
+
+const instructorModalTemplate = compileTemplate("instructor-modal", `
+  <div class="modal-overlay" id="instructor-modal">
+    <div class="modal modal-compact">
+      <div class="modal-header">
+        <div>
+          <h3>{{displayName}}</h3>
+          <div class="muted">{{t "instructor.subtitle" "Instructor details"}}</div>
+        </div>
+        <button class="modal-close" id="close-instructor" type="button" aria-label="{{t "common.close" "Close"}}"></button>
+      </div>
+      <div class="instructor-card">
+        <div class="instructor-avatar">
+          {{#if avatarUrl}}
+            <img src="{{avatarUrl}}" alt="{{displayName}} avatar" />
+          {{else}}
+            <span>{{initials}}</span>
+          {{/if}}
+        </div>
+        <div>
+          <div class="instructor-name">{{displayName}}</div>
+          {{#if bio}}
+            <div class="muted">{{bio}}</div>
+          {{/if}}
+          <div class="contact-actions instructor-actions">
+            {{#if hasPhone}}
+              <a class="contact-icon phone" href="{{phoneLink}}" title="{{t "contact.call" "Call"}}" aria-label="{{t "contact.call" "Call"}} {{displayName}}">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M22 16.9v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.18 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.72c.1.8.3 1.57.6 2.3a2 2 0 0 1-.45 2.11L8.1 9.9a16 16 0 0 0 6 6l1.77-1.15a2 2 0 0 1 2.11-.45c.73.3 1.5.5 2.3.6A2 2 0 0 1 22 16.9z"/>
+                </svg>
+              </a>
+            {{/if}}
+            {{#if hasEmail}}
+              <a class="contact-icon email" href="{{emailLink}}" title="{{t "contact.email" "Email"}}" aria-label="{{t "contact.email" "Email"}} {{displayName}}">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="3" y="5" width="18" height="14" rx="2"/>
+                  <path d="M3 7l9 6 9-6"/>
+                </svg>
+              </a>
+            {{/if}}
+            {{#if hasWhatsapp}}
+              <a class="contact-icon whatsapp" href="{{whatsappLink}}" target="_blank" rel="noreferrer" title="WhatsApp" aria-label="WhatsApp {{displayName}}">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M21 11.5a8.5 8.5 0 1 1-4.2-7.3A8.5 8.5 0 0 1 21 11.5z"/>
+                  <path d="M7 19l1-3"/>
+                </svg>
+              </a>
+            {{/if}}
+            {{#if hasPhone}}
+              <a class="contact-icon sms" href="{{smsLink}}" title="{{t "contact.sms" "SMS"}}" aria-label="{{t "contact.sms" "SMS"}} {{displayName}}">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z"/>
+                </svg>
+              </a>
+            {{/if}}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+`);
+
+const descriptionModalTemplate = compileTemplate("description-modal", `
+  <div class="modal-overlay" id="description-modal">
+    <div class="modal modal-compact">
+      <div class="modal-header">
+        <div>
+          <h3>{{title}}</h3>
+          <div class="muted">{{t "session.descriptionSubtitle" "Series description"}}</div>
+        </div>
+        <button class="modal-close" id="close-description" type="button" aria-label="{{t "common.close" "Close"}}"></button>
+      </div>
+      <div class="description-body">{{{html}}}</div>
+    </div>
+  </div>
+`);
+
+const confirmModalTemplate = compileTemplate("confirm-modal", `
+  <div class="modal-overlay" id="confirm-modal">
+    <div class="modal modal-compact">
+      <div class="modal-header">
+        <div>
+          <h3>{{title}}</h3>
+          <div class="muted">{{message}}</div>
+        </div>
+        <button class="modal-close" id="close-confirm" type="button" aria-label="{{t "common.close" "Close"}}"></button>
+      </div>
+      <div class="modal-footer">
+        <div class="modal-actions">
+          <button class="secondary" id="confirm-cancel">{{cancelLabel}}</button>
+          <button id="confirm-ok">{{confirmLabel}}</button>
         </div>
       </div>
     </div>
@@ -610,9 +820,13 @@ const sessionModalTemplate = compileTemplate("session-modal", `
           <label>{{t "session.title" "Title"}}</label>
           <input name="title" value="Studio Flow" />
         </div>
-        <div>
-          <label>{{t "session.description" "Description"}}</label>
-          <input name="description" value="" />
+        <div class="span-2 markdown-field">
+          <div class="markdown-header">
+            <label>{{t "session.description" "Description"}}</label>
+            <button class="secondary markdown-toggle" type="button" data-markdown-toggle="session-create-description">{{t "common.preview" "Preview"}}</button>
+          </div>
+          <textarea name="description" rows="3" data-markdown-source="session-create-description" placeholder="{{t "series.descriptionHint" "Markdown text or URL"}}"></textarea>
+          <div class="markdown-preview hidden" data-markdown-preview="session-create-description"></div>
         </div>
         <div>
           <label>{{t "session.instructor" "Instructor"}}</label>
@@ -649,8 +863,8 @@ const sessionModalTemplate = compileTemplate("session-modal", `
           <input type="number" name="remoteCapacity" value="0" />
         </div>
         <div>
-          <label>{{t "session.price" "Price (cents)"}}</label>
-          <input type="number" name="priceCents" value="2500" />
+          <label>{{t "session.price" "Price (NIS)"}}</label>
+          <input type="number" step="0.01" name="price" value="25" />
         </div>
         <div>
           <label>{{t "session.currency" "Currency"}}</label>
@@ -664,6 +878,21 @@ const sessionModalTemplate = compileTemplate("session-modal", `
           <label>{{t "session.cancellationWindow" "Cancellation window (hours)"}}</label>
           <input type="number" name="cancellationWindowHours" value="6" />
         </div>
+        {{#if plans.length}}
+        <div class="span-2">
+          <label>{{t "session.allowedPlans" "Allowed plans"}}</label>
+          <div class="plan-options">
+            {{#each plans}}
+              <label class="checkbox">
+                <input type="checkbox" name="sessionPlanIds" value="{{id}}" {{#if selected}}checked{{/if}} />
+                <span>{{name}}</span>
+                <span class="meta">{{price}}</span>
+              </label>
+            {{/each}}
+          </div>
+          <div class="meta">{{t "series.allowedPlansHint" "Leave empty to allow all plans + drop-ins."}}</div>
+        </div>
+        {{/if}}
       </div>
       <div class="form-grid session-one-time">
         <div>
@@ -760,8 +989,8 @@ const seriesModalTemplate = compileTemplate("series-modal", `
           <input type="number" name="remoteCapacity" value="{{remoteCapacity}}" />
         </div>
         <div>
-          <label>{{t "series.price" "Price (cents)"}}</label>
-          <input type="number" name="priceCents" value="{{priceCents}}" />
+          <label>{{t "series.price" "Price (NIS)"}}</label>
+          <input type="number" step="0.01" name="price" value="{{price}}" />
         </div>
         <div>
           <label>{{t "series.zoomInvite" "Zoom invite link"}}</label>
@@ -783,9 +1012,13 @@ const seriesModalTemplate = compileTemplate("series-modal", `
             {{/each}}
           </select>
         </div>
-        <div>
-          <label>{{t "series.description" "Description"}}</label>
-          <textarea name="description" rows="2">{{description}}</textarea>
+        <div class="span-2 markdown-field">
+          <div class="markdown-header">
+            <label>{{t "series.description" "Description"}}</label>
+            <button class="secondary markdown-toggle" type="button" data-markdown-toggle="series-description">{{t "common.preview" "Preview"}}</button>
+          </div>
+          <textarea name="description" rows="3" data-markdown-source="series-description" placeholder="{{t "series.descriptionHint" "Markdown text or URL"}}">{{description}}</textarea>
+          <div class="markdown-preview hidden" data-markdown-preview="series-description"></div>
         </div>
         <div>
           <label>{{t "series.recurrence" "Recurrence (weeks)"}}</label>
@@ -900,9 +1133,18 @@ const customerModalTemplate = compileTemplate("customer-modal", `
             {{/each}}
           </select>
         </div>
-        <div>
+        <div class="span-2">
           <label>{{t "customer.tags" "Tags"}}</label>
-          <input name="tags" value="{{tags}}" placeholder="{{t "customer.tagsPlaceholder" "e.g. VIP, trial, morning"}}" />
+          <div class="tag-input" data-tag-input>
+            <div class="tag-chips"></div>
+            <input name="tagsInput" list="tag-suggestions" placeholder="{{t "customer.tagsPlaceholder" "e.g. VIP, trial, morning"}}" />
+            <datalist id="tag-suggestions">
+              {{#each tagSuggestions}}
+                <option value="{{this}}"></option>
+              {{/each}}
+            </datalist>
+          </div>
+          <input type="hidden" name="tags" value="{{tags}}" />
         </div>
         <div>
           <label>{{t "customer.archived" "Archived"}}</label>
@@ -911,12 +1153,6 @@ const customerModalTemplate = compileTemplate("customer-modal", `
             <option value="true" {{#if isArchived}}selected{{/if}}>{{t "common.yes" "Yes"}}</option>
           </select>
         </div>
-        {{#unless isEdit}}
-        <div>
-          <label>{{t "customer.password" "Password (optional)"}}</label>
-          <input name="password" type="password" placeholder="{{t "customer.passwordHint" "Leave empty for temp password"}}" />
-        </div>
-        {{/unless}}
       </div>
       <div class="attachments">
         <h4>{{t "customer.attachments" "Attachments"}}</h4>
@@ -946,6 +1182,9 @@ const customerModalTemplate = compileTemplate("customer-modal", `
       <div class="modal-footer">
         <div class="meta">{{footerNote}}</div>
         <div class="modal-actions">
+          {{#if isEdit}}
+            <button class="secondary" id="reset-customer-password">{{t "customer.resetPassword" "Reset password"}}</button>
+          {{/if}}
           <button id="save-customer">{{saveLabel}}</button>
         </div>
       </div>
@@ -1097,12 +1336,20 @@ const userModalTemplate = compileTemplate("user-modal", `
           <input name="phone" type="tel" value="{{phone}}" />
         </div>
         <div>
+          <label>{{t "user.city" "City"}}</label>
+          <input name="city" value="{{city}}" />
+        </div>
+        <div>
           <label>{{t "user.gender" "Gender"}}</label>
           <select name="gender">
             {{#each genderOptions}}
               <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
             {{/each}}
           </select>
+        </div>
+        <div>
+          <label>{{t "user.dateOfBirth" "Date of birth"}}</label>
+          <input name="dateOfBirth" type="date" value="{{dateOfBirth}}" />
         </div>
         <div>
           <label>{{t "user.idNumber" "ID number"}}</label>
@@ -1139,8 +1386,8 @@ const userModalTemplate = compileTemplate("user-modal", `
           <textarea name="instructorBio" rows="2" placeholder="{{t "user.instructorBioHint" "Short bio"}}">{{instructorBio}}</textarea>
         </div>
         <div class="instructor-fields">
-          <label>{{t "user.instructorRate" "Payroll rate (cents)"}}</label>
-          <input name="instructorRateCents" type="number" min="0" value="{{instructorRateCents}}" />
+          <label>{{t "user.instructorRate" "Payroll rate (NIS)"}}</label>
+          <input name="instructorRate" type="number" min="0" step="0.01" value="{{instructorRate}}" />
         </div>
         <div class="instructor-fields">
           <label>{{t "user.instructorRateUnit" "Rate unit"}}</label>
@@ -1152,11 +1399,7 @@ const userModalTemplate = compileTemplate("user-modal", `
         </div>
         <div class="instructor-fields">
           <label>{{t "user.instructorRateCurrency" "Rate currency"}}</label>
-          <input name="instructorRateCurrency" value="{{instructorRateCurrency}}" />
-        </div>
-        <div>
-          <label>{{t "user.password" "Password (optional)"}}</label>
-          <input name="password" type="password" placeholder="{{t "user.passwordHint" "Leave empty to keep current"}}" />
+          <input name="instructorRateCurrency" value="{{instructorRateCurrency}}" readonly />
         </div>
       </div>
       <div class="attachments">
@@ -1185,6 +1428,9 @@ const userModalTemplate = compileTemplate("user-modal", `
       <div class="modal-footer">
         <div class="meta">{{footerNote}}</div>
         <div class="modal-actions">
+          {{#if isEdit}}
+            <button class="secondary" id="reset-user-password">{{t "user.resetPassword" "Reset password"}}</button>
+          {{/if}}
           <button id="save-user">{{saveLabel}}</button>
         </div>
       </div>
@@ -1282,12 +1528,27 @@ const planModalTemplate = compileTemplate("plan-modal", `
           <input type="number" name="punchCardUses" value="{{punchCardUses}}" />
         </div>
         <div>
-          <label>{{t "plans.price" "Price (cents)"}}</label>
-          <input type="number" name="priceCents" value="{{priceCents}}" />
+          <label>{{t "plans.price" "Price (NIS)"}}</label>
+          <input type="number" step="0.01" name="price" value="{{price}}" />
         </div>
         <div>
           <label>{{t "plans.currency" "Currency"}}</label>
           <input name="currency" value="{{currency}}" />
+        </div>
+        <div>
+          <label>{{t "plans.remoteOnly" "Remote only"}}</label>
+          <select name="planRemoteOnly">
+            <option value="false" {{#unless remoteOnly}}selected{{/unless}}>{{t "common.no" "No"}}</option>
+            <option value="true" {{#if remoteOnly}}selected{{/if}}>{{t "common.yes" "Yes"}}</option>
+          </select>
+        </div>
+        <div>
+          <label>{{t "plans.validityDays" "Validity (days)"}}</label>
+          <input type="number" name="planValidityDays" value="{{validityDays}}" placeholder="{{t "plans.validityNone" "No expiry"}}" />
+        </div>
+        <div>
+          <label>{{t "plans.dailyLimit" "Daily limit"}}</label>
+          <input type="number" name="planDailyLimit" value="{{dailyLimit}}" placeholder="{{t "plans.dailyLimitNone" "No limit"}}" />
         </div>
         <div>
           <label>{{t "plans.active" "Active"}}</label>
@@ -1681,7 +1942,12 @@ const auditTemplate = compileTemplate("audit", `
     </div>
     <div class="audit-actions">
       <button class="secondary" id="apply-audit">{{t "common.apply" "Apply"}}</button>
-      <button class="secondary" id="export-audit">{{t "audit.export" "Export CSV"}}</button>
+      <button class="icon-button export-btn" id="export-audit" aria-label="{{t "audit.export" "Export CSV"}}">
+        <span class="icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 3h12l4 4v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm11 1v4h4M7 9l2 3-2 3h2l1-2 1 2h2l-2-3 2-3h-2l-1 2-1-2H7z"/></svg>
+        </span>
+        <span class="sr-only">{{t "audit.export" "Export CSV"}}</span>
+      </button>
     </div>
   </div>
   <div class="audit-controls audit-clear">
@@ -1700,7 +1966,7 @@ const auditTemplate = compileTemplate("audit", `
         <th>{{t "audit.time" "Time"}}</th>
         <th>{{t "audit.actor" "Actor"}}</th>
         <th>{{t "audit.action" "Action"}}</th>
-        <th>{{t "audit.entity" "Entity"}}</th>
+        <th>{{t "audit.relatesTo" "Relates to"}}</th>
         <th>{{t "audit.summary" "Summary"}}</th>
       </tr>
     </thead>
@@ -1709,8 +1975,8 @@ const auditTemplate = compileTemplate("audit", `
       <tr>
         <td>{{timeLabel}}</td>
         <td>{{actorLabel}}</td>
-        <td>{{action}}</td>
-        <td>{{entity}}</td>
+        <td>{{actionLabel}}</td>
+        <td>{{relatesToLabel}}</td>
         <td>{{summary}}</td>
       </tr>
       {{/each}}
@@ -2065,13 +2331,14 @@ const adminMachine = createMachine({
                     const view = input.calendarView || "week";
                     const focusDate = input.calendarDate || toDateInputValue(new Date());
                     const range = getCalendarRange(view, focusDate, studio.weekStartsOn ?? 0);
-                    const [items, rooms, instructors, customers] = await Promise.all([
+                    const [items, rooms, instructors, customers, plans] = await Promise.all([
                         apiGet(`/api/admin/calendar?from=${range.from}&to=${range.to}`),
                         apiGet("/api/admin/rooms"),
                         apiGet("/api/admin/instructors"),
-                        apiGet("/api/admin/customers")
+                        apiGet("/api/admin/customers"),
+                        apiGet("/api/admin/plans")
                     ]);
-                    return { studio, items, rooms, instructors, customers, calendar: { view, focusDate, studio, range } };
+                    return { studio, items, rooms, instructors, customers, plans, calendar: { view, focusDate, studio, range } };
                 }
                 case "events": {
                     const [series, rooms, instructors, plans] = await Promise.all([
@@ -2226,7 +2493,8 @@ function render(state) {
             focusDate,
             timeZone,
             weekStartsOn,
-            search
+            search,
+            customers: data.customers || []
         });
         const subtitleMapView = {
             day: t("calendar.subtitle.day", "Daily schedule focus."),
@@ -2271,9 +2539,7 @@ function render(state) {
     if (route === "customers") {
         const customers = (data.customers || []).map(c => ({
             ...c,
-            statusLabel: c.isArchived
-                ? t("customers.status.archived", "Archived")
-                : (c.statusName || t("customers.status.active", "Active")),
+            statusLabel: formatCustomerStatus(c.isArchived ? "Archived" : (c.statusName || "Active")),
             archiveLabel: c.isArchived ? t("customers.restore", "Restore") : t("customers.archive", "Archive")
         }));
         const filters = data.customerFilters || { search: "", includeArchived: false, statusId: "" };
@@ -2281,7 +2547,7 @@ function render(state) {
             .filter(status => status.isActive !== false)
             .map(status => ({
                 id: status.id,
-                name: status.name,
+                name: formatCustomerStatus(status.name),
                 selected: String(status.id) === String(filters.statusId || "")
             }));
         content = customersTemplate({
@@ -2396,12 +2662,14 @@ function render(state) {
     if (route === "audit") {
         const logs = (data.audit?.logs || []).map(log => {
             const actorLabel = log.actorName || log.actorEmail || log.actorRole || "-";
-            const entity = log.entityId ? `${log.entityType} #${log.entityId}` : log.entityType;
+            const entityLabel = formatAuditEntity(log.entityType);
+            const relatesToLabel = log.entityId ? `${entityLabel} #${log.entityId}` : entityLabel;
             return {
                 ...log,
                 timeLabel: formatShortDateTime(log.createdAtUtc),
                 actorLabel,
-                entity
+                actionLabel: formatAuditAction(log.action),
+                relatesToLabel
             };
         });
         const filters = data.audit?.filters || {};
@@ -2432,6 +2700,7 @@ function render(state) {
                 if (search) params.set("search", search);
                 const query = params.toString();
                 window.location.hash = `#/audit${query ? `?${query}` : ""}`;
+                actor.send({ type: "REFRESH" });
             });
         }
 
@@ -2467,7 +2736,6 @@ function render(state) {
                 }
             });
         }
-        return;
     }
 
     if (route === "payroll") {
@@ -2485,7 +2753,6 @@ function render(state) {
                 window.location.hash = `#/payroll${query ? `?${query}` : ""}`;
             });
         }
-        return;
     }
 
     if (route === "settings") {
@@ -2547,6 +2814,8 @@ function render(state) {
     const userEmail = user.email || "";
     const userRolesLabel = (user.roles || [user.role]).filter(Boolean).join(", ");
 
+    const shouldRefocusSearch = route === "calendar"
+        && (calendarSearchShouldFocus || document.activeElement?.id === "calendar-search");
     root.innerHTML = layoutTemplate({
         title: titleMap[route] || "Admin",
         subtitle,
@@ -2562,6 +2831,17 @@ function render(state) {
     setFavicon(theme.faviconUrl || theme.logoUrl || "");
 
     applySidebarState(getSidebarState());
+    if (route !== "calendar") {
+        calendarSearchShouldFocus = false;
+    }
+    if (shouldRefocusSearch) {
+        const searchInput = document.getElementById("calendar-search");
+        if (searchInput) {
+            searchInput.focus();
+            searchInput.selectionStart = searchInput.value.length;
+            searchInput.selectionEnd = searchInput.value.length;
+        }
+    }
 
     const navigateToRoute = (routeName) => {
         const targetHash = `#/${routeName}`;
@@ -2650,6 +2930,7 @@ function bindRouteActions(route, data, state) {
         const navButtons = document.querySelectorAll("button[data-nav]");
         const dateInput = document.getElementById("calendar-date");
         const searchInput = document.getElementById("calendar-search");
+        const todayBtn = document.getElementById("calendar-today");
 
         viewButtons.forEach(btn => {
             btn.addEventListener("click", () => {
@@ -2675,8 +2956,24 @@ function bindRouteActions(route, data, state) {
             });
         }
 
+        if (todayBtn) {
+            todayBtn.addEventListener("click", () => {
+                const today = toDateInputValue(new Date());
+                actor.send({ type: "SET_CALENDAR", view: currentView, date: today });
+            });
+        }
+
         if (searchInput) {
+            const markFocus = () => {
+                calendarSearchShouldFocus = true;
+            };
+            searchInput.addEventListener("focus", markFocus);
+            searchInput.addEventListener("click", markFocus);
+            searchInput.addEventListener("blur", () => {
+                calendarSearchShouldFocus = false;
+            });
             searchInput.addEventListener("input", () => {
+                calendarSearchShouldFocus = true;
                 actor.send({ type: "SET_CALENDAR_SEARCH", search: searchInput.value || "" });
             });
         }
@@ -2712,11 +3009,23 @@ function bindRouteActions(route, data, state) {
         const itemMap = new Map((data.items || []).map(item => [String(item.id), item]));
         document.querySelectorAll(".calendar-event[data-event], .calendar-list [data-event]").forEach(card => {
             card.addEventListener("click", (event) => {
+                if (event.target.closest(".event-actions")) return;
                 event.stopPropagation();
                 const id = card.getAttribute("data-event");
                 const item = itemMap.get(String(id));
-                if (!item || item.isHoliday) return;
+                if (!item || item.isHoliday || item.isBirthday) return;
                 openCalendarEventModal(item, data);
+            });
+        });
+        document.querySelectorAll(".event-actions").forEach(button => {
+            button.addEventListener("click", (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                const card = button.closest(".calendar-event");
+                const id = card?.getAttribute("data-event");
+                const item = itemMap.get(String(id));
+                if (!item || item.isHoliday || item.isBirthday) return;
+                openEventActionsMenu(button, item, data);
             });
         });
         bindCalendarInteractions(data, itemMap);
@@ -3234,12 +3543,17 @@ function readFormValues(fields) {
     return values;
 }
 
-function serializeTags(value) {
-    return (value || "")
+function parseTagList(value) {
+    return String(value || "")
         .split(",")
         .map((tag) => tag.trim())
-        .filter(Boolean)
-        .join(", ");
+        .filter(Boolean);
+}
+
+function serializeTags(value) {
+    const tags = Array.isArray(value) ? value : parseTagList(value);
+    const unique = Array.from(new Set(tags.map(tag => tag.trim()).filter(Boolean)));
+    return unique.join(", ");
 }
 
 function formatTags(tagsJson) {
@@ -3253,6 +3567,80 @@ function formatTags(tagsJson) {
         return tagsJson;
     }
     return tagsJson;
+}
+
+function setupTagInput(root) {
+    const wrapper = root?.querySelector("[data-tag-input]");
+    if (!wrapper) return;
+    const chips = wrapper.querySelector(".tag-chips");
+    const input = wrapper.querySelector("input[name=\"tagsInput\"]");
+    const hidden = root.querySelector("input[name=\"tags\"]");
+    if (!chips || !input || !hidden) return;
+
+    let tags = parseTagList(hidden.value);
+    const render = () => {
+        chips.innerHTML = "";
+        tags.forEach(tag => {
+            const chip = document.createElement("span");
+            chip.className = "tag-chip";
+            chip.textContent = tag;
+            const remove = document.createElement("button");
+            remove.type = "button";
+            remove.className = "tag-remove";
+            remove.setAttribute("aria-label", t("customer.tagRemove", "Remove tag"));
+            remove.innerHTML = "&times;";
+            remove.addEventListener("click", () => {
+                tags = tags.filter(existing => existing !== tag);
+                hidden.value = serializeTags(tags);
+                render();
+            });
+            chip.appendChild(remove);
+            chips.appendChild(chip);
+        });
+    };
+
+    const addTag = (value) => {
+        const cleaned = String(value || "").trim().replace(/,$/, "");
+        if (!cleaned) return;
+        if (!tags.includes(cleaned)) {
+            tags.push(cleaned);
+            hidden.value = serializeTags(tags);
+            render();
+        }
+    };
+
+    input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === ",") {
+            event.preventDefault();
+            addTag(input.value);
+            input.value = "";
+        }
+        if (event.key === "Backspace" && !input.value && tags.length) {
+            tags.pop();
+            hidden.value = serializeTags(tags);
+            render();
+        }
+    });
+    input.addEventListener("blur", () => {
+        addTag(input.value);
+        input.value = "";
+    });
+    input.addEventListener("change", () => {
+        addTag(input.value);
+        input.value = "";
+    });
+
+    hidden.value = serializeTags(tags);
+    render();
+}
+
+function collectTagSuggestions(customers) {
+    const set = new Set();
+    (customers || []).forEach(customer => {
+        const value = customer.tags || formatTags(customer.tagsJson);
+        parseTagList(value).forEach(tag => set.add(tag));
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
 }
 
 function parseGuidListJson(value) {
@@ -3437,6 +3825,9 @@ function getInitials(value) {
 
 const sidebarStorageKey = "letmein.sidebar.collapsed";
 let activeModalKeyHandler = null;
+let activeEventMenu = null;
+let activeEventMenuCleanup = null;
+let calendarSearchShouldFocus = false;
 
 function getSidebarState() {
     return localStorage.getItem(sidebarStorageKey) === "1";
@@ -3452,9 +3843,14 @@ function applySidebarState(collapsed) {
     shell.classList.toggle("collapsed", collapsed);
     const toggle = document.getElementById("toggle-sidebar");
     if (toggle) {
-        toggle.textContent = collapsed
+        const label = collapsed
             ? t("nav.expand", "Expand")
             : t("nav.menu", "Menu");
+        toggle.setAttribute("aria-label", label);
+        const srLabel = toggle.querySelector(".sr-only");
+        if (srLabel) {
+            srLabel.textContent = label;
+        }
     }
 }
 
@@ -3523,6 +3919,51 @@ function showToast(message, type = "info") {
     });
 }
 
+function escapeHtml(value) {
+    return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+function renderMarkdown(value) {
+    if (!value) return "";
+    const escaped = escapeHtml(value);
+    const withLinks = escaped.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
+    const withBold = withLinks.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    const withItalic = withBold.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+    return withItalic.replace(/\n/g, "<br>");
+}
+
+function bindMarkdownPreview(root) {
+    if (!root) return;
+    const toggles = Array.from(root.querySelectorAll("[data-markdown-toggle]"));
+    if (toggles.length === 0) return;
+    toggles.forEach(toggle => {
+        const key = toggle.getAttribute("data-markdown-toggle");
+        if (!key) return;
+        const source = root.querySelector(`[data-markdown-source="${key}"]`);
+        const preview = root.querySelector(`[data-markdown-preview="${key}"]`);
+        if (!source || !preview) return;
+        const updatePreview = () => {
+            preview.innerHTML = renderMarkdown(source.value || "");
+        };
+        toggle.addEventListener("click", () => {
+            preview.classList.toggle("hidden");
+            if (!preview.classList.contains("hidden")) {
+                updatePreview();
+            }
+        });
+        source.addEventListener("input", () => {
+            if (!preview.classList.contains("hidden")) {
+                updatePreview();
+            }
+        });
+    });
+}
+
 function clearModalEscape() {
     if (!activeModalKeyHandler) return;
     document.removeEventListener("keydown", activeModalKeyHandler);
@@ -3544,6 +3985,16 @@ function bindModalEscape(closeModal) {
             activeModalKeyHandler = null;
         }
     };
+}
+
+function bindModalBackdrop(overlay) {
+    if (!overlay) return;
+    overlay.addEventListener("click", (event) => {
+        if (event.target === overlay) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    });
 }
 
 function setFieldValue(name, value) {
@@ -3569,7 +4020,6 @@ function fillCustomerForm(customer) {
     const tags = customer.tags ?? formatTags(customer.tagsJson);
     setFieldValue("tags", tags);
     setFieldValue("isArchived", customer.isArchived ? "true" : "false");
-    setFieldValue("password", "");
     const saveBtn = document.getElementById("save-customer");
     if (saveBtn) {
         saveBtn.textContent = t("customer.update", "Update customer");
@@ -3592,7 +4042,6 @@ function resetCustomerForm() {
     setFieldValue("signedHealthView", "false");
     setFieldValue("tags", "");
     setFieldValue("isArchived", "false");
-    setFieldValue("password", "");
     const saveBtn = document.getElementById("save-customer");
     if (saveBtn) {
         saveBtn.textContent = t("customer.create", "Create customer");
@@ -3604,14 +4053,18 @@ function fillUserForm(userItem) {
     setFieldValue("displayName", userItem.displayName);
     setFieldValue("email", userItem.email);
     setFieldValue("phone", userItem.phone);
+    setFieldValue("city", userItem.city);
     setFieldValue("address", userItem.address);
     setFieldValue("gender", userItem.gender);
     setFieldValue("idNumber", userItem.idNumber);
+    setFieldValue("dateOfBirth", userItem.dateOfBirth);
     setFieldValue("role", userItem.role || "Admin");
     setFieldValue("isActive", userItem.isActive ? "true" : "false");
     setFieldValue("instructorDisplayName", userItem.instructorName || "");
     setFieldValue("instructorBio", userItem.instructorBio || "");
-    setFieldValue("password", "");
+    setFieldValue("instructorRate", Number(userItem.instructorRateCents || 0) / 100);
+    setFieldValue("instructorRateUnit", userItem.instructorRateUnit || "Session");
+    setFieldValue("instructorRateCurrency", userItem.instructorRateCurrency || "ILS");
     const saveBtn = document.getElementById("save-user");
     if (saveBtn) {
         saveBtn.textContent = t("user.update", "Update user");
@@ -3623,14 +4076,18 @@ function resetUserForm() {
     setFieldValue("displayName", "");
     setFieldValue("email", "");
     setFieldValue("phone", "");
+    setFieldValue("city", "");
     setFieldValue("address", "");
     setFieldValue("gender", "");
     setFieldValue("idNumber", "");
+    setFieldValue("dateOfBirth", "");
     setFieldValue("role", "Admin");
     setFieldValue("isActive", "true");
     setFieldValue("instructorDisplayName", "");
     setFieldValue("instructorBio", "");
-    setFieldValue("password", "");
+    setFieldValue("instructorRate", "0");
+    setFieldValue("instructorRateUnit", "Session");
+    setFieldValue("instructorRateCurrency", "ILS");
     const saveBtn = document.getElementById("save-user");
     if (saveBtn) {
         saveBtn.textContent = t("user.create", "Create user");
@@ -3654,6 +4111,7 @@ async function openCalendarEventModal(item, data) {
     const end = item.endUtc ? new Date(item.endUtc) : null;
     const timeRange = end ? `${formatTimeOnly(start, timeZone)} - ${formatTimeOnly(end, timeZone)}` : formatTimeOnly(start, timeZone);
     const startLabel = formatFullDate(start, timeZone);
+    const sessionDateKey = getDateKeyInTimeZone(start, timeZone);
 
     let roster = [];
     try {
@@ -3663,6 +4121,15 @@ async function openCalendarEventModal(item, data) {
     }
 
     const messageSubject = `${t("session.emailSubject", "Class registration:")} ${item.seriesTitle || t("session.sessionFallback", "Session")}`;
+    const isBirthdayForKey = (dateOfBirth, dateKey) => {
+        if (!dateOfBirth || !dateKey) return false;
+        const parts = String(dateOfBirth).split("-");
+        if (parts.length < 3) return false;
+        const month = parts[1];
+        const day = parts[2];
+        if (!month || !day) return false;
+        return `${month}-${day}` === dateKey.slice(5);
+    };
     const normalizeRosterRows = (rows) => rows.map(row => {
         const bookingStatusLabel = normalizeBookingStatus(row.bookingStatus);
         const attendanceLabel = normalizeAttendanceStatus(row.attendanceStatus);
@@ -3680,6 +4147,7 @@ async function openCalendarEventModal(item, data) {
         const isPresent = attendanceRaw === "Present" || attendanceRaw === 0;
         const isNoShow = attendanceRaw === "NoShow" || attendanceRaw === 1;
         const isRegistered = attendanceRaw === "Registered" || attendanceRaw === null || attendanceRaw === undefined;
+        const isBirthday = isBirthdayForKey(row.dateOfBirth, sessionDateKey);
         return {
             ...row,
             bookingStatusLabel,
@@ -3689,6 +4157,7 @@ async function openCalendarEventModal(item, data) {
             isRegistered,
             isPresent,
             isNoShow,
+            isBirthday,
             hasEmail: Boolean(email),
             hasPhone: Boolean(phone),
             hasWhatsapp: Boolean(phoneDigits),
@@ -3720,6 +4189,10 @@ async function openCalendarEventModal(item, data) {
             selected: instructor.id === item.instructorId
         }))
     ];
+    const instructorDetails = (data.instructors || []).find(instructor => String(instructor.id) === String(item.instructorId));
+    const descriptionValue = (item.seriesDescription || item.description || "").trim();
+    const hasDescription = descriptionValue.length > 0;
+    const descriptionIsUrl = /^https?:\/\//i.test(descriptionValue);
 
     const statuses = [
         {
@@ -3742,7 +4215,7 @@ async function openCalendarEventModal(item, data) {
         const bookedLabel = t("capacity.registered", "Registered");
         const remoteLabel = t("capacity.registeredRemote", "Registered remotely");
         if (remoteCapacityValue > 0) {
-            return `${bookedLabel}: ${bookedCount} / ${capacityValue} • ${remoteLabel}: ${remoteCount} / ${remoteCapacityValue}`;
+            return `${bookedLabel}: ${bookedCount} / ${capacityValue} | ${remoteLabel}: ${remoteCount} / ${remoteCapacityValue}`;
         }
         return `${bookedLabel}: ${bookedCount} / ${capacityValue}`;
     };
@@ -3754,6 +4227,17 @@ async function openCalendarEventModal(item, data) {
         ...customer,
         email: customer.email || "",
         lookupLabel: `${customer.fullName}${customer.email ? ` (${customer.email})` : ""}`
+    }));
+    const seriesPlanIds = Array.isArray(item.seriesAllowedPlanIds) ? item.seriesAllowedPlanIds.map(id => String(id)) : [];
+    const instancePlanIds = Array.isArray(item.instanceAllowedPlanIds) ? item.instanceAllowedPlanIds.map(id => String(id)) : [];
+    const hasPlanOverride = item.hasPlanOverride === true;
+    const effectivePlanIds = hasPlanOverride ? instancePlanIds : seriesPlanIds;
+    const allowedPlanSet = new Set(effectivePlanIds);
+    const planOptions = (data.plans || []).map(plan => ({
+        id: plan.id,
+        name: plan.name,
+        price: formatMoney(plan.priceCents, plan.currency),
+        selected: allowedPlanSet.has(String(plan.id))
     }));
 
     const modalMarkup = calendarModalTemplate({
@@ -3767,10 +4251,15 @@ async function openCalendarEventModal(item, data) {
         shareUrl,
         rosterHtml,
         customers,
+        plans: planOptions,
         capacitySummary,
+        price: toCurrencyUnits(item.priceCents),
         remoteCapacity: remoteCapacityValue,
         remoteInviteUrl: item.remoteInviteUrl || "",
-        hasRemoteCapacity: remoteCapacityValue > 0
+        hasRemoteCapacity: remoteCapacityValue > 0,
+        hasInstructorDetails: Boolean(instructorDetails),
+        hasDescription,
+        seriesDescription: descriptionValue
     });
 
     const wrapper = document.createElement("div");
@@ -3786,15 +4275,28 @@ async function openCalendarEventModal(item, data) {
         overlay.remove();
     };
     cleanupEscape = bindModalEscape(closeModal);
-    overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-            closeModal();
-        }
-    });
+    bindModalBackdrop(overlay);
+    bindMarkdownPreview(overlay);
 
     const closeBtn = overlay.querySelector("#close-modal");
     if (closeBtn) {
         closeBtn.addEventListener("click", closeModal);
+    }
+
+    const instructorBtn = overlay.querySelector("#open-instructor");
+    if (instructorBtn && instructorDetails) {
+        instructorBtn.addEventListener("click", () => openInstructorModal(instructorDetails));
+    }
+
+    const descriptionBtn = overlay.querySelector("#open-description");
+    if (descriptionBtn && hasDescription) {
+        descriptionBtn.addEventListener("click", () => {
+            if (descriptionIsUrl) {
+                window.open(descriptionValue, "_blank", "noopener");
+                return;
+            }
+            openDescriptionModal(item.seriesTitle || t("session.descriptionTitle", "Description"), descriptionValue);
+        });
     }
 
     const editSeriesBtn = overlay.querySelector("#edit-series");
@@ -3830,54 +4332,8 @@ async function openCalendarEventModal(item, data) {
         duplicateBtn.addEventListener("click", async () => {
             duplicateBtn.disabled = true;
             try {
-                let series = null;
-                if (item.eventSeriesId) {
-                    try {
-                        series = await apiGet(`/api/admin/event-series/${item.eventSeriesId}`);
-                    } catch {
-                        series = null;
-                    }
-                }
-
-                const start = new Date(item.startUtc);
-                const end = item.endUtc ? new Date(item.endUtc) : null;
-                const durationMinutes = end
-                    ? Math.max(1, Math.round((end.getTime() - start.getTime()) / 60000))
-                    : (series?.durationMinutes || 60);
-                const date = getDateKeyInTimeZone(start, timeZone);
-                const startTimeLocal = formatTimeInput(start, timeZone);
-                const payload = {
-                    title: item.seriesTitle || series?.title || "Session",
-                    description: series?.description || "",
-                    date,
-                    startTimeLocal: `${startTimeLocal}:00`,
-                    durationMinutes,
-                    instructorId: item.instructorId || null,
-                    roomId: item.roomId || null,
-                    capacity: Number(item.capacity || series?.defaultCapacity || 0),
-                    remoteCapacity: Number(item.remoteCapacity || series?.remoteCapacity || 0),
-                    priceCents: Number(item.priceCents || series?.priceCents || 0),
-                    currency: item.currency || series?.currency || "ILS",
-                    remoteInviteUrl: item.remoteInviteUrl || series?.remoteInviteUrl || "",
-                    cancellationWindowHours: Number(series?.cancellationWindowHours || 0),
-                    notes: item.notes || "",
-                    status: item.status || "Scheduled"
-                };
-
-                const created = await apiPost("/api/admin/event-instances", payload);
-                const newItem = {
-                    ...item,
-                    id: created.id || item.id,
-                    eventSeriesId: created.eventSeriesId || item.eventSeriesId,
-                    startUtc: created.startUtc || item.startUtc,
-                    endUtc: created.endUtc || item.endUtc,
-                    seriesTitle: series?.title || item.seriesTitle || payload.title,
-                    notes: payload.notes,
-                    remoteCapacity: payload.remoteCapacity,
-                    remoteInviteUrl: payload.remoteInviteUrl
-                };
                 closeModal();
-                await openCalendarEventModal(newItem, data);
+                await duplicateSessionFromItem(item, data);
             } catch (error) {
                 showToast(error.message || t("session.duplicateError", "Unable to duplicate session."), "error");
             } finally {
@@ -3890,24 +4346,109 @@ async function openCalendarEventModal(item, data) {
     if (saveBtn) {
         saveBtn.addEventListener("click", async () => {
             const formValues = {};
-            ["status", "roomId", "instructorId", "capacity", "remoteCapacity", "priceCents", "remoteInviteUrl"].forEach(field => {
+            ["title", "description", "status", "roomId", "instructorId", "capacity", "remoteCapacity", "price", "remoteInviteUrl"].forEach(field => {
                 const element = overlay.querySelector(`[name="${field}"]`);
                 formValues[field] = element ? element.value : "";
             });
 
-            await apiPut(`/api/admin/event-instances/${item.id}`, {
-                status: formValues.status || statusValue,
-                roomId: formValues.roomId || null,
-                instructorId: formValues.instructorId || null,
-                capacity: Number(formValues.capacity || item.capacity),
-                remoteCapacity: Number(formValues.remoteCapacity || item.remoteCapacity || 0),
-                priceCents: Number(formValues.priceCents || item.priceCents),
-                currency: item.currency || "ILS",
-                remoteInviteUrl: formValues.remoteInviteUrl || ""
-            });
+            const normalizedRoomId = formValues.roomId || null;
+            const normalizedInstructorId = formValues.instructorId || null;
+            const capacityValue = Number(formValues.capacity || item.capacity);
+            const remoteCapacityValue = Number(formValues.remoteCapacity || item.remoteCapacity || 0);
+            const priceValue = Number(formValues.price || toCurrencyUnits(item.priceCents));
+            const remoteInviteUrlValue = formValues.remoteInviteUrl || "";
+            const titleValue = formValues.title?.trim() || "";
+            const descriptionValue = formValues.description?.trim() || "";
+            const selectedPlanIds = Array.from(overlay.querySelectorAll("input[name=\"instancePlanIds\"]:checked"))
+                .map(input => input.value)
+                .filter(Boolean);
+            const selectedPlanSignature = selectedPlanIds.map(id => String(id)).sort().join(",");
+            const seriesSignature = seriesPlanIds.map(id => String(id)).sort().join(",");
+            const shouldOverridePlans = hasPlanOverride || selectedPlanSignature !== seriesSignature;
+            const allowedPlanIdsJson = shouldOverridePlans ? JSON.stringify(selectedPlanIds) : null;
 
-            closeModal();
-            actor.send({ type: "REFRESH" });
+            const hasSeriesChanges =
+                titleValue !== (item.seriesTitle || "") ||
+                descriptionValue !== (item.seriesDescription || "") ||
+                String(normalizedRoomId || "") !== String(item.roomId || "") ||
+                String(normalizedInstructorId || "") !== String(item.instructorId || "") ||
+                capacityValue !== Number(item.capacity || 0) ||
+                remoteCapacityValue !== Number(item.remoteCapacity || 0) ||
+                priceValue !== toCurrencyUnits(Number(item.priceCents || 0)) ||
+                remoteInviteUrlValue !== (item.remoteInviteUrl || "") ||
+                selectedPlanSignature !== seriesSignature;
+
+            const saveInstance = async (applyToSeries) => {
+                const payload = {};
+                const statusNext = formValues.status || statusValue;
+                const roomChanged = String(normalizedRoomId || "") !== String(item.roomId || "");
+                const instructorChanged = String(normalizedInstructorId || "") !== String(item.instructorId || "");
+                if (titleValue !== (item.seriesTitle || "")) payload.title = titleValue;
+                if (descriptionValue !== (item.seriesDescription || "")) payload.description = descriptionValue;
+                if (statusNext !== statusValue) payload.status = statusNext;
+                if (roomChanged) payload.roomId = normalizedRoomId || "00000000-0000-0000-0000-000000000000";
+                if (instructorChanged) payload.instructorId = normalizedInstructorId || "00000000-0000-0000-0000-000000000000";
+                if (capacityValue !== Number(item.capacity || 0)) payload.capacity = capacityValue;
+                if (remoteCapacityValue !== Number(item.remoteCapacity || 0)) payload.remoteCapacity = remoteCapacityValue;
+                if (priceValue !== toCurrencyUnits(Number(item.priceCents || 0))) {
+                    payload.priceCents = toCents(priceValue);
+                    payload.currency = item.currency || "ILS";
+                }
+                if (remoteInviteUrlValue !== (item.remoteInviteUrl || "")) payload.remoteInviteUrl = remoteInviteUrlValue;
+                if (allowedPlanIdsJson !== null) payload.allowedPlanIdsJson = allowedPlanIdsJson;
+
+                await apiPut(`/api/admin/event-instances/${item.id}`, payload);
+
+                closeModal();
+                actor.send({ type: "REFRESH" });
+
+                if (applyToSeries) {
+                    try {
+                        const [seriesList, plans] = await Promise.all([
+                            apiGet("/api/admin/event-series"),
+                            apiGet("/api/admin/plans")
+                        ]);
+                        const series = (seriesList || []).find(entry => String(entry.id) === String(item.eventSeriesId));
+                        if (!series) {
+                            showToast(t("series.notFound", "Series not found."), "error");
+                            return;
+                        }
+                        const updatedSeries = {
+                            ...series,
+                            title: titleValue,
+                            description: descriptionValue,
+                            instructorId: normalizedInstructorId,
+                            roomId: normalizedRoomId,
+                            defaultCapacity: capacityValue,
+                            remoteCapacity: remoteCapacityValue,
+                            priceCents: toCents(priceValue),
+                            remoteInviteUrl: remoteInviteUrlValue,
+                            allowedPlanIdsJson
+                        };
+                        openSeriesModal(updatedSeries, {
+                            rooms: data.rooms || [],
+                            instructors: data.instructors || [],
+                            plans: plans || []
+                        });
+                    } catch (error) {
+                        showToast(error.message || t("series.loadError", "Unable to load series details."), "error");
+                    }
+                }
+            };
+
+            if (hasSeriesChanges) {
+                openConfirmModal({
+                    title: t("series.applyChangesTitle", "Apply changes to series?"),
+                    message: t("series.applyChangesMessage", "Apply these updates to the whole series or only this session."),
+                    confirmLabel: t("series.applyYes", "Yes, update series"),
+                    cancelLabel: t("series.applyNo", "No, only this session"),
+                    onConfirm: () => saveInstance(true),
+                    onCancel: () => saveInstance(false)
+                });
+                return;
+            }
+
+            await saveInstance(false);
         });
     }
 
@@ -4049,106 +4590,270 @@ async function openCalendarEventModal(item, data) {
     }
 
     const registerBtn = overlay.querySelector("#register-customer");
+    const addCustomerBtn = overlay.querySelector("#add-customer-modal");
+    const upsertCustomerOption = (customerEntry) => {
+        if (!customerEntry?.id) return;
+        if (customerList.some(entry => entry.id === customerEntry.id)) return;
+        const created = {
+            id: customerEntry.id,
+            fullName: customerEntry.fullName || "",
+            email: customerEntry.email || "",
+            lookupLabel: `${customerEntry.fullName}${customerEntry.email ? ` (${customerEntry.email})` : ""}`
+        };
+        customerList.push(created);
+        const list = overlay.querySelector("#customer-list");
+        if (list) {
+            const option = document.createElement("option");
+            option.value = created.lookupLabel;
+            option.setAttribute("data-customer-id", created.id);
+            list.appendChild(option);
+        }
+    };
+    const registerCustomer = async (customerId, isRemote) => {
+        if (!customerId) {
+            showToast(t("session.registerValidation", "Select a customer to register."), "error");
+            return;
+        }
+        const currentUser = actor.getSnapshot()?.context?.user || {};
+        const roleList = currentUser.roles || [currentUser.role];
+        const isAdmin = roleList.includes("Admin");
+        const sendRegistration = async (overrideHealthWaiver) =>
+            apiPost(`/api/admin/event-instances/${item.id}/registrations`, {
+                customerId,
+                fullName: "",
+                email: "",
+                phone: "",
+                membershipId: null,
+                isRemote,
+                overrideHealthWaiver: Boolean(overrideHealthWaiver)
+            });
+
+        try {
+            const result = await sendRegistration(false);
+            upsertCustomerOption(result?.customer);
+            if (customerLookupInput) customerLookupInput.value = "";
+            if (customerIdInput) customerIdInput.value = "";
+            const attendanceInput = overlay.querySelector("[name=\"attendanceType\"]");
+            if (attendanceInput) attendanceInput.value = "in-person";
+            showToast(t("session.registered", "Customer registered."), "success");
+            await refreshRoster();
+        } catch (error) {
+            const message = error.message || "";
+            if (message === "Health declaration required" && isAdmin) {
+                const confirmOverride = await confirmWithModal({
+                    title: t("session.healthOverrideTitle", "Health waiver required"),
+                    message: t("session.healthOverrideConfirm", "Health waiver not signed. Register anyway?"),
+                    confirmLabel: t("common.yes", "Yes"),
+                    cancelLabel: t("common.no", "No")
+                });
+                if (confirmOverride) {
+                    try {
+                        const result = await sendRegistration(true);
+                        upsertCustomerOption(result?.customer);
+                        showToast(t("session.registered", "Customer registered."), "success");
+                        await refreshRoster();
+                        return;
+                    } catch (overrideError) {
+                        showToast(overrideError.message || t("session.registerError", "Unable to register customer."), "error");
+                        return;
+                    }
+                }
+            }
+            showToast(message || t("session.registerError", "Unable to register customer."), "error");
+        }
+    };
+
     if (registerBtn) {
         registerBtn.addEventListener("click", async () => {
-            const getValue = (name) => overlay.querySelector(`[name="${name}"]`)?.value || "";
-            const fullName = getValue("fullName").trim();
-            const email = getValue("email").trim();
-            const phone = getValue("phone").trim();
-            const attendanceType = getValue("attendanceType");
+            const attendanceType = overlay.querySelector("[name=\"attendanceType\"]")?.value || "in-person";
             const isRemote = attendanceType === "remote";
             const customerId = customerIdInput?.value || resolveCustomerId(customerLookupInput?.value || "");
-
-            if (!customerId && (!fullName || !email)) {
-                showToast(t("session.registerValidation", "Select a customer or enter name and email."), "error");
-                return;
-            }
-
-            const currentUser = actor.getSnapshot()?.context?.user || {};
-            const roleList = currentUser.roles || [currentUser.role];
-            const isAdmin = roleList.includes("Admin");
-            const sendRegistration = async (overrideHealthWaiver) =>
-                apiPost(`/api/admin/event-instances/${item.id}/registrations`, {
-                    customerId: customerId || null,
-                    fullName,
-                    email,
-                    phone,
-                    membershipId: null,
-                    isRemote,
-                    overrideHealthWaiver: Boolean(overrideHealthWaiver)
-                });
-
             registerBtn.disabled = true;
             try {
-                const result = await sendRegistration(false);
-
-                if (result?.customer?.id && !customerList.some(entry => entry.id === result.customer.id)) {
-                    const created = {
-                        id: result.customer.id,
-                        fullName: result.customer.fullName,
-                        email: result.customer.email || "",
-                        lookupLabel: `${result.customer.fullName}${result.customer.email ? ` (${result.customer.email})` : ""}`
-                    };
-                    customerList.push(created);
-                    const list = overlay.querySelector("#customer-list");
-                    if (list) {
-                        const option = document.createElement("option");
-                        option.value = created.lookupLabel;
-                        option.setAttribute("data-customer-id", created.id);
-                        list.appendChild(option);
-                    }
-                }
-
-                if (customerLookupInput) customerLookupInput.value = "";
-                if (customerIdInput) customerIdInput.value = "";
-                const fullNameInput = overlay.querySelector("[name=\"fullName\"]");
-                const emailInput = overlay.querySelector("[name=\"email\"]");
-                const phoneInput = overlay.querySelector("[name=\"phone\"]");
-                const attendanceInput = overlay.querySelector("[name=\"attendanceType\"]");
-                if (fullNameInput) fullNameInput.value = "";
-                if (emailInput) emailInput.value = "";
-                if (phoneInput) phoneInput.value = "";
-                if (attendanceInput) attendanceInput.value = "in-person";
-                showToast(t("session.registered", "Customer registered."), "success");
-                await refreshRoster();
-            } catch (error) {
-                const message = error.message || "";
-                if (message === "Health declaration required" && isAdmin) {
-                    const confirmOverride = window.confirm(t("session.healthOverrideConfirm", "Health waiver not signed. Register anyway?"));
-                    if (confirmOverride) {
-                        try {
-                            const result = await sendRegistration(true);
-                            if (result?.customer?.id && !customerList.some(entry => entry.id === result.customer.id)) {
-                                const created = {
-                                    id: result.customer.id,
-                                    fullName: result.customer.fullName,
-                                    email: result.customer.email || "",
-                                    lookupLabel: `${result.customer.fullName}${result.customer.email ? ` (${result.customer.email})` : ""}`
-                                };
-                                customerList.push(created);
-                                const list = overlay.querySelector("#customer-list");
-                                if (list) {
-                                    const option = document.createElement("option");
-                                    option.value = created.lookupLabel;
-                                    option.setAttribute("data-customer-id", created.id);
-                                    list.appendChild(option);
-                                }
-                            }
-                            showToast(t("session.registered", "Customer registered."), "success");
-                            await refreshRoster();
-                            return;
-                        } catch (overrideError) {
-                            showToast(overrideError.message || t("session.registerError", "Unable to register customer."), "error");
-                            return;
-                        }
-                    }
-                }
-                showToast(message || t("session.registerError", "Unable to register customer."), "error");
+                await registerCustomer(customerId, isRemote);
             } finally {
                 registerBtn.disabled = false;
             }
         });
     }
+
+    if (addCustomerBtn) {
+        addCustomerBtn.addEventListener("click", () => {
+            const attendanceType = overlay.querySelector("[name=\"attendanceType\"]")?.value || "in-person";
+            const isRemote = attendanceType === "remote";
+            openCustomerModal(null, data, {
+                onSaved: async (savedCustomer) => {
+                    upsertCustomerOption(savedCustomer);
+                    await registerCustomer(savedCustomer?.id || "", isRemote);
+                }
+            });
+        });
+    }
+}
+
+async function duplicateSessionFromItem(item, data) {
+    const timeZone = getLocalTimeZone();
+    let series = null;
+    if (item.eventSeriesId) {
+        try {
+            series = await apiGet(`/api/admin/event-series/${item.eventSeriesId}`);
+        } catch {
+            series = null;
+        }
+    }
+
+    const start = new Date(item.startUtc);
+    const end = item.endUtc ? new Date(item.endUtc) : null;
+    const durationMinutes = end
+        ? Math.max(1, Math.round((end.getTime() - start.getTime()) / 60000))
+        : (series?.durationMinutes || 60);
+    const date = getDateKeyInTimeZone(start, timeZone);
+    const startTimeLocal = formatTimeInput(start, timeZone);
+    const prefill = {
+        title: item.seriesTitle || series?.title || "Session",
+        description: item.seriesDescription || series?.description || "",
+        instructorId: item.instructorId || null,
+        roomId: item.roomId || null,
+        startTimeLocal,
+        durationMinutes,
+        capacity: Number(item.capacity || series?.defaultCapacity || 0),
+        remoteCapacity: Number(item.remoteCapacity || series?.remoteCapacity || 0),
+        price: toCurrencyUnits(item.priceCents || series?.priceCents || 0),
+        currency: item.currency || series?.currency || "ILS",
+        remoteInviteUrl: item.remoteInviteUrl || series?.remoteInviteUrl || "",
+        cancellationWindowHours: Number(item.cancellationWindowHours ?? series?.cancellationWindowHours || 0),
+        allowedPlanIds: Array.isArray(item.allowedPlanIds) ? item.allowedPlanIds : parseGuidListJson(series?.allowedPlanIdsJson)
+    };
+    openSessionModal(data, { date, prefill, type: "one-time" });
+}
+
+function openInstructorModal(instructor) {
+    if (!instructor) return;
+    const existing = document.getElementById("instructor-modal");
+    if (existing) {
+        clearModalEscape();
+        existing.remove();
+    }
+
+    const email = (instructor.email || "").trim();
+    const phone = (instructor.phone || "").trim();
+    const phoneDigits = phone.replace(/[^\d]/g, "");
+    const emailLink = email ? `mailto:${email}` : "";
+    const phoneLink = phone ? `tel:${phone}` : "";
+    const smsLink = phone ? `sms:${phone}` : "";
+    const whatsappLink = phoneDigits ? `https://wa.me/${phoneDigits}` : "";
+    const modalMarkup = instructorModalTemplate({
+        displayName: instructor.displayName || t("instructor.unknown", "Instructor"),
+        bio: instructor.bio || "",
+        avatarUrl: instructor.avatarUrl || "",
+        initials: getInitials(instructor.displayName || instructor.email),
+        hasEmail: Boolean(email),
+        hasPhone: Boolean(phone),
+        hasWhatsapp: Boolean(phoneDigits),
+        emailLink,
+        phoneLink,
+        smsLink,
+        whatsappLink
+    });
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = modalMarkup;
+    const overlay = wrapper.firstElementChild;
+    if (!overlay) return;
+    document.body.appendChild(overlay);
+    let cleanupEscape = () => {};
+    const closeModal = () => {
+        cleanupEscape();
+        overlay.remove();
+    };
+    cleanupEscape = bindModalEscape(closeModal);
+    bindModalBackdrop(overlay);
+    bindMarkdownPreview(overlay);
+    const closeBtn = overlay.querySelector("#close-instructor");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", closeModal);
+    }
+}
+
+function openDescriptionModal(title, description) {
+    const existing = document.getElementById("description-modal");
+    if (existing) {
+        clearModalEscape();
+        existing.remove();
+    }
+    const modalMarkup = descriptionModalTemplate({
+        title: title || t("session.descriptionTitle", "Description"),
+        html: renderMarkdown(description || "")
+    });
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = modalMarkup;
+    const overlay = wrapper.firstElementChild;
+    if (!overlay) return;
+    document.body.appendChild(overlay);
+    let cleanupEscape = () => {};
+    const closeModal = () => {
+        cleanupEscape();
+        overlay.remove();
+    };
+    cleanupEscape = bindModalEscape(closeModal);
+    bindModalBackdrop(overlay);
+    const closeBtn = overlay.querySelector("#close-description");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", closeModal);
+    }
+}
+
+function openConfirmModal({ title, message, confirmLabel, cancelLabel, onConfirm, onCancel }) {
+    const existing = document.getElementById("confirm-modal");
+    if (existing) {
+        clearModalEscape();
+        existing.remove();
+    }
+    const modalMarkup = confirmModalTemplate({
+        title: title || t("common.confirm", "Confirm"),
+        message: message || "",
+        confirmLabel: confirmLabel || t("common.yes", "Yes"),
+        cancelLabel: cancelLabel || t("common.no", "No")
+    });
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = modalMarkup;
+    const overlay = wrapper.firstElementChild;
+    if (!overlay) return;
+    document.body.appendChild(overlay);
+    let cleanupEscape = () => {};
+    const closeModal = (didConfirm) => {
+        cleanupEscape();
+        overlay.remove();
+        if (didConfirm) {
+            onConfirm?.();
+        } else {
+            onCancel?.();
+        }
+    };
+    cleanupEscape = bindModalEscape(() => closeModal(false));
+    bindModalBackdrop(overlay);
+    const closeBtn = overlay.querySelector("#close-confirm");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", () => closeModal(false));
+    }
+    const confirmBtn = overlay.querySelector("#confirm-ok");
+    if (confirmBtn) {
+        confirmBtn.addEventListener("click", () => closeModal(true));
+    }
+    const cancelBtn = overlay.querySelector("#confirm-cancel");
+    if (cancelBtn) {
+        cancelBtn.addEventListener("click", () => closeModal(false));
+        cancelBtn.focus();
+    }
+}
+
+function confirmWithModal(options) {
+    return new Promise(resolve => {
+        openConfirmModal({
+            ...options,
+            onConfirm: () => resolve(true),
+            onCancel: () => resolve(false)
+        });
+    });
 }
 
 function openSessionModal(data, options = {}) {
@@ -4160,10 +4865,19 @@ function openSessionModal(data, options = {}) {
 
     const calendarMeta = data.calendar || {};
     const focusDate = options.date || calendarMeta.focusDate || toDateInputValue(new Date());
+    const prefill = options.prefill || {};
+    const allowedPlanSet = new Set((prefill.allowedPlanIds || []).map(id => String(id)));
+    const plans = (data.plans || []).map(plan => ({
+        id: plan.id,
+        name: plan.name,
+        price: formatMoney(plan.priceCents, plan.currency),
+        selected: allowedPlanSet.has(String(plan.id))
+    }));
     const modalMarkup = sessionModalTemplate({
         focusDate,
         rooms: data.rooms || [],
-        instructors: data.instructors || []
+        instructors: data.instructors || [],
+        plans
     });
 
     const wrapper = document.createElement("div");
@@ -4179,11 +4893,8 @@ function openSessionModal(data, options = {}) {
         overlay.remove();
     };
     cleanupEscape = bindModalEscape(closeModal);
-    overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-            closeModal();
-        }
-    });
+    bindModalBackdrop(overlay);
+    bindMarkdownPreview(overlay);
 
     const closeBtn = overlay.querySelector("#close-session");
     if (closeBtn) {
@@ -4205,6 +4916,28 @@ function openSessionModal(data, options = {}) {
         }
     }
 
+    const setValue = (name, value) => {
+        const input = overlay.querySelector(`[name="${name}"]`);
+        if (input && value !== undefined && value !== null) {
+            input.value = value;
+        }
+    };
+
+    if (prefill && Object.keys(prefill).length > 0) {
+        setValue("title", prefill.title);
+        setValue("description", prefill.description);
+        setValue("instructorId", prefill.instructorId || "");
+        setValue("roomId", prefill.roomId || "");
+        setValue("startTimeLocal", prefill.startTimeLocal);
+        setValue("durationMinutes", prefill.durationMinutes);
+        setValue("capacity", prefill.capacity);
+        setValue("remoteCapacity", prefill.remoteCapacity);
+        setValue("price", prefill.price);
+        setValue("currency", prefill.currency);
+        setValue("remoteInviteUrl", prefill.remoteInviteUrl);
+        setValue("cancellationWindowHours", prefill.cancellationWindowHours);
+    }
+
     const setMode = (mode) => {
         const isRecurring = mode === "recurring";
         if (oneTimeSection) oneTimeSection.classList.toggle("hidden", isRecurring);
@@ -4212,6 +4945,9 @@ function openSessionModal(data, options = {}) {
     };
 
     if (typeSelect) {
+        if (options.type) {
+            typeSelect.value = options.type;
+        }
         typeSelect.addEventListener("change", () => {
             setMode(typeSelect.value);
         });
@@ -4222,6 +4958,9 @@ function openSessionModal(data, options = {}) {
         saveBtn.addEventListener("click", async () => {
             const getValue = (name) => overlay.querySelector(`[name="${name}"]`)?.value || "";
             const type = getValue("sessionType") || "one-time";
+            const selectedPlanIds = Array.from(overlay.querySelectorAll("input[name=\"sessionPlanIds\"]:checked"))
+                .map(input => input.value)
+                .filter(Boolean);
             const payload = {
                 title: getValue("title"),
                 description: getValue("description"),
@@ -4231,10 +4970,11 @@ function openSessionModal(data, options = {}) {
                 durationMinutes: Number(getValue("durationMinutes") || 0),      
                 capacity: Number(getValue("capacity") || 0),
                 remoteCapacity: Number(getValue("remoteCapacity") || 0),
-                priceCents: Number(getValue("priceCents") || 0),
+                priceCents: toCents(Number(getValue("price") || 0)),
                 currency: getValue("currency") || "ILS",
                 remoteInviteUrl: getValue("remoteInviteUrl") || "",
-                cancellationWindowHours: Number(getValue("cancellationWindowHours") || 0)
+                cancellationWindowHours: Number(getValue("cancellationWindowHours") || 0),
+                allowedPlanIdsJson: JSON.stringify(selectedPlanIds)
             };
 
             if (!payload.title || !payload.startTimeLocal || payload.durationMinutes <= 0) {
@@ -4263,6 +5003,7 @@ function openSessionModal(data, options = {}) {
                         priceCents: payload.priceCents,
                         currency: payload.currency,
                         remoteInviteUrl: payload.remoteInviteUrl,
+                        allowedPlanIdsJson: payload.allowedPlanIdsJson,
                         cancellationWindowHours: payload.cancellationWindowHours,
                         isActive: true
                     });
@@ -4286,6 +5027,7 @@ function openSessionModal(data, options = {}) {
                         priceCents: payload.priceCents,
                         currency: payload.currency,
                         remoteInviteUrl: payload.remoteInviteUrl,
+                        allowedPlanIdsJson: payload.allowedPlanIdsJson,
                         cancellationWindowHours: payload.cancellationWindowHours,
                         status: "Scheduled"
                     });
@@ -4299,7 +5041,7 @@ function openSessionModal(data, options = {}) {
         });
     }
 
-    setMode("one-time");
+    setMode(typeSelect?.value || "one-time");
 }
 
 async function openBulkRegistrationModal(selectedCustomers, data) {
@@ -4342,11 +5084,7 @@ async function openBulkRegistrationModal(selectedCustomers, data) {
         overlay.remove();
     };
     cleanupEscape = bindModalEscape(closeModal);
-    overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-            closeModal();
-        }
-    });
+    bindModalBackdrop(overlay);
 
     const closeBtn = overlay.querySelector("#close-bulk-registration");
     if (closeBtn) {
@@ -4401,11 +5139,7 @@ function openProfileModal(user, studio) {
     };
     cleanupEscape = bindModalEscape(closeModal);
 
-    overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-            closeModal();
-        }
-    });
+    bindModalBackdrop(overlay);
 
     const closeBtn = overlay.querySelector("#close-profile");
     if (closeBtn) {
@@ -4473,7 +5207,7 @@ function openProfileModal(user, studio) {
     }
 }
 
-function openCustomerModal(customer, data) {
+function openCustomerModal(customer, data, options = {}) {
     const existing = document.getElementById("customer-modal");
     if (existing) {
         clearModalEscape();
@@ -4499,6 +5233,7 @@ function openCustomerModal(customer, data) {
         { value: "Male", label: t("gender.male", "Male"), selected: genderValue === "Male" },
         { value: "Female", label: t("gender.female", "Female"), selected: genderValue === "Female" }
     ];
+    const tagSuggestions = collectTagSuggestions(data?.customers || []);
     const modalMarkup = customerModalTemplate({
         title: isEdit ? t("customer.editTitle", "Edit customer") : t("customer.addTitle", "Add customer"),
         subtitle: isEdit
@@ -4522,6 +5257,7 @@ function openCustomerModal(customer, data) {
         signedHealthView: customer?.signedHealthView || false,
         statusOptions,
         tags: customer?.tags ?? formatTags(customer?.tagsJson),
+        tagSuggestions,
         isArchived: customer?.isArchived,
         attachmentsHtml
     });
@@ -4539,11 +5275,8 @@ function openCustomerModal(customer, data) {
         overlay.remove();
     };
     cleanupEscape = bindModalEscape(closeModal);
-    overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-            closeModal();
-        }
-    });
+    bindModalBackdrop(overlay);
+    setupTagInput(overlay);
 
     const closeBtn = overlay.querySelector("#close-customer");
     if (closeBtn) {
@@ -4631,6 +5364,39 @@ function openCustomerModal(customer, data) {
         });
     }
 
+    const resetPasswordBtn = overlay.querySelector("#reset-customer-password");
+    if (resetPasswordBtn && isEdit && customer?.id) {
+        resetPasswordBtn.addEventListener("click", async () => {
+            const confirmed = await confirmWithModal({
+                title: t("customer.resetPasswordTitle", "Reset customer password"),
+                message: t("customer.resetPasswordConfirm", "Generate a new temporary password for this customer?"),
+                confirmLabel: t("common.yes", "Yes"),
+                cancelLabel: t("common.no", "No")
+            });
+            if (!confirmed) return;
+            resetPasswordBtn.disabled = true;
+            try {
+                const result = await apiPost(`/api/admin/customers/${customer.id}/reset-password`, {});
+                const tempPassword = result?.tempPassword || "";
+                if (tempPassword) {
+                    try {
+                        await navigator.clipboard.writeText(tempPassword);
+                        showToast(t("customer.resetPasswordCopied", "Temporary password copied."), "success");
+                    } catch {
+                        showToast(`${t("customer.resetPasswordTemp", "Temporary password")}: ${tempPassword}`, "success");
+                    }
+                    openDescriptionModal(t("customer.resetPasswordTitle", "Temporary password"), tempPassword);
+                } else {
+                    showToast(t("customer.resetPasswordSuccess", "Password reset."), "success");
+                }
+            } catch (error) {
+                showToast(error.message || t("customer.resetPasswordError", "Unable to reset password."), "error");
+            } finally {
+                resetPasswordBtn.disabled = false;
+            }
+        });
+    }
+
     const saveBtn = overlay.querySelector("#save-customer");
     if (saveBtn) {
         saveBtn.addEventListener("click", async () => {
@@ -4650,7 +5416,6 @@ function openCustomerModal(customer, data) {
             const statusId = getValue("statusId") || null;
             const tags = serializeTags(getValue("tags"));
             const isArchived = getValue("isArchived") === "true";
-            const password = getValue("password");
 
             if (!fullName || !email) {
                 showToast(t("customer.required", "Full name and email are required."), "error");
@@ -4658,8 +5423,9 @@ function openCustomerModal(customer, data) {
             }
 
             try {
+                let saved = null;
                 if (isEdit && customer?.id) {
-                    await apiPut(`/api/admin/customers/${customer.id}`, {       
+                    saved = await apiPut(`/api/admin/customers/${customer.id}`, {
                         fullName,
                         firstName,
                         lastName,
@@ -4677,7 +5443,7 @@ function openCustomerModal(customer, data) {
                         isArchived
                     });
                 } else {
-                    await apiPost("/api/admin/customers", {
+                    saved = await apiPost("/api/admin/customers", {
                         fullName,
                         firstName,
                         lastName,
@@ -4691,9 +5457,11 @@ function openCustomerModal(customer, data) {
                         occupation,
                         signedHealthView,
                         statusId,
-                        tags,
-                        password: password || null
+                        tags
                     });
+                }
+                if (saved) {
+                    options.onSaved?.(saved);
                 }
                 closeModal();
                 actor.send({ type: "REFRESH" });
@@ -4739,11 +5507,7 @@ function openCustomerStatusModal(statuses) {
         overlay.remove();
     };
     cleanupEscape = bindModalEscape(closeModal);
-    overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-            closeModal();
-        }
-    });
+    bindModalBackdrop(overlay);
 
     const closeBtn = overlay.querySelector("#close-statuses");
     if (closeBtn) {
@@ -4835,6 +5599,7 @@ function openUserModal(userItem) {
         { value: "Month", label: t("payroll.unit.month", "Per month") }
     ];
     const selectedRateUnit = userItem?.instructorRateUnit || "Session";
+    const instructorRate = Number(userItem?.instructorRateCents || 0) / 100;
     const genderValue = (userItem?.gender || "").trim();
     const genderOptions = [
         { value: "", label: t("common.select", "Select"), selected: !genderValue },
@@ -4854,14 +5619,16 @@ function openUserModal(userItem) {
         displayName: userItem?.displayName || "",
         email: userItem?.email || "",
         phone: userItem?.phone || "",
+        city: userItem?.city || "",
         address: userItem?.address || "",
         idNumber: userItem?.idNumber || "",
+        dateOfBirth: userItem?.dateOfBirth || "",
         genderOptions,
         roleOptions,
         isActive: userItem?.isActive !== false,
         instructorDisplayName: userItem?.instructorName || "",
         instructorBio: userItem?.instructorBio || "",
-        instructorRateCents: userItem?.instructorRateCents ?? 0,
+        instructorRate,
         rateUnitOptions: rateUnitOptions.map(option => ({
             ...option,
             selected: option.value === selectedRateUnit
@@ -4884,11 +5651,7 @@ function openUserModal(userItem) {
         overlay.remove();
     };
     cleanupEscape = bindModalEscape(closeModal);
-    overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-            closeModal();
-        }
-    });
+    bindModalBackdrop(overlay);
 
     const closeBtn = overlay.querySelector("#close-user");
     if (closeBtn) {
@@ -4987,6 +5750,39 @@ function openUserModal(userItem) {
         });
     }
 
+    const resetPasswordBtn = overlay.querySelector("#reset-user-password");
+    if (resetPasswordBtn && isEdit && userItem?.id) {
+        resetPasswordBtn.addEventListener("click", async () => {
+            const confirmed = await confirmWithModal({
+                title: t("user.resetPasswordTitle", "Reset user password"),
+                message: t("user.resetPasswordConfirm", "Generate a new temporary password for this user?"),
+                confirmLabel: t("common.yes", "Yes"),
+                cancelLabel: t("common.no", "No")
+            });
+            if (!confirmed) return;
+            resetPasswordBtn.disabled = true;
+            try {
+                const result = await apiPost(`/api/admin/users/${userItem.id}/invite`, { sendEmail: false });
+                const tempPassword = result?.tempPassword || "";
+                if (tempPassword) {
+                    try {
+                        await navigator.clipboard.writeText(tempPassword);
+                        showToast(t("user.resetPasswordCopied", "Temporary password copied."), "success");
+                    } catch {
+                        showToast(`${t("user.resetPasswordTemp", "Temporary password")}: ${tempPassword}`, "success");
+                    }
+                    openDescriptionModal(t("user.resetPasswordTitle", "Temporary password"), tempPassword);
+                } else {
+                    showToast(t("user.resetPasswordSuccess", "Password reset."), "success");
+                }
+            } catch (error) {
+                showToast(error.message || t("user.resetPasswordError", "Unable to reset password."), "error");
+            } finally {
+                resetPasswordBtn.disabled = false;
+            }
+        });
+    }
+
     const saveBtn = overlay.querySelector("#save-user");
     if (saveBtn) {
         saveBtn.addEventListener("click", async () => {
@@ -4994,17 +5790,19 @@ function openUserModal(userItem) {
             const displayName = getValue("displayName").trim();
             const email = getValue("email").trim();
             const phone = getValue("phone").trim();
+            const city = getValue("city").trim();
             const address = getValue("address").trim();
             const gender = getValue("gender");
             const idNumber = getValue("idNumber").trim();
+            const dateOfBirth = getValue("dateOfBirth") || null;
             const roles = readRoles();
             const isActive = getValue("isActive") !== "false";
             const instructorDisplayName = getValue("instructorDisplayName");    
             const instructorBio = getValue("instructorBio");
-            const instructorRateCents = Number(getValue("instructorRateCents") || 0);
+            const instructorRate = Number(getValue("instructorRate") || 0);
             const instructorRateUnit = getValue("instructorRateUnit") || "Session";
             const instructorRateCurrency = getValue("instructorRateCurrency").trim();
-            const password = getValue("password");
+            const instructorRateCents = Number.isFinite(instructorRate) ? Math.round(instructorRate * 100) : 0;
 
             if (!displayName || !email) {
                 showToast(t("user.required", "Display name and email are required."), "error");
@@ -5022,18 +5820,19 @@ function openUserModal(userItem) {
                 displayName,
                 email,
                 phone,
+                city,
                 address,
                 gender,
                 idNumber,
+                dateOfBirth,
                 role: primaryRole,
                 roles,
                 isActive,
                 instructorDisplayName: instructorDisplayName || null,
                 instructorBio: instructorBio || null,
-                instructorRateCents: Number.isFinite(instructorRateCents) ? instructorRateCents : 0,
+                instructorRateCents,
                 instructorRateUnit,
-                instructorRateCurrency: instructorRateCurrency || "ILS",
-                password: password || null
+                instructorRateCurrency: instructorRateCurrency || "ILS"
             };
 
             try {
@@ -5076,11 +5875,7 @@ function openGuestModal() {
         overlay.remove();
     };
     cleanupEscape = bindModalEscape(closeModal);
-    overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-            closeModal();
-        }
-    });
+    bindModalBackdrop(overlay);
 
     const closeBtn = overlay.querySelector("#close-guest");
     if (closeBtn) {
@@ -5146,11 +5941,7 @@ function openRoomModal(room) {
         overlay.remove();
     };
     cleanupEscape = bindModalEscape(closeModal);
-    overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-            closeModal();
-        }
-    });
+    bindModalBackdrop(overlay);
 
     const closeBtn = overlay.querySelector("#close-room");
     if (closeBtn) {
@@ -5218,8 +6009,11 @@ function openPlanModal(plan) {
         typeOptions,
         weeklyLimit: plan?.weeklyLimit ?? 2,
         punchCardUses: plan?.punchCardUses ?? 0,
-        priceCents: plan?.priceCents ?? 12000,
+        price: toCurrencyUnits(plan?.priceCents ?? 12000),
         currency: plan?.currency || "ILS",
+        remoteOnly: plan?.remoteOnly ?? false,
+        validityDays: plan?.validityDays ?? "",
+        dailyLimit: plan?.dailyLimit ?? "",
         activeOptions
     });
 
@@ -5236,11 +6030,7 @@ function openPlanModal(plan) {
         overlay.remove();
     };
     cleanupEscape = bindModalEscape(closeModal);
-    overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-            closeModal();
-        }
-    });
+    bindModalBackdrop(overlay);
 
     const closeBtn = overlay.querySelector("#close-plan");
     if (closeBtn) {
@@ -5255,9 +6045,12 @@ function openPlanModal(plan) {
             const type = getValue("planType");
             const weeklyLimit = Number(getValue("weeklyLimit"));
             const punchCardUses = Number(getValue("punchCardUses"));
-            const priceCents = Number(getValue("priceCents"));
+            const price = Number(getValue("price"));
             const currency = getValue("currency").trim() || "ILS";
             const active = getValue("planActive") === "true";
+            const remoteOnly = getValue("planRemoteOnly") === "true";
+            const validityDays = Number(getValue("planValidityDays"));
+            const dailyLimit = Number(getValue("planDailyLimit"));
 
             if (!name) {
                 showToast(t("plans.nameRequired", "Plan name is required."), "error");
@@ -5269,8 +6062,11 @@ function openPlanModal(plan) {
                 type,
                 weeklyLimit: Number.isFinite(weeklyLimit) ? weeklyLimit : 0,
                 punchCardUses: Number.isFinite(punchCardUses) ? punchCardUses : 0,
-                priceCents: Number.isFinite(priceCents) ? priceCents : 0,
+                priceCents: toCents(Number.isFinite(price) ? price : 0),
                 currency,
+                remoteOnly,
+                validityDays: Number.isFinite(validityDays) && validityDays > 0 ? validityDays : null,
+                dailyLimit: Number.isFinite(dailyLimit) && dailyLimit > 0 ? dailyLimit : null,
                 active
             };
 
@@ -5345,7 +6141,7 @@ function openSeriesModal(series, data) {
         durationMinutes: series?.durationMinutes ?? 60,
         defaultCapacity: series?.defaultCapacity ?? 14,
         remoteCapacity: series?.remoteCapacity ?? 0,
-        priceCents: series?.priceCents ?? 2500,
+        price: toCurrencyUnits(series?.priceCents ?? 2500),
         remoteInviteUrl: series?.remoteInviteUrl || "",
         description: series?.description || "",
         recurrenceIntervalWeeks: series?.recurrenceIntervalWeeks ?? 1,
@@ -5370,11 +6166,7 @@ function openSeriesModal(series, data) {
         overlay.remove();
     };
     cleanupEscape = bindModalEscape(closeModal);
-    overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-            closeModal();
-        }
-    });
+    bindModalBackdrop(overlay);
 
     const closeBtn = overlay.querySelector("#close-series");
     if (closeBtn) {
@@ -5405,7 +6197,7 @@ function openSeriesModal(series, data) {
                 recurrenceIntervalWeeks: Number(getValue("recurrenceIntervalWeeks") || 1),
                 defaultCapacity: Number(getValue("capacity") || 0),
                 remoteCapacity: Number(getValue("remoteCapacity") || 0),
-                priceCents: Number(getValue("priceCents") || 0),
+                priceCents: toCents(Number(getValue("price") || 0)),
                 currency: "ILS",
                 remoteInviteUrl: getValue("remoteInviteUrl") || "",
                 allowedPlanIdsJson: JSON.stringify(allowedPlanIds),
@@ -5460,12 +6252,24 @@ function buildCalendarView(items, options) {
     const weekStartsOn = Number.isFinite(Number(options.weekStartsOn))
         ? Number(options.weekStartsOn)
         : 0;
+    const customers = options.customers || [];
+    const searchTerm = (options.search || "").trim().toLowerCase();
     const eventMap = buildEventMap(items, timeZone);
     const todayKey = getDateKeyInTimeZone(new Date(), timeZone);
+    const matchesSearch = (event) => {
+        if (!searchTerm) return true;
+        const haystack = [
+            event.seriesTitle,
+            event.instructorName,
+            event.roomName
+        ].filter(Boolean).join(" ").toLowerCase();
+        return haystack.includes(searchTerm);
+    };
+    const filterEvents = (events) => searchTerm ? events.filter(matchesSearch) : events;
 
     const dayDate = parseDateInput(focusDate);
     const dayKey = formatDateKeyLocal(dayDate);
-    const dayEvents = eventMap.get(dayKey) || [];
+    const dayEvents = filterEvents(eventMap.get(dayKey) || []);
     const day = {
         dateKey: dayKey,
         label: formatFullDate(dayDate, timeZone),
@@ -5479,7 +6283,7 @@ function buildCalendarView(items, options) {
     for (let i = 0; i < 7; i += 1) {
         const date = addDays(weekStart, i);
         const key = formatDateKeyLocal(date);
-        const events = eventMap.get(key) || [];
+        const events = filterEvents(eventMap.get(key) || []);
         weekDays.push({
             dateKey: key,
             weekday: weekdayNames[i],
@@ -5499,12 +6303,14 @@ function buildCalendarView(items, options) {
         for (let d = 0; d < 7; d += 1) {
             const date = addDays(gridStart, w * 7 + d);
             const key = formatDateKeyLocal(date);
-            const events = eventMap.get(key) || [];
+            const events = filterEvents(eventMap.get(key) || []);
             const previews = events.slice(0, 3).map(event => ({
                 id: event.id,
                 time: event.startTime,
                 title: event.seriesTitle,
                 isCancelled: event.isCancelled,
+                isBirthday: event.isBirthday,
+                isLocked: event.isLocked,
                 seriesIcon: event.seriesIcon,
                 eventStyle: event.eventStyle
             }));
@@ -5522,7 +6328,6 @@ function buildCalendarView(items, options) {
     }
 
     const rangeLabel = getRangeLabel(view, focusDate, weekStartsOn, timeZone);
-    const searchTerm = (options.search || "").trim().toLowerCase();
     const listItems = [];
     eventMap.forEach(list => {
         list.forEach(event => {
@@ -5531,11 +6336,12 @@ function buildCalendarView(items, options) {
             const capacity = Number(event.capacity || 0);
             const remoteBooked = Number(event.remoteBooked || 0);
             const remoteCapacity = Number(event.remoteCapacity || 0);
-            const bookedSummary = event.isHoliday
+            const bookedSummary = event.isHoliday || event.isBirthday
                 ? t("calendar.list.na", "-")
-                : (remoteCapacity > 0
-                    ? `${booked} / ${capacity} • ${remoteBooked} / ${remoteCapacity}`
-                    : `${booked} / ${capacity}`);
+                : `${booked} / ${capacity}`;
+            const remoteSummary = event.isHoliday || event.isBirthday
+                ? t("calendar.list.na", "-")
+                : (remoteCapacity > 0 ? `${remoteBooked} / ${remoteCapacity}` : t("calendar.list.na", "-"));
             const searchText = [
                 event.seriesTitle,
                 event.instructorName,
@@ -5545,6 +6351,7 @@ function buildCalendarView(items, options) {
                 ...event,
                 dateLabel,
                 bookedSummary,
+                remoteSummary,
                 searchText
             });
         });
@@ -5554,10 +6361,43 @@ function buildCalendarView(items, options) {
         ? listItems.filter(item => item.searchText.includes(searchTerm))
         : listItems;
 
+    const allEvents = [];
+    eventMap.forEach(list => {
+        list.forEach(event => {
+            if (!searchTerm || matchesSearch(event)) {
+                allEvents.push(event);
+            }
+        });
+    });
+    const sessionEvents = allEvents.filter(event => !event.isHoliday && !event.isBirthday && !event.isCancelled);
+    const sessionsCount = sessionEvents.length;
+    const daysInView = view === "day"
+        ? 1
+        : view === "week"
+            ? 7
+            : view === "month"
+                ? new Date(focus.getFullYear(), focus.getMonth() + 1, 0).getDate()
+                : 14;
+    const sessionsPerDay = daysInView ? Math.round((sessionsCount / daysInView) * 10) / 10 : 0;
+    const totalRegistered = sessionEvents.reduce((sum, event) => sum + Number(event.booked || 0) + Number(event.remoteBooked || 0), 0);
+    const instructorsCount = new Set(sessionEvents.map(event => event.instructorId).filter(Boolean)).size;
+    const range = getCalendarRange(view, focusDate, weekStartsOn);
+    const newCustomersCount = (customers || []).filter(customer => {
+        if (!customer.createdAtUtc) return false;
+        const createdKey = formatDateKeyLocal(new Date(customer.createdAtUtc));
+        return createdKey >= range.from && createdKey < range.to;
+    }).length;
+    const weekNumberLabel = view === "week"
+        ? `${t("calendar.weekNumber", "Week")} ${String(getWeekNumber(weekStart)).padStart(2, "0")}`
+        : "";
+    const hebrewDateLabel = formatHebrewDate(focus);
+
     return {
         view,
         focusDate,
         rangeLabel,
+        weekNumberLabel,
+        hebrewDateLabel,
         isDay: view === "day",
         isWeek: view === "week",
         isMonth: view === "month",
@@ -5566,7 +6406,13 @@ function buildCalendarView(items, options) {
         day,
         week: { days: weekDays },
         month: { weeks: monthWeeks, weekdays: weekdayNames },
-        list: { items: filteredItems, hasItems: filteredItems.length > 0 }
+        list: { items: filteredItems, hasItems: filteredItems.length > 0 },
+        stats: {
+            sessionsPerDay: sessionsPerDay.toString(),
+            totalRegistered: totalRegistered.toString(),
+            instructors: instructorsCount.toString(),
+            newCustomers: newCustomersCount.toString()
+        }
     };
 }
 
@@ -5586,6 +6432,66 @@ function formatPlanType(value) {
     if (value === "PunchCard") return t("plans.type.punch", "Punch card");
     if (value === "Unlimited") return t("plans.type.unlimited", "Unlimited");
     return value || "-";
+}
+
+function formatCustomerStatus(value) {
+    if (!value) return "";
+    const normalized = String(value).trim().toLowerCase();
+    if (normalized === "active") return t("customers.status.active", "Active");
+    if (normalized === "archived") return t("customers.status.archived", "Archived");
+    if (normalized === "lead") return t("customers.status.lead", "Lead");
+    if (normalized === "trial") return t("customers.status.trial", "Trial");
+    if (normalized === "vip") return t("customers.status.vip", "VIP");
+    return value;
+}
+
+function formatAuditAction(value) {
+    const normalized = String(value || "").trim().toLowerCase();
+    if (normalized === "create") return t("audit.action.create", "Created");
+    if (normalized === "update") return t("audit.action.update", "Updated");
+    if (normalized === "delete") return t("audit.action.delete", "Deleted");
+    if (normalized === "login") return t("audit.action.login", "Login");
+    if (normalized === "logout") return t("audit.action.logout", "Logout");
+    if (normalized === "register") return t("audit.action.register", "Registered");
+    if (normalized === "cancel") return t("audit.action.cancel", "Cancelled");
+    if (normalized === "report") return t("audit.action.report", "Reported");
+    if (normalized === "generate") return t("audit.action.generate", "Generated");
+    if (normalized === "invite") return t("audit.action.invite", "Invited");
+    return value;
+}
+
+function formatAuditEntity(value) {
+    const normalized = String(value || "").trim();
+    if (!normalized) return "";
+    const map = {
+        EventInstance: t("audit.entity.session", "Session"),
+        EventSeries: t("audit.entity.series", "Series"),
+        Booking: t("audit.entity.booking", "Booking"),
+        Attendance: t("audit.entity.attendance", "Attendance"),
+        Customer: t("audit.entity.customer", "Customer"),
+        User: t("audit.entity.user", "User"),
+        Instructor: t("audit.entity.instructor", "Instructor"),
+        Room: t("audit.entity.room", "Room"),
+        Plan: t("audit.entity.plan", "Plan"),
+        Payment: t("audit.entity.payment", "Payment"),
+        Membership: t("audit.entity.membership", "Membership"),
+        HealthDeclaration: t("audit.entity.health", "Health waiver"),
+        Payroll: t("audit.entity.payroll", "Payroll"),
+        AuditLog: t("audit.entity.audit", "Audit log"),
+        Studio: t("audit.entity.studio", "Studio")
+    };
+    return map[normalized] || value;
+}
+
+function toCurrencyUnits(cents) {
+    const amount = Number(cents || 0) / 100;
+    return Number.isFinite(amount) ? amount : 0;
+}
+
+function toCents(value) {
+    const amount = Number(value || 0);
+    if (!Number.isFinite(amount)) return 0;
+    return Math.round(amount * 100);
 }
 
 function normalizeBookingStatus(value) {
@@ -5633,12 +6539,25 @@ function buildEventMap(items, timeZone) {
         const end = item.endUtc ? new Date(item.endUtc) : null;
         const dateKey = getDateKeyInTimeZone(start, timeZone);
         const isHoliday = Boolean(item.isHoliday);
-        const startTime = isHoliday ? t("calendar.allDay", "All day") : formatTimeOnly(start, timeZone);
-        const endTime = isHoliday || !end ? "" : formatTimeOnly(end, timeZone);
+        const isBirthday = Boolean(item.isBirthday);
+        const isAllDay = isHoliday || isBirthday;
+        const startTime = isAllDay ? "" : formatTimeOnly(start, timeZone);
+        const endTime = isAllDay || !end ? "" : formatTimeOnly(end, timeZone);
         const timeRange = endTime ? `${startTime} - ${endTime}` : startTime;
         const statusLabel = normalizeStatus(item.status);
         const isCancelled = String(item.status) === "Cancelled" || item.status === 1;
+        const birthdayName = item.birthdayName || item.seriesTitle || "";
+        const birthdayIcon = "\u{1F382}";
+        const birthdayTitle = birthdayName
+            ? `${birthdayIcon} ${birthdayName}`
+            : `${birthdayIcon} ${t("calendar.birthday", "Birthday")}`;
+        const seriesTitle = isBirthday ? birthdayTitle : item.seriesTitle;
+        const seriesIcon = isBirthday ? "" : item.seriesIcon;
         const eventStyle = item.seriesColor ? `--series-color: ${item.seriesColor};` : "";
+        const booked = Number(item.booked || 0);
+        const capacity = Number(item.capacity || 0);
+        const remoteBooked = Number(item.remoteBooked || 0);
+        const remoteCapacity = Number(item.remoteCapacity || 0);
         const event = {
             ...item,
             dateKey,
@@ -5648,6 +6567,12 @@ function buildEventMap(items, timeZone) {
             statusLabel,
             isCancelled,
             isHoliday,
+            isBirthday,
+            isLocked: isAllDay,
+            seriesTitle,
+            seriesIcon,
+            registeredSummary: isHoliday || isBirthday ? "" : `${booked}/${capacity}`,
+            remoteSummary: remoteCapacity > 0 && !isHoliday && !isBirthday ? `${remoteBooked}/${remoteCapacity}` : "",
             price: formatMoney(item.priceCents, item.currency),
             eventStyle
         };
@@ -5717,6 +6642,69 @@ function formatDateKeyLocal(date) {
     return `${year}-${month}-${day}`;
 }
 
+function closeEventActionsMenu() {
+    if (activeEventMenu) {
+        activeEventMenu.remove();
+        activeEventMenu = null;
+    }
+    if (activeEventMenuCleanup) {
+        activeEventMenuCleanup();
+        activeEventMenuCleanup = null;
+    }
+}
+
+function openEventActionsMenu(anchor, item, data) {
+    if (!anchor || !item) return;
+    closeEventActionsMenu();
+
+    const menu = document.createElement("div");
+    menu.className = "event-actions-menu";
+    menu.innerHTML = `
+        <button type="button" data-action="edit">${t("calendar.actionEdit", "Edit session")}</button>
+        <button type="button" data-action="duplicate">${t("calendar.actionDuplicate", "Duplicate session")}</button>
+    `;
+
+    document.body.appendChild(menu);
+    const rect = anchor.getBoundingClientRect();
+    const top = rect.bottom + window.scrollY + 6;
+    const left = rect.left + window.scrollX;
+    menu.style.top = `${top}px`;
+    menu.style.left = `${left}px`;
+
+    const onDocumentClick = (event) => {
+        if (event.target === anchor || anchor.contains(event.target)) return;
+        if (menu.contains(event.target)) return;
+        closeEventActionsMenu();
+    };
+    const onKeyDown = (event) => {
+        if (event.key === "Escape") {
+            event.preventDefault();
+            closeEventActionsMenu();
+        }
+    };
+    document.addEventListener("click", onDocumentClick, true);
+    document.addEventListener("keydown", onKeyDown);
+    activeEventMenuCleanup = () => {
+        document.removeEventListener("click", onDocumentClick, true);
+        document.removeEventListener("keydown", onKeyDown);
+    };
+    activeEventMenu = menu;
+
+    menu.addEventListener("click", async (event) => {
+        const button = event.target.closest("button[data-action]");
+        if (!button) return;
+        const action = button.getAttribute("data-action");
+        closeEventActionsMenu();
+        if (action === "edit") {
+            openCalendarEventModal(item, data);
+            return;
+        }
+        if (action === "duplicate") {
+            await duplicateSessionFromItem(item, data);
+        }
+    });
+}
+
 function bindCalendarInteractions(data, itemMap) {
     const calendarMeta = data.calendar || {};
     const timeZone = getLocalTimeZone();
@@ -5750,7 +6738,7 @@ function bindCalendarInteractions(data, itemMap) {
             const dateKey = zone.getAttribute("data-date");
             if (!eventId || !dateKey) return;
             const item = itemMap.get(String(eventId));
-            if (!item || item.isHoliday) return;
+            if (!item || item.isHoliday || item.isBirthday) return;
             const currentKey = getDateKeyInTimeZone(new Date(item.startUtc), timeZone);
             if (currentKey === dateKey) return;
             try {
@@ -5844,6 +6832,22 @@ function formatMonthYear(date, timeZone) {
     }).format(date);
 }
 
+function formatHebrewDate(date) {
+    return new Intl.DateTimeFormat("he-IL-u-ca-hebrew", {
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+    }).format(date);
+}
+
+function getWeekNumber(date) {
+    const utcDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const day = utcDate.getUTCDay() || 7;
+    utcDate.setUTCDate(utcDate.getUTCDate() + 4 - day);
+    const yearStart = new Date(Date.UTC(utcDate.getUTCFullYear(), 0, 1));
+    return Math.ceil((((utcDate - yearStart) / 86400000) + 1) / 7);
+}
+
 function getWeekdayNames(weekStartsOn) {
     const base = new Date(2024, 0, 7, 12);
     const names = Array.from({ length: 7 }, (_, index) =>
@@ -5880,8 +6884,4 @@ function handleRouteChange() {
 
 window.addEventListener("hashchange", handleRouteChange);
 handleRouteChange();
-
-
-
-
 
