@@ -29,9 +29,9 @@ public class BookingService
             return (false, "Event is not available", null, null);
         }
 
-        var existing = await _db.Bookings
-            .AnyAsync(b => b.StudioId == studio.Id && b.CustomerId == customer.Id && b.EventInstanceId == instance.Id && b.Status != BookingStatus.Cancelled, ct);
-        if (existing)
+        var existingBooking = await _db.Bookings
+            .FirstOrDefaultAsync(b => b.StudioId == studio.Id && b.CustomerId == customer.Id && b.EventInstanceId == instance.Id, ct);
+        if (existingBooking != null && existingBooking.Status != BookingStatus.Cancelled)
         {
             return (false, "Already booked", null, null);
         }
@@ -116,18 +116,21 @@ public class BookingService
 
         if (membership == null)
         {
-            payment = new Payment
+            if (existingBooking == null || existingBooking.PaymentId == null)
             {
-                Id = Guid.NewGuid(),
-                StudioId = studio.Id,
-                CustomerId = customer.Id,
-                AmountCents = instance.PriceCents,
-                Currency = instance.Currency,
-                Status = PaymentStatus.Paid,
-                Provider = "manual",
-                ProviderRef = $"manual-{Guid.NewGuid():N}"
-            };
-            _db.Payments.Add(payment);
+                payment = new Payment
+                {
+                    Id = Guid.NewGuid(),
+                    StudioId = studio.Id,
+                    CustomerId = customer.Id,
+                    AmountCents = instance.PriceCents,
+                    Currency = instance.Currency,
+                    Status = PaymentStatus.Paid,
+                    Provider = "manual",
+                    ProviderRef = $"manual-{Guid.NewGuid():N}"
+                };
+                _db.Payments.Add(payment);
+            }
         }
         else if (plan != null && plan.Type == PlanType.PunchCard)
         {
@@ -135,19 +138,36 @@ public class BookingService
             _db.Memberships.Update(membership);
         }
 
-        var booking = new Booking
+        Booking booking;
+        if (existingBooking != null)
         {
-            Id = Guid.NewGuid(),
-            StudioId = studio.Id,
-            CustomerId = customer.Id,
-            EventInstanceId = instance.Id,
-            MembershipId = membership?.Id,
-            PaymentId = payment?.Id,
-            Status = BookingStatus.Confirmed,
-            IsRemote = isRemote
-        };
+            existingBooking.Status = BookingStatus.Confirmed;
+            existingBooking.CancelledAtUtc = null;
+            existingBooking.IsRemote = isRemote;
+            existingBooking.MembershipId = membership?.Id;
+            if (payment?.Id != null)
+            {
+                existingBooking.PaymentId = payment.Id;
+            }
+            booking = existingBooking;
+            _db.Bookings.Update(existingBooking);
+        }
+        else
+        {
+            booking = new Booking
+            {
+                Id = Guid.NewGuid(),
+                StudioId = studio.Id,
+                CustomerId = customer.Id,
+                EventInstanceId = instance.Id,
+                MembershipId = membership?.Id,
+                PaymentId = payment?.Id,
+                Status = BookingStatus.Confirmed,
+                IsRemote = isRemote
+            };
+            _db.Bookings.Add(booking);
+        }
 
-        _db.Bookings.Add(booking);
         await _db.SaveChangesAsync(ct);
         await tx.CommitAsync(ct);
 

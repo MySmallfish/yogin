@@ -539,6 +539,7 @@ const rosterTemplate = compileTemplate("roster", `
                 <button type="button" class="attendance-btn {{#if isRegistered}}active{{/if}}" data-status="Registered" aria-label="{{t "roster.status.registered" "Registered"}}" title="{{t "roster.status.registered" "Registered"}}">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
                     <circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="2" />
+                    <path d="M8 12h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                   </svg>
                 </button>
                 <button type="button" class="attendance-btn {{#if isPresent}}active{{/if}}" data-status="Present" aria-label="{{t "roster.status.present" "Present"}}" title="{{t "roster.status.present" "Present"}}">
@@ -659,10 +660,12 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
               <label>{{t "series.allowedPlans" "Allowed plans"}}</label>
               <div class="plan-options">
                 {{#each plans}}
-                  <label class="checkbox">
+                  <label class="plan-pill">
                     <input type="checkbox" name="instancePlanIds" value="{{id}}" {{#if selected}}checked{{/if}} />
-                    <span>{{name}}</span>
-                    <span class="meta">{{price}}</span>
+                    <span>
+                      <span class="plan-name">{{name}}</span>
+                      <span class="plan-price">{{price}}</span>
+                    </span>
                   </label>
                 {{/each}}
               </div>
@@ -673,20 +676,25 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
         <div class="modal-column modal-column-registration">
           <div class="share-row">
             <label>{{t "session.shareLink" "Share registration link"}}</label>
-            <div class="share-field">
-              <input type="text" readonly value="{{shareUrl}}" />
+            <div class="share-field share-buttons" data-share-url="{{shareUrl}}">
               <button class="secondary" id="copy-share-link">{{t "common.copy" "Copy"}}</button>
-              <a class="secondary" href="{{shareUrl}}" target="_blank" rel="noreferrer">{{t "common.open" "Open"}}</a>
+              <button class="secondary" id="open-share-link">{{t "common.open" "Open"}}</button>
             </div>
           </div>
           <div class="roster" data-roster-panel>
             {{{rosterHtml}}}
           </div>
           <div class="registration-form">
-            <h4>{{t "session.addCustomer" "Add customer"}}</h4>
+            <h4 class="registration-title">{{t "session.registrationTitle" "Registration"}}</h4>
+            <div class="meta registration-hint">{{t "session.addCustomerHint" "Select an existing customer or add a new one."}}</div>
             <div class="form-grid">
               <div class="span-2">
-                <label>{{t "session.findCustomer" "Find existing customer"}}</label>
+                <div class="registration-lookup-header">
+                  <label>{{t "session.findCustomer" "Find existing customer"}}</label>
+                  <button class="icon-button circle-button add-inline" type="button" id="add-customer-modal" aria-label="{{t "customer.addTitle" "Add customer"}}">
+                    <span class="icon" aria-hidden="true">+</span>
+                  </button>
+                </div>
                 <input name="customerLookup" list="customer-list" placeholder="{{t "session.findCustomerPlaceholder" "Start typing a name or email"}}" autocomplete="off" />
                 <input type="hidden" name="customerId" />
                 <datalist id="customer-list">
@@ -704,13 +712,8 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
                   {{/if}}
                 </select>
               </div>
-              <div class="span-2">
-                <label>{{t "session.addCustomer" "Add customer"}}</label>
-                <button class="secondary" type="button" id="add-customer-modal">{{t "customer.addTitle" "Add customer"}}</button>
-              </div>
             </div>
             <div class="modal-footer">
-              <div class="meta">{{t "session.addCustomerHint" "Select an existing customer or add a new one."}}</div>
               <div class="modal-actions">
                 <button id="register-customer">{{t "session.registerCustomer" "Register customer"}}</button>
               </div>
@@ -935,10 +938,12 @@ const sessionModalTemplate = compileTemplate("session-modal", `
           <label>{{t "session.allowedPlans" "Allowed plans"}}</label>
           <div class="plan-options">
             {{#each plans}}
-              <label class="checkbox">
+              <label class="plan-pill">
                 <input type="checkbox" name="sessionPlanIds" value="{{id}}" {{#if selected}}checked{{/if}} />
-                <span>{{name}}</span>
-                <span class="meta">{{price}}</span>
+                <span>
+                  <span class="plan-name">{{name}}</span>
+                  <span class="plan-price">{{price}}</span>
+                </span>
               </label>
             {{/each}}
           </div>
@@ -1091,9 +1096,12 @@ const seriesModalTemplate = compileTemplate("series-modal", `
         <label>{{t "series.allowedPlans" "Allowed plans"}}</label>
         <div class="plan-options">
           {{#each plans}}
-            <label class="checkbox">
+            <label class="plan-pill">
               <input type="checkbox" name="planIds" value="{{id}}" {{#if selected}}checked{{/if}} />
-              {{name}} <span class="muted">({{price}})</span>
+              <span>
+                <span class="plan-name">{{name}}</span>
+                <span class="plan-price">{{price}}</span>
+              </span>
             </label>
           {{/each}}
         </div>
@@ -1146,7 +1154,7 @@ const customerModalTemplate = compileTemplate("customer-modal", `
           <input name="idNumber" value="{{idNumber}}" />
         </div>
         <div>
-          <label>{{t "customer.gender" "Gender"}}</label>
+          <label>{{t "customer.sex" "Sex"}}</label>
           <select name="gender">
             {{#each genderOptions}}
               <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
@@ -1391,7 +1399,7 @@ const userModalTemplate = compileTemplate("user-modal", `
           <input name="city" value="{{city}}" />
         </div>
         <div>
-          <label>{{t "user.gender" "Gender"}}</label>
+          <label>{{t "user.sex" "Sex"}}</label>
           <select name="gender">
             {{#each genderOptions}}
               <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
@@ -4368,7 +4376,7 @@ async function openCalendarEventModal(item, data) {
     const planOptions = (data.plans || []).map(plan => ({
         id: plan.id,
         name: plan.name,
-        price: formatMoney(plan.priceCents, plan.currency),
+        price: formatPlainPrice(plan.priceCents),
         selected: allowedPlanSet.has(String(plan.id))
     }));
 
@@ -4446,16 +4454,28 @@ async function openCalendarEventModal(item, data) {
                 await navigator.clipboard.writeText(shareUrl);
                 showToast(t("session.shareCopied", "Share link copied."), "success");
             } catch {
-                const input = overlay.querySelector(".share-field input");
-                if (input) {
-                    input.focus();
-                    input.select();
+                try {
+                    const temp = document.createElement("textarea");
+                    temp.value = shareUrl;
+                    temp.style.position = "fixed";
+                    temp.style.opacity = "0";
+                    document.body.appendChild(temp);
+                    temp.focus();
+                    temp.select();
                     document.execCommand("copy");
+                    temp.remove();
                     showToast(t("session.shareCopied", "Share link copied."), "success");
-                } else {
+                } catch {
                     showToast(t("session.shareCopyError", "Unable to copy share link."), "error");
                 }
             }
+        });
+    }
+
+    const shareOpenBtn = overlay.querySelector("#open-share-link");
+    if (shareOpenBtn) {
+        shareOpenBtn.addEventListener("click", () => {
+            window.open(shareUrl, "_blank", "noopener");
         });
     }
 
@@ -5108,7 +5128,7 @@ function openSessionModal(data, options = {}) {
     const plans = (data.plans || []).map(plan => ({
         id: plan.id,
         name: plan.name,
-        price: formatMoney(plan.priceCents, plan.currency),
+        price: formatPlainPrice(plan.priceCents),
         selected: allowedPlanSet.has(String(plan.id))
     }));
     const modalMarkup = sessionModalTemplate({
@@ -6362,7 +6382,7 @@ function openSeriesModal(series, data) {
     const allowedSet = new Set(allowedPlanIds);
     const plans = (data.plans || []).map(plan => ({
         ...plan,
-        price: formatMoney(plan.priceCents, plan.currency),
+        price: formatPlainPrice(plan.priceCents),
         selected: allowedSet.has(String(plan.id))
     }));
     const modalMarkup = seriesModalTemplate({
@@ -6734,6 +6754,12 @@ function toCents(value) {
     const amount = Number(value || 0);
     if (!Number.isFinite(amount)) return 0;
     return Math.round(amount * 100);
+}
+
+function formatPlainPrice(cents) {
+    const amount = toCurrencyUnits(cents);
+    const locale = document.documentElement.lang || navigator.language || "en";
+    return new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(amount);
 }
 
 function normalizeBookingStatus(value) {

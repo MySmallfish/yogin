@@ -242,6 +242,7 @@ const calendarModalTemplate = compileTemplate("instructor-modal", `
                         <button type="button" class="attendance-btn {{#if isRegistered}}active{{/if}}" data-status="Registered" aria-label="Registered" title="Registered">
                           <svg viewBox="0 0 24 24" aria-hidden="true">
                             <circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="2" />
+                            <path d="M8 12h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                           </svg>
                         </button>
                         <button type="button" class="attendance-btn {{#if isPresent}}active{{/if}}" data-status="Present" aria-label="Present" title="Present">

@@ -1467,6 +1467,29 @@ button.modal-close:hover {
   grid-template-columns: 1fr;
 }
 
+.registration-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.registration-hint {
+  margin-top: 4px;
+}
+
+.registration-lookup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.add-inline {
+  width: 32px;
+  height: 32px;
+}
+
 .form-grid .span-2 {
   grid-column: 1 / -1;
 }
@@ -1484,6 +1507,11 @@ button.modal-close:hover {
   gap: 10px;
 }
 
+.share-buttons {
+  grid-template-columns: auto auto;
+  justify-content: flex-start;
+}
+
 .share-field input {
   background: #fff7e6;
   border-color: rgba(15, 23, 42, 0.12);
@@ -1493,6 +1521,10 @@ button.modal-close:hover {
   .share-field {
     grid-template-columns: minmax(0, 1fr) auto auto;
     align-items: center;
+  }
+
+  .share-field.share-buttons {
+    grid-template-columns: auto auto;
   }
 }
 
@@ -1504,9 +1536,9 @@ button.modal-close:hover {
 
 .roster h4 {
   margin: 0;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
   color: var(--muted);
 }
 
@@ -1797,6 +1829,57 @@ button.modal-close:hover {
   display: grid;
   gap: 8px;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.plan-pill {
+  position: relative;
+  display: flex;
+  cursor: pointer;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.plan-pill input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.plan-pill span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.7);
+  transition: all 0.2s ease;
+}
+
+.plan-pill .plan-name {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.plan-pill .plan-price {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.plan-pill:hover {
+  color: var(--ink);
+}
+
+.plan-pill:hover span {
+  border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.plan-pill input:checked + span {
+  border-color: rgba(245, 158, 11, 0.55);
+  background: rgba(245, 158, 11, 0.14);
+  color: var(--ink);
 }
 
 .color-dot {
