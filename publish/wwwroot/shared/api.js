@@ -21,12 +21,19 @@ async function parseResponse(response) {
 }
 
 export async function apiFetch(path, options = {}) {
+    const isFormData = options.body instanceof FormData;
+    const headers = {
+        ...(isFormData ? {} : baseHeaders),
+        ...(options.headers || {})
+    };
+
+    if (isFormData && headers["Content-Type"]) {
+        delete headers["Content-Type"];
+    }
+
     const response = await fetch(path, {
         credentials: "include",
-        headers: {
-            ...baseHeaders,
-            ...(options.headers || {})
-        },
+        headers,
         ...options
     });
 

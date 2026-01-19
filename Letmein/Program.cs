@@ -1,4 +1,5 @@
 
+using System.Globalization;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
@@ -1195,6 +1196,55 @@ adminApi.MapGet("/event-instances/{id:guid}/roster", async (ClaimsPrincipal user
     return Results.Ok(response);
 });
 
+adminApi.MapDelete("/bookings/{id:guid}", async (ClaimsPrincipal user, Guid id, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var booking = await db.Bookings.FirstOrDefaultAsync(b => b.Id == id && b.StudioId == studioId);
+    if (booking == null)
+    {
+        return Results.NotFound();
+    }
+
+    if (booking.Status == BookingStatus.Cancelled)
+    {
+        return Results.Ok(new { status = "cancelled" });
+    }
+
+    var customer = await db.Customers.FirstOrDefaultAsync(c => c.Id == booking.CustomerId && c.StudioId == studioId);
+    if (customer == null)
+    {
+        return Results.NotFound();
+    }
+
+    booking.Status = BookingStatus.Cancelled;
+    booking.CancelledAtUtc = DateTime.UtcNow;
+
+    if (booking.MembershipId.HasValue)
+    {
+        var membership = await db.Memberships.FirstOrDefaultAsync(m => m.Id == booking.MembershipId && m.CustomerId == customer.Id);
+        if (membership != null)
+        {
+            var plan = await db.Plans.FirstOrDefaultAsync(p => p.Id == membership.PlanId);
+            if (plan?.Type == PlanType.PunchCard)
+            {
+                membership.RemainingUses += 1;
+                db.Memberships.Update(membership);
+            }
+        }
+    }
+
+    var attendance = await db.Attendance.FirstOrDefaultAsync(a => a.StudioId == studioId && a.EventInstanceId == booking.EventInstanceId && a.CustomerId == booking.CustomerId);
+    if (attendance != null)
+    {
+        db.Attendance.Remove(attendance);
+    }
+
+    db.Bookings.Update(booking);
+    await db.SaveChangesAsync();
+    await LogAuditAsync(db, user, "Cancel", "Booking", booking.Id.ToString(), "Removed registration", new { booking.Id, booking.EventInstanceId });
+    return Results.Ok(new { status = "cancelled" });
+});
+
 adminApi.MapPost("/event-instances/{id:guid}/attendance", async (ClaimsPrincipal user, Guid id, AttendanceUpdateRequest request, AppDbContext db) =>
 {
     var studioId = GetStudioId(user);
@@ -1856,6 +1906,267 @@ adminApi.MapGet("/customers", async (ClaimsPrincipal user, string? search, bool?
     }
 
     return Results.Ok(results);
+});
+
+adminApi.MapGet("/customers/export/csv", async (ClaimsPrincipal user, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var customers = await db.Customers.AsNoTracking()
+        .Where(c => c.StudioId == studioId)
+        .ToListAsync();
+    var userIds = customers.Select(c => c.UserId).Distinct().ToList();
+    var users = await db.Users.AsNoTracking()
+        .Where(u => u.StudioId == studioId && userIds.Contains(u.Id))
+        .ToDictionaryAsync(u => u.Id, u => u);
+    var statusIds = customers.Where(c => c.StatusId.HasValue).Select(c => c.StatusId!.Value).Distinct().ToList();
+    var statusMap = await db.CustomerStatuses.AsNoTracking()
+        .Where(s => s.StudioId == studioId && statusIds.Contains(s.Id))
+        .ToDictionaryAsync(s => s.Id, s => s.Name);
+
+    var sb = new StringBuilder();
+    sb.AppendLine("FullName,Email,Phone,IdNumber,Gender,City,Address,DateOfBirth,Status,Tags,Archived");
+    foreach (var customer in customers)
+    {
+        var email = users.TryGetValue(customer.UserId, out var userRow) ? userRow.Email : "";
+        var statusName = customer.StatusId.HasValue && statusMap.TryGetValue(customer.StatusId.Value, out var name) ? name : "";
+        var tags = string.Join(";", TagsToDisplay(customer.TagsJson));
+        var dateOfBirth = customer.DateOfBirth.HasValue ? customer.DateOfBirth.Value.ToString("yyyy-MM-dd") : "";
+        sb.AppendLine(string.Join(",",
+            EscapeCsv(customer.FullName ?? ""),
+            EscapeCsv(email),
+            EscapeCsv(customer.Phone ?? ""),
+            EscapeCsv(customer.IdNumber ?? ""),
+            EscapeCsv(customer.Gender ?? ""),
+            EscapeCsv(customer.City ?? ""),
+            EscapeCsv(customer.Address ?? ""),
+            EscapeCsv(dateOfBirth),
+            EscapeCsv(statusName),
+            EscapeCsv(tags),
+            EscapeCsv(customer.IsArchived ? "Yes" : "No")));
+    }
+
+    var encoding = new UTF8Encoding(true);
+    var bytes = encoding.GetPreamble().Concat(encoding.GetBytes(sb.ToString())).ToArray();
+    return Results.File(bytes, "text/csv; charset=utf-8", "letmein-customers.csv");
+});
+
+adminApi.MapPost("/customers/import", async (ClaimsPrincipal user, HttpRequest request, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var form = await request.ReadFormAsync();
+    var file = form.Files.FirstOrDefault();
+    if (file == null || file.Length == 0)
+    {
+        return Results.BadRequest(new { error = "CSV file required" });
+    }
+
+    using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8, true);
+    var content = await reader.ReadToEndAsync();
+    var lines = content
+        .Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)
+        .ToList();
+    if (lines.Count == 0)
+    {
+        return Results.BadRequest(new { error = "CSV file is empty" });
+    }
+
+    var header = ParseCsvLine(lines[0]);
+    if (header.Count == 0)
+    {
+        return Results.BadRequest(new { error = "CSV header missing" });
+    }
+
+    header[0] = header[0].TrimStart('\uFEFF');
+    var headerMap = header
+        .Select((value, index) => new { Key = NormalizeHeader(value), Index = index })
+        .Where(entry => !string.IsNullOrWhiteSpace(entry.Key))
+        .ToDictionary(entry => entry.Key, entry => entry.Index, StringComparer.OrdinalIgnoreCase);
+
+    var statusList = await db.CustomerStatuses.AsNoTracking()
+        .Where(s => s.StudioId == studioId && s.IsActive)
+        .ToListAsync();
+    var statusByName = statusList.ToDictionary(s => s.Name, s => s.Id, StringComparer.OrdinalIgnoreCase);
+    var defaultStatusId = statusList.FirstOrDefault(s => s.IsDefault)?.Id;
+
+    int created = 0;
+    int updated = 0;
+    int skipped = 0;
+
+    foreach (var line in lines.Skip(1))
+    {
+        var cells = ParseCsvLine(line);
+        if (cells.Count == 0)
+        {
+            skipped += 1;
+            continue;
+        }
+
+        string GetValue(params string[] keys)
+        {
+            foreach (var key in keys)
+            {
+                if (headerMap.TryGetValue(key, out var idx) && idx < cells.Count)
+                {
+                    return cells[idx]?.Trim() ?? "";
+                }
+            }
+            return "";
+        }
+
+        var fullName = GetValue("full name", "fullname", "name");
+        var firstName = GetValue("first name", "firstname");
+        var lastName = GetValue("last name", "lastname");
+        var email = GetValue("email", "mail", "e-mail").Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            skipped += 1;
+            continue;
+        }
+        var phone = GetValue("phone", "mobile", "phone number");
+        var idNumber = GetValue("idnumber", "id number", "id");
+        var gender = GetValue("gender", "sex");
+        var city = GetValue("city");
+        var address = GetValue("address");
+        var dateOfBirthValue = GetValue("dateofbirth", "date of birth", "dob", "birthdate", "birthday");
+        var statusName = GetValue("status");
+        var tagsValue = GetValue("tags", "tag");
+        var archivedValue = GetValue("archived", "isarchived");
+
+        var dateOfBirth = TryParseDateOnly(dateOfBirthValue);
+        Guid? statusId = defaultStatusId;
+        if (!string.IsNullOrWhiteSpace(statusName) && statusByName.TryGetValue(statusName.Trim(), out var statusGuid))
+        {
+            statusId = statusGuid;
+        }
+
+        var tags = SplitTags(tagsValue);
+        var tagsJson = tags.Length > 0 ? NormalizeTagsJson(null, string.Join(",", tags)) : null;
+
+        var userRow = await db.Users.FirstOrDefaultAsync(u => u.StudioId == studioId && u.Email == email);
+        var customer = userRow != null
+            ? await db.Customers.FirstOrDefaultAsync(c => c.StudioId == studioId && c.UserId == userRow.Id)
+            : null;
+
+        if (customer == null)
+        {
+            if (string.IsNullOrWhiteSpace(fullName))
+            {
+                fullName = $"{firstName} {lastName}".Trim();
+            }
+            if (string.IsNullOrWhiteSpace(fullName))
+            {
+                skipped += 1;
+                continue;
+            }
+
+            var newUser = userRow ?? new AppUser
+            {
+                Id = Guid.NewGuid(),
+                StudioId = studioId,
+                Email = email,
+                DisplayName = fullName,
+                Phone = phone,
+                City = city,
+                Address = address,
+                Gender = gender,
+                IdNumber = idNumber,
+                IsActive = true
+            };
+
+            if (userRow == null)
+            {
+                var password = GenerateTempPassword();
+                var hasher = new PasswordHasher<AppUser>();
+                newUser.PasswordHash = hasher.HashPassword(newUser, password);
+                SetUserRoles(newUser, new[] { UserRole.Customer });
+                db.Users.Add(newUser);
+            }
+            else
+            {
+                var roles = GetUserRoles(newUser);
+                if (!roles.Contains(UserRole.Customer))
+                {
+                    roles.Add(UserRole.Customer);
+                    SetUserRoles(newUser, roles);
+                }
+                db.Users.Update(newUser);
+            }
+
+            var (resolvedFirst, resolvedLast) = ResolveNameParts(fullName, firstName, lastName);
+            customer = new Customer
+            {
+                Id = Guid.NewGuid(),
+                StudioId = studioId,
+                UserId = newUser.Id,
+                FirstName = resolvedFirst,
+                LastName = resolvedLast,
+                FullName = fullName,
+                Phone = phone,
+                DateOfBirth = dateOfBirth,
+                IdNumber = idNumber,
+                Gender = gender,
+                City = city,
+                Address = address,
+                Occupation = "",
+                SignedHealthView = false,
+                StatusId = statusId,
+                TagsJson = tagsJson,
+                IsArchived = archivedValue.Equals("yes", StringComparison.OrdinalIgnoreCase) || archivedValue.Equals("true", StringComparison.OrdinalIgnoreCase)
+            };
+            db.Customers.Add(customer);
+            created += 1;
+        }
+        else
+        {
+            if (!string.IsNullOrWhiteSpace(fullName))
+            {
+                customer.FullName = fullName;
+            }
+            if (!string.IsNullOrWhiteSpace(firstName) || !string.IsNullOrWhiteSpace(lastName))
+            {
+                var (resolvedFirst, resolvedLast) = ResolveNameParts(customer.FullName, firstName, lastName);
+                customer.FirstName = resolvedFirst;
+                customer.LastName = resolvedLast;
+            }
+            if (!string.IsNullOrWhiteSpace(phone)) customer.Phone = phone;
+            if (!string.IsNullOrWhiteSpace(idNumber)) customer.IdNumber = idNumber;
+            if (!string.IsNullOrWhiteSpace(gender)) customer.Gender = gender;
+            if (!string.IsNullOrWhiteSpace(city)) customer.City = city;
+            if (!string.IsNullOrWhiteSpace(address)) customer.Address = address;
+            if (dateOfBirth.HasValue) customer.DateOfBirth = dateOfBirth;
+            if (!string.IsNullOrWhiteSpace(statusName) && statusId.HasValue) customer.StatusId = statusId;
+            if (tagsJson != null) customer.TagsJson = tagsJson;
+            if (!string.IsNullOrWhiteSpace(archivedValue))
+            {
+                customer.IsArchived = archivedValue.Equals("yes", StringComparison.OrdinalIgnoreCase) || archivedValue.Equals("true", StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (userRow != null)
+            {
+                userRow.DisplayName = customer.FullName;
+                if (!string.IsNullOrWhiteSpace(phone)) userRow.Phone = phone;
+                if (!string.IsNullOrWhiteSpace(city)) userRow.City = city;
+                if (!string.IsNullOrWhiteSpace(address)) userRow.Address = address;
+                if (!string.IsNullOrWhiteSpace(gender)) userRow.Gender = gender;
+                if (!string.IsNullOrWhiteSpace(idNumber)) userRow.IdNumber = idNumber;
+                userRow.IsActive = !customer.IsArchived;
+                var roles = GetUserRoles(userRow);
+                if (!roles.Contains(UserRole.Customer))
+                {
+                    roles.Add(UserRole.Customer);
+                    SetUserRoles(userRow, roles);
+                }
+                db.Users.Update(userRow);
+            }
+
+            db.Customers.Update(customer);
+            updated += 1;
+        }
+    }
+
+    await db.SaveChangesAsync();
+    await LogAuditAsync(db, user, "Import", "Customer", studioId.ToString(), $"Imported customers (created: {created}, updated: {updated}, skipped: {skipped})");
+    return Results.Ok(new { created, updated, skipped });
 });
 
 adminApi.MapPost("/customers", async (ClaimsPrincipal user, CustomerCreateRequest request, AppDbContext db) =>
@@ -3856,6 +4167,68 @@ instructorApi.MapGet("/instances/{id:guid}/roster", async (ClaimsPrincipal user,
     return Results.Ok(roster);
 });
 
+instructorApi.MapDelete("/bookings/{id:guid}", async (ClaimsPrincipal user, Guid id, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var userId = GetUserId(user);
+    var booking = await db.Bookings.FirstOrDefaultAsync(b => b.Id == id && b.StudioId == studioId);
+    if (booking == null)
+    {
+        return Results.NotFound();
+    }
+
+    var instance = await db.EventInstances.AsNoTracking().FirstOrDefaultAsync(i => i.Id == booking.EventInstanceId && i.StudioId == studioId);
+    if (instance == null)
+    {
+        return Results.NotFound();
+    }
+
+    var instructor = await db.Instructors.AsNoTracking().FirstOrDefaultAsync(i => i.StudioId == studioId && i.UserId == userId);
+    if (instructor == null || (instance.InstructorId != instructor.Id && !user.IsInRole(UserRole.Admin.ToString())))
+    {
+        return Results.Forbid();
+    }
+
+    if (booking.Status == BookingStatus.Cancelled)
+    {
+        return Results.Ok(new { status = "cancelled" });
+    }
+
+    var customer = await db.Customers.FirstOrDefaultAsync(c => c.Id == booking.CustomerId && c.StudioId == studioId);
+    if (customer == null)
+    {
+        return Results.NotFound();
+    }
+
+    booking.Status = BookingStatus.Cancelled;
+    booking.CancelledAtUtc = DateTime.UtcNow;
+
+    if (booking.MembershipId.HasValue)
+    {
+        var membership = await db.Memberships.FirstOrDefaultAsync(m => m.Id == booking.MembershipId && m.CustomerId == customer.Id);
+        if (membership != null)
+        {
+            var plan = await db.Plans.FirstOrDefaultAsync(p => p.Id == membership.PlanId);
+            if (plan?.Type == PlanType.PunchCard)
+            {
+                membership.RemainingUses += 1;
+                db.Memberships.Update(membership);
+            }
+        }
+    }
+
+    var attendance = await db.Attendance.FirstOrDefaultAsync(a => a.StudioId == studioId && a.EventInstanceId == booking.EventInstanceId && a.CustomerId == booking.CustomerId);
+    if (attendance != null)
+    {
+        db.Attendance.Remove(attendance);
+    }
+
+    db.Bookings.Update(booking);
+    await db.SaveChangesAsync();
+    await LogAuditAsync(db, user, "Cancel", "Booking", booking.Id.ToString(), "Removed registration", new { booking.Id, booking.EventInstanceId });
+    return Results.Ok(new { status = "cancelled" });
+});
+
 instructorApi.MapPost("/instances/{id:guid}/attendance", async (ClaimsPrincipal user, Guid id, AttendanceUpdateRequest request, AppDbContext db) =>
 {
     var studioId = GetStudioId(user);
@@ -4331,6 +4704,87 @@ static string EscapeCsv(string value)
 
     var escaped = value.Replace("\"", "\"\"");
     return $"\"{escaped}\"";
+}
+
+static string NormalizeHeader(string value)
+{
+    return value.Trim().ToLowerInvariant();
+}
+
+static List<string> ParseCsvLine(string line)
+{
+    var values = new List<string>();
+    if (line == null)
+    {
+        return values;
+    }
+
+    var sb = new StringBuilder();
+    var inQuotes = false;
+    for (var i = 0; i < line.Length; i++)
+    {
+        var ch = line[i];
+        if (ch == '"')
+        {
+            if (inQuotes && i + 1 < line.Length && line[i + 1] == '"')
+            {
+                sb.Append('"');
+                i++;
+            }
+            else
+            {
+                inQuotes = !inQuotes;
+            }
+            continue;
+        }
+
+        if (ch == ',' && !inQuotes)
+        {
+            values.Add(sb.ToString());
+            sb.Clear();
+            continue;
+        }
+
+        sb.Append(ch);
+    }
+
+    values.Add(sb.ToString());
+    return values;
+}
+
+static string[] SplitTags(string value)
+{
+    if (string.IsNullOrWhiteSpace(value))
+    {
+        return Array.Empty<string>();
+    }
+
+    return value
+        .Split(new[] { ",", ";", "|" }, StringSplitOptions.RemoveEmptyEntries)
+        .Select(tag => tag.Trim())
+        .Where(tag => !string.IsNullOrWhiteSpace(tag))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToArray();
+}
+
+static DateOnly? TryParseDateOnly(string value)
+{
+    if (string.IsNullOrWhiteSpace(value))
+    {
+        return null;
+    }
+
+    if (DateOnly.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
+    {
+        return date;
+    }
+
+    if (DateOnly.TryParse(value, CultureInfo.CurrentCulture, DateTimeStyles.None, out date))
+    {
+        return date;
+    }
+
+    return null;
 }
 
 static string GenerateTempPassword()

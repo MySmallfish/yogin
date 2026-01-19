@@ -226,6 +226,7 @@ const calendarModalTemplate = compileTemplate("instructor-modal", `
                     <th>Name</th>
                     <th>Contact</th>
                     <th>Attendance</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -254,6 +255,13 @@ const calendarModalTemplate = compileTemplate("instructor-modal", `
                           </svg>
                         </button>
                       </div>
+                    </td>
+                    <td>
+                      <button type="button" class="icon-button roster-remove" data-remove-booking="{{bookingId}}" data-customer-name="{{customerName}}" aria-label="Remove {{customerName}}" title="Remove">
+                        <span class="icon" aria-hidden="true">
+                          <svg viewBox="0 0 24 24"><path d="M6 7h12M9 7v12m6-12v12M10 4h4l1 2H9l1-2z"/></svg>
+                        </span>
+                      </button>
                     </td>
                   </tr>
                   {{/each}}
@@ -550,6 +558,26 @@ async function openEventModal(item) {
                     console.error(error);
                 }
             });
+        });
+    });
+
+    overlay.querySelectorAll("[data-remove-booking]").forEach(button => {
+        const bookingId = button.getAttribute("data-remove-booking");
+        const customerName = button.getAttribute("data-customer-name") || "";
+        if (!bookingId) return;
+        button.addEventListener("click", async () => {
+            const confirmed = window.confirm(`Remove ${customerName || "registration"}?`);
+            if (!confirmed) return;
+            button.disabled = true;
+            try {
+                await apiDelete(`/api/instructor/bookings/${bookingId}`);
+                overlay.remove();
+                await refreshCalendar();
+            } catch (error) {
+                console.error(error);
+            } finally {
+                button.disabled = false;
+            }
         });
     });
 }

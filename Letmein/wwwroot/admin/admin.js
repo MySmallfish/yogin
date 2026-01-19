@@ -246,7 +246,7 @@ const calendarTemplate = compileTemplate("calendar", `
         {{#if day.hasEvents}}
           <div class="calendar-events">
             {{#each day.events}}
-              <div class="calendar-event {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}}" data-event="{{id}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
+              <div class="calendar-event {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
                 <button class="event-actions" type="button" aria-label="{{t "calendar.actions" "Actions"}}">
                   <span class="icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24"><path d="M5 12a2 2 0 1 0 0 0zm7 0a2 2 0 1 0 0 0zm7 0a2 2 0 1 0 0 0z"/></svg>
@@ -256,6 +256,11 @@ const calendarTemplate = compileTemplate("calendar", `
                 <div class="event-title">
                   {{#if seriesIcon}}<span class="event-icon">{{seriesIcon}}</span>{{/if}}
                   {{seriesTitle}}
+                  {{#if hasBirthdayList}}
+                    <span class="birthday-chevron" aria-hidden="true">
+                      <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg>
+                    </span>
+                  {{/if}}
                 </div>
                 <div class="event-meta">{{roomName}} - {{instructorName}}</div>
                 <div class="event-meta event-meta-compact">
@@ -287,7 +292,7 @@ const calendarTemplate = compileTemplate("calendar", `
             {{#if hasEvents}}
               <div class="calendar-day-events">
                 {{#each events}}
-                  <div class="calendar-event compact {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}}" data-event="{{id}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
+                  <div class="calendar-event compact {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
                     <button class="event-actions" type="button" aria-label="{{t "calendar.actions" "Actions"}}">
                       <span class="icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24"><path d="M5 12a2 2 0 1 0 0 0zm7 0a2 2 0 1 0 0 0zm7 0a2 2 0 1 0 0 0z"/></svg>
@@ -297,6 +302,11 @@ const calendarTemplate = compileTemplate("calendar", `
                     <div class="event-title">
                       {{#if seriesIcon}}<span class="event-icon">{{seriesIcon}}</span>{{/if}}
                       {{seriesTitle}}
+                      {{#if hasBirthdayList}}
+                        <span class="birthday-chevron" aria-hidden="true">
+                          <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg>
+                        </span>
+                      {{/if}}
                     </div>
                     <div class="event-meta">{{roomName}}</div>
                     <div class="event-meta">{{instructorName}}</div>
@@ -329,11 +339,16 @@ const calendarTemplate = compileTemplate("calendar", `
                 {{#if hasEvents}}
                   <div class="calendar-month-events">
                     {{#each eventsPreview}}
-                      <div class="calendar-event mini {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}}" data-event="{{id}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
+                      <div class="calendar-event mini {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
                         <span class="event-time">{{time}}</span>
                         <span class="event-title">
                           {{#if seriesIcon}}<span class="event-icon">{{seriesIcon}}</span>{{/if}}
                           {{title}}
+                          {{#if hasBirthdayList}}
+                            <span class="birthday-chevron" aria-hidden="true">
+                              <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg>
+                            </span>
+                          {{/if}}
                         </span>
                       </div>
                     {{/each}}
@@ -365,7 +380,7 @@ const calendarTemplate = compileTemplate("calendar", `
             </thead>
             <tbody>
               {{#each list.items}}
-              <tr class="{{#if isHoliday}}holiday-row{{/if}} {{#if isBirthday}}birthday-row{{/if}}" data-event="{{id}}">
+              <tr class="{{#if isHoliday}}holiday-row{{/if}} {{#if isBirthday}}birthday-row{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-label="{{birthdayDateLabel}}">
                 <td>{{dateLabel}}</td>
                 <td>{{timeRange}}</td>
                 <td>
@@ -430,6 +445,7 @@ const rosterTemplate = compileTemplate("roster", `
           <th>{{t "roster.email" "Email"}}</th>
           <th>{{t "roster.booking" "Booking"}}</th>
           <th>{{t "roster.attendance" "Attendance"}}</th>
+          <th>{{t "roster.actions" "Actions"}}</th>
         </tr>
       </thead>
       <tbody>
@@ -538,6 +554,15 @@ const rosterTemplate = compileTemplate("roster", `
               </div>
             {{/if}}
           </td>
+          <td>
+            {{#if canRemove}}
+              <button type="button" class="icon-button roster-remove" data-remove-booking="{{bookingId}}" data-customer-name="{{customerName}}" aria-label="{{t "roster.remove" "Remove"}} {{customerName}}" title="{{t "roster.remove" "Remove"}}">
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M6 7h12M9 7v12m6-12v12M10 4h4l1 2H9l1-2z"/></svg>
+                </span>
+              </button>
+            {{/if}}
+          </td>
         </tr>
         {{/each}}
       </tbody>
@@ -572,21 +597,24 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
         </div>
         <button class="modal-close" id="close-modal" type="button" aria-label="{{t "common.close" "Close"}}"></button>
       </div>
+      <div class="session-header-fields">
+        <div class="form-grid">
+          <div class="span-2">
+            <label>{{t "session.title" "Title"}}</label>
+            <input name="title" value="{{seriesTitle}}" />
+          </div>
+          <div class="span-2 markdown-field">
+            <label>{{t "session.description" "Description"}}</label>
+            <div class="markdown-split">
+              <textarea name="description" rows="4" data-markdown-source="session-description" placeholder="{{t "series.descriptionHint" "Markdown text or URL"}}">{{seriesDescription}}</textarea>
+              <div class="markdown-preview" data-markdown-preview="session-description"></div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="modal-columns">
         <div class="modal-column modal-column-details">
           <div class="form-grid">
-            <div class="span-2">
-              <label>{{t "session.title" "Title"}}</label>
-              <input name="title" value="{{seriesTitle}}" />
-            </div>
-            <div class="span-2 markdown-field">
-              <div class="markdown-header">
-                <label>{{t "session.description" "Description"}}</label>
-                <button class="secondary markdown-toggle" type="button" data-markdown-toggle="session-description">{{t "common.preview" "Preview"}}</button>
-              </div>
-              <textarea name="description" rows="3" data-markdown-source="session-description" placeholder="{{t "series.descriptionHint" "Markdown text or URL"}}">{{seriesDescription}}</textarea>
-              <div class="markdown-preview hidden" data-markdown-preview="session-description"></div>
-            </div>
             <div>
               <label>{{t "session.status" "Status"}}</label>
               <select name="status">
@@ -693,8 +721,12 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
       <div class="modal-footer">
         <div class="meta" data-booked-meta>{{capacitySummary}}</div>
         <div class="modal-actions">
+          <button class="secondary" id="delete-session">{{t "session.delete" "Delete session"}}</button>
           <button class="secondary" id="duplicate-session">{{t "session.duplicate" "Duplicate"}}</button>
           <button id="save-instance">{{t "common.saveChanges" "Save changes"}}</button>
+          {{#if eventSeriesId}}
+            <button class="secondary" id="delete-series">{{t "series.delete" "Delete series"}}</button>
+          {{/if}}
           <button class="secondary" id="edit-series">{{t "series.edit" "Edit series"}}</button>
         </div>
       </div>
@@ -778,6 +810,27 @@ const descriptionModalTemplate = compileTemplate("description-modal", `
   </div>
 `);
 
+const birthdayModalTemplate = compileTemplate("birthday-modal", `
+  <div class="modal-overlay" id="birthday-modal">
+    <div class="modal modal-compact">
+      <div class="modal-header">
+        <div>
+          <h3>{{title}}</h3>
+          {{#if subtitle}}
+            <div class="muted">{{subtitle}}</div>
+          {{/if}}
+        </div>
+        <button class="modal-close" id="close-birthday" type="button" aria-label="{{t "common.close" "Close"}}"></button>
+      </div>
+      <div class="birthday-list">
+        {{#each names}}
+          <div class="birthday-item">{{this}}</div>
+        {{/each}}
+      </div>
+    </div>
+  </div>
+`);
+
 const confirmModalTemplate = compileTemplate("confirm-modal", `
   <div class="modal-overlay" id="confirm-modal">
     <div class="modal modal-compact">
@@ -821,12 +874,11 @@ const sessionModalTemplate = compileTemplate("session-modal", `
           <input name="title" value="Studio Flow" />
         </div>
         <div class="span-2 markdown-field">
-          <div class="markdown-header">
-            <label>{{t "session.description" "Description"}}</label>
-            <button class="secondary markdown-toggle" type="button" data-markdown-toggle="session-create-description">{{t "common.preview" "Preview"}}</button>
+          <label>{{t "session.description" "Description"}}</label>
+          <div class="markdown-split">
+            <textarea name="description" rows="4" data-markdown-source="session-create-description" placeholder="{{t "series.descriptionHint" "Markdown text or URL"}}"></textarea>
+            <div class="markdown-preview" data-markdown-preview="session-create-description"></div>
           </div>
-          <textarea name="description" rows="3" data-markdown-source="session-create-description" placeholder="{{t "series.descriptionHint" "Markdown text or URL"}}"></textarea>
-          <div class="markdown-preview hidden" data-markdown-preview="session-create-description"></div>
         </div>
         <div>
           <label>{{t "session.instructor" "Instructor"}}</label>
@@ -1013,12 +1065,11 @@ const seriesModalTemplate = compileTemplate("series-modal", `
           </select>
         </div>
         <div class="span-2 markdown-field">
-          <div class="markdown-header">
-            <label>{{t "series.description" "Description"}}</label>
-            <button class="secondary markdown-toggle" type="button" data-markdown-toggle="series-description">{{t "common.preview" "Preview"}}</button>
+          <label>{{t "series.description" "Description"}}</label>
+          <div class="markdown-split">
+            <textarea name="description" rows="4" data-markdown-source="series-description" placeholder="{{t "series.descriptionHint" "Markdown text or URL"}}">{{description}}</textarea>
+            <div class="markdown-preview" data-markdown-preview="series-description"></div>
           </div>
-          <textarea name="description" rows="3" data-markdown-source="series-description" placeholder="{{t "series.descriptionHint" "Markdown text or URL"}}">{{description}}</textarea>
-          <div class="markdown-preview hidden" data-markdown-preview="series-description"></div>
         </div>
         <div>
           <label>{{t "series.recurrence" "Recurrence (weeks)"}}</label>
@@ -1628,6 +1679,7 @@ const eventsTemplate = compileTemplate("events", `
           <td>
             <button class="secondary" data-edit="{{id}}">{{t "common.edit" "Edit"}}</button>
             <button data-generate="{{id}}">{{t "events.generate" "Generate"}}</button>
+            <button class="secondary" data-delete-series="{{id}}">{{t "events.delete" "Delete"}}</button>
           </td>
         </tr>
         {{/each}}
@@ -1674,6 +1726,11 @@ const customersTemplate = compileTemplate("customers", `
   <div class="toolbar">
     <button id="add-customer">{{t "customers.add" "Add customer"}}</button>     
     <button class="secondary" id="manage-statuses">{{t "customers.manageStatuses" "Manage statuses"}}</button>
+    <button class="secondary" id="export-customers">{{t "customers.export" "Export CSV"}}</button>
+    <label class="secondary file-button">
+      <input type="file" id="import-customers" accept=".csv" />
+      <span>{{t "customers.import" "Import CSV"}}</span>
+    </label>
   </div>
   <div class="customer-controls">
     <input type="search" name="search" placeholder="{{t "customers.search" "Search customers"}}" value="{{search}}" />
@@ -3011,6 +3068,12 @@ function bindRouteActions(route, data, state) {
             card.addEventListener("click", (event) => {
                 if (event.target.closest(".event-actions")) return;
                 event.stopPropagation();
+                const birthdayNames = getBirthdayNamesFromElement(card);
+                if (birthdayNames) {
+                    const label = card.getAttribute("data-birthday-label") || "";
+                    openBirthdayModal(birthdayNames, label);
+                    return;
+                }
                 const id = card.getAttribute("data-event");
                 const item = itemMap.get(String(id));
                 if (!item || item.isHoliday || item.isBirthday) return;
@@ -3060,8 +3123,41 @@ function bindRouteActions(route, data, state) {
         document.querySelectorAll("button[data-generate]").forEach(btn => {
             btn.addEventListener("click", async () => {
                 const seriesId = btn.getAttribute("data-generate");
-                await apiPost(`/api/admin/event-series/${seriesId}/generate-instances`, {});
-                actor.send({ type: "REFRESH" });
+                if (!seriesId) return;
+                btn.disabled = true;
+                try {
+                    await apiPost(`/api/admin/event-series/${seriesId}/generate-instances`, {});
+                    showToast(t("events.generateSuccess", "Sessions generated."), "success");
+                    actor.send({ type: "REFRESH" });
+                } catch (error) {
+                    showToast(error.message || t("events.generateError", "Unable to generate sessions."), "error");
+                } finally {
+                    btn.disabled = false;
+                }
+            });
+        });
+
+        document.querySelectorAll("button[data-delete-series]").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const seriesId = btn.getAttribute("data-delete-series");
+                if (!seriesId) return;
+                const confirmed = await confirmWithModal({
+                    title: t("events.deleteConfirmTitle", "Delete series?"),
+                    message: t("events.deleteConfirmMessage", "This will remove the series and its future sessions."),
+                    confirmLabel: t("events.delete", "Delete"),
+                    cancelLabel: t("common.cancel", "Cancel")
+                });
+                if (!confirmed) return;
+                btn.disabled = true;
+                try {
+                    await apiDelete(`/api/admin/event-series/${seriesId}`);
+                    showToast(t("events.deleteSuccess", "Series deleted."), "success");
+                    actor.send({ type: "REFRESH" });
+                } catch (error) {
+                    showToast(error.message || t("events.deleteError", "Unable to delete series."), "error");
+                } finally {
+                    btn.disabled = false;
+                }
             });
         });
     }
@@ -3123,6 +3219,8 @@ function bindRouteActions(route, data, state) {
     if (route === "customers") {
         const addBtn = document.getElementById("add-customer");
         const manageStatusesBtn = document.getElementById("manage-statuses");
+        const exportBtn = document.getElementById("export-customers");
+        const importInput = document.getElementById("import-customers");
         const filterBtn = document.getElementById("apply-customer-filters");
         const selectAll = document.getElementById("customers-select-all");
         const bulkEmail = document.getElementById("bulk-email");
@@ -3139,6 +3237,38 @@ function bindRouteActions(route, data, state) {
         if (manageStatusesBtn) {
             manageStatusesBtn.addEventListener("click", () => {
                 openCustomerStatusModal(data.customerStatuses || []);
+            });
+        }
+
+        if (exportBtn) {
+            exportBtn.addEventListener("click", () => {
+                window.location.href = "/api/admin/customers/export/csv";
+            });
+        }
+
+        if (importInput) {
+            importInput.addEventListener("change", async () => {
+                const file = importInput.files?.[0];
+                if (!file) return;
+                const formData = new FormData();
+                formData.append("file", file);
+                importInput.disabled = true;
+                try {
+                    const result = await apiFetch("/api/admin/customers/import", {
+                        method: "POST",
+                        body: formData
+                    });
+                    const created = result?.created ?? 0;
+                    const updated = result?.updated ?? 0;
+                    const skipped = result?.skipped ?? 0;
+                    showToast(`${t("customers.importSuccess", "Customer import complete.")} (${created}/${updated}/${skipped})`, "success");
+                    actor.send({ type: "REFRESH" });
+                } catch (error) {
+                    showToast(error.message || t("customers.importError", "Unable to import customers."), "error");
+                } finally {
+                    importInput.value = "";
+                    importInput.disabled = false;
+                }
             });
         }
 
@@ -3939,27 +4069,27 @@ function renderMarkdown(value) {
 
 function bindMarkdownPreview(root) {
     if (!root) return;
-    const toggles = Array.from(root.querySelectorAll("[data-markdown-toggle]"));
-    if (toggles.length === 0) return;
-    toggles.forEach(toggle => {
-        const key = toggle.getAttribute("data-markdown-toggle");
+    const sources = Array.from(root.querySelectorAll("[data-markdown-source]"));
+    sources.forEach(source => {
+        const key = source.getAttribute("data-markdown-source");
         if (!key) return;
-        const source = root.querySelector(`[data-markdown-source="${key}"]`);
         const preview = root.querySelector(`[data-markdown-preview="${key}"]`);
-        if (!source || !preview) return;
+        if (!preview) return;
         const updatePreview = () => {
             preview.innerHTML = renderMarkdown(source.value || "");
         };
+        updatePreview();
+        source.addEventListener("input", updatePreview);
+    });
+
+    const toggles = Array.from(root.querySelectorAll("[data-markdown-toggle]"));
+    toggles.forEach(toggle => {
+        const key = toggle.getAttribute("data-markdown-toggle");
+        if (!key) return;
+        const preview = root.querySelector(`[data-markdown-preview="${key}"]`);
+        if (!preview) return;
         toggle.addEventListener("click", () => {
             preview.classList.toggle("hidden");
-            if (!preview.classList.contains("hidden")) {
-                updatePreview();
-            }
-        });
-        source.addEventListener("input", () => {
-            if (!preview.classList.contains("hidden")) {
-                updatePreview();
-            }
         });
     });
 }
@@ -4148,6 +4278,7 @@ async function openCalendarEventModal(item, data) {
         const isNoShow = attendanceRaw === "NoShow" || attendanceRaw === 1;
         const isRegistered = attendanceRaw === "Registered" || attendanceRaw === null || attendanceRaw === undefined;
         const isBirthday = isBirthdayForKey(row.dateOfBirth, sessionDateKey);
+        const canRemove = Boolean(row.bookingId) && !isCancelled;
         return {
             ...row,
             bookingStatusLabel,
@@ -4158,6 +4289,7 @@ async function openCalendarEventModal(item, data) {
             isPresent,
             isNoShow,
             isBirthday,
+            canRemove,
             hasEmail: Boolean(email),
             hasPhone: Boolean(phone),
             hasWhatsapp: Boolean(phoneDigits),
@@ -4342,6 +4474,54 @@ async function openCalendarEventModal(item, data) {
         });
     }
 
+    const deleteBtn = overlay.querySelector("#delete-session");
+    if (deleteBtn) {
+        deleteBtn.addEventListener("click", async () => {
+            const confirmed = await confirmWithModal({
+                title: t("calendar.deleteTitle", "Delete session?"),
+                message: t("calendar.deleteMessage", "This will remove the session and its registrations."),
+                confirmLabel: t("calendar.deleteConfirm", "Delete session"),
+                cancelLabel: t("common.cancel", "Cancel")
+            });
+            if (!confirmed) return;
+            deleteBtn.disabled = true;
+            try {
+                await apiDelete(`/api/admin/event-instances/${item.id}`);
+                showToast(t("calendar.deleteSuccess", "Session deleted."), "success");
+                closeModal();
+                actor.send({ type: "REFRESH" });
+            } catch (error) {
+                showToast(error.message || t("calendar.deleteError", "Unable to delete session."), "error");
+            } finally {
+                deleteBtn.disabled = false;
+            }
+        });
+    }
+
+    const deleteSeriesBtn = overlay.querySelector("#delete-series");
+    if (deleteSeriesBtn) {
+        deleteSeriesBtn.addEventListener("click", async () => {
+            const confirmed = await confirmWithModal({
+                title: t("series.deleteConfirmTitle", "Delete series?"),
+                message: t("series.deleteConfirmMessage", "This will remove the series and its future sessions."),
+                confirmLabel: t("series.delete", "Delete series"),
+                cancelLabel: t("common.cancel", "Cancel")
+            });
+            if (!confirmed) return;
+            deleteSeriesBtn.disabled = true;
+            try {
+                await apiDelete(`/api/admin/event-series/${item.eventSeriesId}`);
+                showToast(t("series.deleteSuccess", "Series deleted."), "success");
+                closeModal();
+                actor.send({ type: "REFRESH" });
+            } catch (error) {
+                showToast(error.message || t("series.deleteError", "Unable to delete series."), "error");
+            } finally {
+                deleteSeriesBtn.disabled = false;
+            }
+        });
+    }
+
     const saveBtn = overlay.querySelector("#save-instance");
     if (saveBtn) {
         saveBtn.addEventListener("click", async () => {
@@ -4500,6 +4680,31 @@ async function openCalendarEventModal(item, data) {
                         showToast(error.message || t("attendance.updateError", "Unable to update attendance."), "error");
                     }
                 });
+            });
+        });
+
+        overlay.querySelectorAll("[data-remove-booking]").forEach(button => {
+            const bookingId = button.getAttribute("data-remove-booking");
+            const customerName = button.getAttribute("data-customer-name") || "";
+            if (!bookingId) return;
+            button.addEventListener("click", async () => {
+                const confirmed = await confirmWithModal({
+                    title: t("roster.removeConfirmTitle", "Remove registration?"),
+                    message: t("roster.removeConfirmMessage", "This will cancel the registration for this session."),
+                    confirmLabel: t("roster.remove", "Remove"),
+                    cancelLabel: t("common.cancel", "Cancel")
+                });
+                if (!confirmed) return;
+                button.disabled = true;
+                try {
+                    await apiDelete(`/api/admin/bookings/${bookingId}`);
+                    showToast(t("roster.removeSuccess", "Registration removed."), "success");
+                    await refreshRoster();
+                } catch (error) {
+                    showToast(error.message || t("roster.removeError", "Unable to remove registration."), "error");
+                } finally {
+                    button.disabled = false;
+                }
             });
         });
 
@@ -4797,6 +5002,39 @@ function openDescriptionModal(title, description) {
     cleanupEscape = bindModalEscape(closeModal);
     bindModalBackdrop(overlay);
     const closeBtn = overlay.querySelector("#close-description");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", closeModal);
+    }
+}
+
+function openBirthdayModal(names, dateLabel) {
+    if (!Array.isArray(names) || names.length === 0) return;
+    const existing = document.getElementById("birthday-modal");
+    if (existing) {
+        clearModalEscape();
+        existing.remove();
+    }
+    const subtitle = dateLabel
+        ? `${t("calendar.birthdaySubtitle", "Celebrating on")} ${dateLabel}`
+        : t("calendar.birthdaySubtitle", "Celebrating on");
+    const modalMarkup = birthdayModalTemplate({
+        title: t("calendar.birthdayTitle", "Birthdays"),
+        subtitle,
+        names
+    });
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = modalMarkup;
+    const overlay = wrapper.firstElementChild;
+    if (!overlay) return;
+    document.body.appendChild(overlay);
+    let cleanupEscape = () => {};
+    const closeModal = () => {
+        cleanupEscape();
+        overlay.remove();
+    };
+    cleanupEscape = bindModalEscape(closeModal);
+    bindModalBackdrop(overlay);
+    const closeBtn = overlay.querySelector("#close-birthday");
     if (closeBtn) {
         closeBtn.addEventListener("click", closeModal);
     }
@@ -6310,6 +6548,9 @@ function buildCalendarView(items, options) {
                 title: event.seriesTitle,
                 isCancelled: event.isCancelled,
                 isBirthday: event.isBirthday,
+                hasBirthdayList: event.hasBirthdayList,
+                birthdayNamesJson: event.birthdayNamesJson,
+                birthdayDateLabel: event.birthdayDateLabel,
                 isLocked: event.isLocked,
                 seriesIcon: event.seriesIcon,
                 eventStyle: event.eventStyle
@@ -6457,6 +6698,7 @@ function formatAuditAction(value) {
     if (normalized === "report") return t("audit.action.report", "Reported");
     if (normalized === "generate") return t("audit.action.generate", "Generated");
     if (normalized === "invite") return t("audit.action.invite", "Invited");
+    if (normalized === "import") return t("audit.action.import", "Imported");
     return value;
 }
 
@@ -6558,6 +6800,48 @@ function buildEventMap(items, timeZone) {
         const capacity = Number(item.capacity || 0);
         const remoteBooked = Number(item.remoteBooked || 0);
         const remoteCapacity = Number(item.remoteCapacity || 0);
+        const list = map.get(dateKey) || [];
+        if (isBirthday) {
+            const resolvedName = birthdayName || t("calendar.birthday", "Birthday");
+            const existing = list.find(entry => entry.isBirthdayGroup);
+            if (existing) {
+                existing.birthdayNames.push(resolvedName);
+                existing.birthdayCount = existing.birthdayNames.length;
+                existing.hasBirthdayList = existing.birthdayCount > 1;
+                existing.birthdayNamesJson = encodeURIComponent(JSON.stringify(existing.birthdayNames));
+                existing.seriesTitle = `${birthdayIcon} ${existing.birthdayNames[0]}`;
+            } else {
+                const birthdayNames = [resolvedName];
+                const event = {
+                    ...item,
+                    dateKey,
+                    startTime,
+                    endTime,
+                    timeRange,
+                    statusLabel,
+                    isCancelled,
+                    isHoliday,
+                    isBirthday,
+                    isBirthdayGroup: true,
+                    isLocked: true,
+                    seriesTitle,
+                    seriesIcon: "",
+                    registeredSummary: "",
+                    remoteSummary: "",
+                    price: "",
+                    eventStyle,
+                    birthdayNames,
+                    birthdayCount: birthdayNames.length,
+                    hasBirthdayList: false,
+                    birthdayNamesJson: encodeURIComponent(JSON.stringify(birthdayNames)),
+                    birthdayDateLabel: formatFullDate(start, timeZone)
+                };
+                list.push(event);
+            }
+            map.set(dateKey, list);
+            return;
+        }
+
         const event = {
             ...item,
             dateKey,
@@ -6571,12 +6855,16 @@ function buildEventMap(items, timeZone) {
             isLocked: isAllDay,
             seriesTitle,
             seriesIcon,
-            registeredSummary: isHoliday || isBirthday ? "" : `${booked}/${capacity}`,
-            remoteSummary: remoteCapacity > 0 && !isHoliday && !isBirthday ? `${remoteBooked}/${remoteCapacity}` : "",
+            registeredSummary: isHoliday ? "" : `${booked}/${capacity}`,
+            remoteSummary: remoteCapacity > 0 && !isHoliday ? `${remoteBooked}/${remoteCapacity}` : "",
             price: formatMoney(item.priceCents, item.currency),
-            eventStyle
+            eventStyle,
+            birthdayNames: [],
+            birthdayCount: 0,
+            hasBirthdayList: false,
+            birthdayNamesJson: "",
+            birthdayDateLabel: ""
         };
-        const list = map.get(dateKey) || [];
         list.push(event);
         map.set(dateKey, list);
     });
@@ -6653,6 +6941,21 @@ function closeEventActionsMenu() {
     }
 }
 
+function getBirthdayNamesFromElement(element) {
+    if (!element) return null;
+    const raw = element.getAttribute("data-birthday-names");
+    if (!raw) return null;
+    try {
+        const parsed = JSON.parse(decodeURIComponent(raw));
+        if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+        }
+    } catch {
+        return null;
+    }
+    return null;
+}
+
 function openEventActionsMenu(anchor, item, data) {
     if (!anchor || !item) return;
     closeEventActionsMenu();
@@ -6662,6 +6965,7 @@ function openEventActionsMenu(anchor, item, data) {
     menu.innerHTML = `
         <button type="button" data-action="edit">${t("calendar.actionEdit", "Edit session")}</button>
         <button type="button" data-action="duplicate">${t("calendar.actionDuplicate", "Duplicate session")}</button>
+        <button type="button" data-action="delete">${t("calendar.actionDelete", "Delete session")}</button>
     `;
 
     document.body.appendChild(menu);
@@ -6701,6 +7005,23 @@ function openEventActionsMenu(anchor, item, data) {
         }
         if (action === "duplicate") {
             await duplicateSessionFromItem(item, data);
+            return;
+        }
+        if (action === "delete") {
+            const confirmed = await confirmWithModal({
+                title: t("calendar.deleteTitle", "Delete session?"),
+                message: t("calendar.deleteMessage", "This will remove the session and its registrations."),
+                confirmLabel: t("calendar.deleteConfirm", "Delete session"),
+                cancelLabel: t("common.cancel", "Cancel")
+            });
+            if (!confirmed) return;
+            try {
+                await apiDelete(`/api/admin/event-instances/${item.id}`);
+                showToast(t("calendar.deleteSuccess", "Session deleted."), "success");
+                actor.send({ type: "REFRESH" });
+            } catch (error) {
+                showToast(error.message || t("calendar.deleteError", "Unable to delete session."), "error");
+            }
         }
     });
 }

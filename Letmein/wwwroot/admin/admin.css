@@ -348,8 +348,22 @@ html[dir="rtl"] .table,
   grid-column: span 2;
 }
 
+.session-header-fields {
+  margin-bottom: 16px;
+}
+
 .markdown-field textarea {
   min-height: 90px;
+}
+
+.markdown-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.markdown-split textarea {
+  min-height: 140px;
 }
 
 .markdown-header {
@@ -367,6 +381,10 @@ html[dir="rtl"] .table,
   background: rgba(248, 250, 252, 0.8);
   font-size: 13px;
   color: var(--slate);
+}
+
+.markdown-split .markdown-preview {
+  margin-top: 0;
 }
 
 .markdown-preview a {
@@ -553,8 +571,8 @@ button.modal-close:hover {
 }
 
 .circle-button {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   border-radius: 999px;
   border: 1px solid var(--line);
@@ -1317,6 +1335,23 @@ button.modal-close:hover {
   margin-top: 6px;
 }
 
+.roster-remove {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #dc2626;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.roster-remove .icon svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.7;
+}
+
 .contact-icon {
   width: 26px;
   height: 26px;
@@ -1361,6 +1396,35 @@ button.modal-close:hover {
   background: rgba(15, 23, 42, 0.08);
   color: var(--muted);
   font-size: 11px;
+  font-weight: 600;
+}
+
+.birthday-chevron {
+  display: inline-flex;
+  align-items: center;
+  margin-inline-start: 6px;
+  color: var(--muted);
+}
+
+.birthday-chevron svg {
+  width: 12px;
+  height: 12px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+}
+
+.birthday-list {
+  display: grid;
+  gap: 8px;
+  padding: 8px 0 4px;
+}
+
+.birthday-item {
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(248, 250, 252, 0.9);
+  border: 1px solid rgba(15, 23, 42, 0.08);
   font-weight: 600;
 }
 
@@ -1432,6 +1496,12 @@ button.modal-close:hover {
   }
 }
 
+@media (max-width: 840px) {
+  .markdown-split {
+    grid-template-columns: 1fr;
+  }
+}
+
 .roster h4 {
   margin: 0;
   font-size: 12px;
@@ -1466,6 +1536,19 @@ button.modal-close:hover {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.file-button {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.file-button input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
 }
 
 .role-pill {

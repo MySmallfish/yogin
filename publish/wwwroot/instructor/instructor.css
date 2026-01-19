@@ -6,6 +6,16 @@
   gap: 24px;
 }
 
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
 .portal-header {
   display: flex;
   align-items: center;
@@ -130,6 +140,23 @@ html[lang^="he"] .portal-title h1 {
   color: #b45309;
   border-color: rgba(245, 158, 11, 0.5);
   background: rgba(245, 158, 11, 0.16);
+}
+
+.roster-remove {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #dc2626;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.roster-remove .icon svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.7;
 }
 
 .calendar-event.birthday {
