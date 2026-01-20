@@ -1,9 +1,11 @@
 
 using System.Globalization;
+using System.IO.Compression;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Xml.Linq;
 using Letmein.Contracts;
 using Letmein.Data;
 using Letmein.Models;
@@ -1957,23 +1959,32 @@ adminApi.MapPost("/customers/import", async (ClaimsPrincipal user, HttpRequest r
     var file = form.Files.FirstOrDefault();
     if (file == null || file.Length == 0)
     {
-        return Results.BadRequest(new { error = "CSV file required" });
+        return Results.BadRequest(new { error = "File required" });
     }
 
-    using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8, true);
-    var content = await reader.ReadToEndAsync();
-    var lines = content
-        .Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)
-        .ToList();
-    if (lines.Count == 0)
+    var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+    List<List<string>> rows;
+    if (extension == ".xlsx")
     {
-        return Results.BadRequest(new { error = "CSV file is empty" });
+        using var fileStream = file.OpenReadStream();
+        rows = ReadXlsxRows(fileStream);
+    }
+    else
+    {
+        using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8, true);
+        var content = await reader.ReadToEndAsync();
+        rows = ReadCsvRows(content);
     }
 
-    var header = ParseCsvLine(lines[0]);
+    if (rows.Count == 0)
+    {
+        return Results.BadRequest(new { error = "File is empty" });
+    }
+
+    var header = rows[0];
     if (header.Count == 0)
     {
-        return Results.BadRequest(new { error = "CSV header missing" });
+        return Results.BadRequest(new { error = "Header missing" });
     }
 
     header[0] = header[0].TrimStart('\uFEFF');
@@ -1992,9 +2003,8 @@ adminApi.MapPost("/customers/import", async (ClaimsPrincipal user, HttpRequest r
     int updated = 0;
     int skipped = 0;
 
-    foreach (var line in lines.Skip(1))
+    foreach (var cells in rows.Skip(1))
     {
-        var cells = ParseCsvLine(line);
         if (cells.Count == 0)
         {
             skipped += 1;
@@ -4750,6 +4760,127 @@ static List<string> ParseCsvLine(string line)
 
     values.Add(sb.ToString());
     return values;
+}
+
+static List<List<string>> ReadCsvRows(string content)
+{
+    var rows = new List<List<string>>();
+    if (string.IsNullOrWhiteSpace(content))
+    {
+        return rows;
+    }
+
+    var lines = content
+        .Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)
+        .ToList();
+
+    foreach (var line in lines)
+    {
+        rows.Add(ParseCsvLine(line));
+    }
+
+    return rows;
+}
+
+static List<List<string>> ReadXlsxRows(Stream stream)
+{
+    var rows = new List<List<string>>();
+    using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
+    var sharedStrings = ParseSharedStrings(archive);
+    var sheetEntry = archive.GetEntry("xl/worksheets/sheet1.xml")
+        ?? archive.Entries.FirstOrDefault(entry =>
+            entry.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase));
+    if (sheetEntry == null)
+    {
+        return rows;
+    }
+
+    using var sheetStream = sheetEntry.Open();
+    var document = XDocument.Load(sheetStream);
+    var ns = document.Root?.Name.Namespace ?? XNamespace.None;
+    foreach (var row in document.Descendants(ns + "row"))
+    {
+        var cells = new List<string>();
+        foreach (var cell in row.Elements(ns + "c"))
+        {
+            var cellRef = cell.Attribute("r")?.Value ?? "";
+            var colIndex = ColumnIndexFromCellRef(cellRef);
+            if (colIndex < 0)
+            {
+                colIndex = cells.Count;
+            }
+            while (cells.Count < colIndex)
+            {
+                cells.Add("");
+            }
+            var value = GetCellText(cell, ns, sharedStrings);
+            cells.Add(value);
+        }
+
+        if (cells.Count == 0 || cells.All(string.IsNullOrWhiteSpace))
+        {
+            continue;
+        }
+
+        rows.Add(cells);
+    }
+
+    return rows;
+}
+
+static List<string> ParseSharedStrings(ZipArchive archive)
+{
+    var entry = archive.GetEntry("xl/sharedStrings.xml");
+    if (entry == null)
+    {
+        return new List<string>();
+    }
+
+    using var stream = entry.Open();
+    var document = XDocument.Load(stream);
+    var ns = document.Root?.Name.Namespace ?? XNamespace.None;
+    return document.Descendants(ns + "si")
+        .Select(node => string.Concat(node.Descendants(ns + "t").Select(t => t.Value)))
+        .ToList();
+}
+
+static int ColumnIndexFromCellRef(string cellRef)
+{
+    if (string.IsNullOrWhiteSpace(cellRef))
+    {
+        return -1;
+    }
+
+    var index = 0;
+    foreach (var ch in cellRef)
+    {
+        if (!char.IsLetter(ch))
+        {
+            break;
+        }
+        index = (index * 26) + (char.ToUpperInvariant(ch) - 'A' + 1);
+    }
+    return index - 1;
+}
+
+static string GetCellText(XElement cell, XNamespace ns, List<string> sharedStrings)
+{
+    var type = cell.Attribute("t")?.Value ?? "";
+    if (type == "inlineStr")
+    {
+        return string.Concat(cell.Descendants(ns + "t").Select(node => node.Value));
+    }
+
+    var value = cell.Element(ns + "v")?.Value ?? "";
+    if (type == "s" && int.TryParse(value, out var index))
+    {
+        if (index >= 0 && index < sharedStrings.Count)
+        {
+            return sharedStrings[index];
+        }
+    }
+
+    return value;
 }
 
 static string[] SplitTags(string value)

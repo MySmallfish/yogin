@@ -41,72 +41,87 @@ const layoutTemplate = compileTemplate("layout", `
         </button>
       </div>
       <nav class="nav">
-        <a href="#/calendar" data-route="calendar">
-          <span class="nav-short" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 8H4v10h16V10z"/></svg>
-          </span>
-          <span class="nav-label">{{t "nav.calendar" "Calendar"}}</span>
-        </a>
-        <a href="#/events" data-route="events">
-          <span class="nav-short" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M17 1l4 4-4 4V6H7a4 4 0 0 0-4 4v1H1v-1a6 6 0 0 1 6-6h10V1zm-10 22l-4-4 4-4v3h10a4 4 0 0 0 4-4v-1h2v1a6 6 0 0 1-6 6H7v3z"/></svg>
-          </span>
-          <span class="nav-label">{{t "nav.events" "Event series"}}</span>
-        </a>
-        <a href="#/rooms" data-route="rooms">
-          <span class="nav-short" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M4 3h12a2 2 0 0 1 2 2v16h-2v-2H6v2H4V3zm2 2v12h8V5H6zm9 7h1v2h-1v-2z"/></svg>
-          </span>
-          <span class="nav-label">{{t "nav.rooms" "Rooms"}}</span>
-        </a>
-        <a href="#/plans" data-route="plans">
-          <span class="nav-short" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M3 5h18a2 2 0 0 1 2 2v2H1V7a2 2 0 0 1 2-2zm-2 8h22v6a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-6zm4 2v2h6v-2H5z"/></svg>
-          </span>
-          <span class="nav-label">{{t "nav.plans" "Plans"}}</span>
-        </a>
-        <a href="#/customers" data-route="customers">
-          <span class="nav-short" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M16 11a3 3 0 1 0-2.999-3A3 3 0 0 0 16 11zm-8 0a3 3 0 1 0-2.999-3A3 3 0 0 0 8 11zm0 2c-2.67 0-8 1.34-8 4v3h10v-3c0-.7.2-1.34.56-1.9C9.71 13.4 8.9 13 8 13zm8 0c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4z"/></svg>
-          </span>
-          <span class="nav-label">{{t "nav.customers" "Customers"}}</span>
-        </a>
-        <a href="#/users" data-route="users">
-          <span class="nav-short" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-3.3 0-8 1.67-8 5v3h16v-3c0-3.33-4.7-5-8-5z"/></svg>
-          </span>
-          <span class="nav-label">{{t "nav.users" "Users"}}</span>
-        </a>
-        <a href="#/guests" data-route="guests">
-          <span class="nav-short" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M15 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm-7 2c-3.3 0-8 1.67-8 5v3h10v-3c0-1.37.47-2.56 1.3-3.54C10.1 14.43 9.08 14 8 14zm12-1h-2V9h-2v4h-4v2h4v4h2v-4h2z"/></svg>
-          </span>
-          <span class="nav-label">{{t "nav.guests" "Guests"}}</span>
-        </a>
-        <a href="#/reports" data-route="reports">
-          <span class="nav-short" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M3 3h2v18H3V3zm8 6h2v12h-2V9zm8-4h2v16h-2V5z"/></svg>
-          </span>
-          <span class="nav-label">{{t "nav.reports" "Reports"}}</span>
-        </a>
-        <a href="#/payroll" data-route="payroll">
-          <span class="nav-short" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M12 3c-5.52 0-10 1.79-10 4s4.48 4 10 4 10-1.79 10-4-4.48-4-10-4zm0 10c-5.52 0-10 1.79-10 4s4.48 4 10 4 10-1.79 10-4-4.48-4-10-4z"/></svg>
-          </span>
-          <span class="nav-label">{{t "nav.payroll" "Payroll"}}</span>
-        </a>
-        <a href="#/audit" data-route="audit">
-          <span class="nav-short" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M9 2h6a2 2 0 0 1 2 2h3v18H4V4h3a2 2 0 0 1 2-2zm0 4h6V4H9v2zm-1 9l2 2 4-4 1.5 1.5L10 19l-3.5-3.5L8 15z"/></svg>
-          </span>
-          <span class="nav-label">{{t "nav.audit" "Audit"}}</span>
-        </a>
-        <a href="#/settings" data-route="settings">
-          <span class="nav-short" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M19.4 13a7.96 7.96 0 0 0 .1-1 7.96 7.96 0 0 0-.1-1l2.1-1.6-2-3.4-2.5 1a7.42 7.42 0 0 0-1.7-1L15 2h-6l-.3 2.9c-.6.2-1.2.6-1.7 1l-2.5-1-2 3.4L4.6 11a7.96 7.96 0 0 0-.1 1 7.96 7.96 0 0 0 .1 1L2.5 14.6l2 3.4 2.5-1c.5.4 1.1.8 1.7 1L9 22h6l.3-2.9c.6-.2 1.2-.6 1.7-1l2.5 1 2-3.4L19.4 13zM12 15.5A3.5 3.5 0 1 1 15.5 12 3.5 3.5 0 0 1 12 15.5z"/></svg>
-          </span>
-          <span class="nav-label">{{t "nav.settings" "Settings"}}</span>
-        </a>
+        <div class="nav-section">
+          <div class="nav-title">{{t "nav.section.schedule" "Schedule"}}</div>
+          <a href="#/calendar" data-route="calendar">
+            <span class="nav-short" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 8H4v10h16V10z"/></svg>
+            </span>
+            <span class="nav-label">{{t "nav.calendar" "Calendar"}}</span>
+          </a>
+          <a href="#/events" data-route="events">
+            <span class="nav-short" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M17 1l4 4-4 4V6H7a4 4 0 0 0-4 4v1H1v-1a6 6 0 0 1 6-6h10V1zm-10 22l-4-4 4-4v3h10a4 4 0 0 0 4-4v-1h2v1a6 6 0 0 1-6 6H7v3z"/></svg>
+            </span>
+            <span class="nav-label">{{t "nav.events" "Event series"}}</span>
+          </a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-title">{{t "nav.section.studio" "Studio"}}</div>
+          <a href="#/rooms" data-route="rooms">
+            <span class="nav-short" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 3h12a2 2 0 0 1 2 2v16h-2v-2H6v2H4V3zm2 2v12h8V5H6zm9 7h1v2h-1v-2z"/></svg>
+            </span>
+            <span class="nav-label">{{t "nav.rooms" "Rooms"}}</span>
+          </a>
+          <a href="#/plans" data-route="plans">
+            <span class="nav-short" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M3 5h18a2 2 0 0 1 2 2v2H1V7a2 2 0 0 1 2-2zm-2 8h22v6a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-6zm4 2v2h6v-2H5z"/></svg>
+            </span>
+            <span class="nav-label">{{t "nav.plans" "Plans"}}</span>
+          </a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-title">{{t "nav.section.people" "People"}}</div>
+          <a href="#/customers" data-route="customers">
+            <span class="nav-short" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M16 11a3 3 0 1 0-2.999-3A3 3 0 0 0 16 11zm-8 0a3 3 0 1 0-2.999-3A3 3 0 0 0 8 11zm0 2c-2.67 0-8 1.34-8 4v3h10v-3c0-.7.2-1.34.56-1.9C9.71 13.4 8.9 13 8 13zm8 0c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4z"/></svg>
+            </span>
+            <span class="nav-label">{{t "nav.customers" "Customers"}}</span>
+          </a>
+          <a href="#/users" data-route="users">
+            <span class="nav-short" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-3.3 0-8 1.67-8 5v3h16v-3c0-3.33-4.7-5-8-5z"/></svg>
+            </span>
+            <span class="nav-label">{{t "nav.users" "Users"}}</span>
+          </a>
+          <a href="#/guests" data-route="guests">
+            <span class="nav-short" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M15 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm-7 2c-3.3 0-8 1.67-8 5v3h10v-3c0-1.37.47-2.56 1.3-3.54C10.1 14.43 9.08 14 8 14zm12-1h-2V9h-2v4h-4v2h4v4h2v-4h2z"/></svg>
+            </span>
+            <span class="nav-label">{{t "nav.guests" "Guests"}}</span>
+          </a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-title">{{t "nav.section.insights" "Insights"}}</div>
+          <a href="#/reports" data-route="reports">
+            <span class="nav-short" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M3 3h2v18H3V3zm8 6h2v12h-2V9zm8-4h2v16h-2V5z"/></svg>
+            </span>
+            <span class="nav-label">{{t "nav.reports" "Reports"}}</span>
+          </a>
+          <a href="#/payroll" data-route="payroll">
+            <span class="nav-short" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 3c-5.52 0-10 1.79-10 4s4.48 4 10 4 10-1.79 10-4-4.48-4-10-4zm0 10c-5.52 0-10 1.79-10 4s4.48 4 10 4 10-1.79 10-4-4.48-4-10-4z"/></svg>
+            </span>
+            <span class="nav-label">{{t "nav.payroll" "Payroll"}}</span>
+          </a>
+          <a href="#/audit" data-route="audit">
+            <span class="nav-short" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M9 2h6a2 2 0 0 1 2 2h3v18H4V4h3a2 2 0 0 1 2-2zm0 4h6V4H9v2zm-1 9l2 2 4-4 1.5 1.5L10 19l-3.5-3.5L8 15z"/></svg>
+            </span>
+            <span class="nav-label">{{t "nav.audit" "Audit"}}</span>
+          </a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-title">{{t "nav.section.settings" "Settings"}}</div>
+          <a href="#/settings" data-route="settings">
+            <span class="nav-short" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M19.4 13a7.96 7.96 0 0 0 .1-1 7.96 7.96 0 0 0-.1-1l2.1-1.6-2-3.4-2.5 1a7.42 7.42 0 0 0-1.7-1L15 2h-6l-.3 2.9c-.6.2-1.2.6-1.7 1l-2.5-1-2 3.4L4.6 11a7.96 7.96 0 0 0-.1 1 7.96 7.96 0 0 0 .1 1L2.5 14.6l2 3.4 2.5-1c.5.4 1.1.8 1.7 1L9 22h6l.3-2.9c.6-.2 1.2-.6 1.7-1l2.5 1 2-3.4L19.4 13zM12 15.5A3.5 3.5 0 1 1 15.5 12 3.5 3.5 0 0 1 12 15.5z"/></svg>
+            </span>
+            <span class="nav-label">{{t "nav.settings" "Settings"}}</span>
+          </a>
+        </div>
       </nav>
       <footer class="sidebar-footer">
         <div class="user-card" id="user-profile-card">
@@ -199,14 +214,14 @@ const calendarTemplate = compileTemplate("calendar", `
       </button>
     </div>
     <div class="calendar-nav">
-      <button class="icon-button circle-button" data-nav="prev" aria-label="{{t "calendar.prev" "Prev"}}">
+      <button class="icon-button nav-arrow" data-nav="prev" aria-label="{{t "calendar.prev" "Prev"}}">
         <span class="icon" aria-hidden="true">
           <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
         </span>
       </button>
       <button class="secondary" id="calendar-today">{{t "calendar.today" "Today"}}</button>
       <input type="date" id="calendar-date" value="{{focusDate}}" />
-      <button class="icon-button circle-button" data-nav="next" aria-label="{{t "calendar.next" "Next"}}">
+      <button class="icon-button nav-arrow" data-nav="next" aria-label="{{t "calendar.next" "Next"}}">
         <span class="icon" aria-hidden="true">
           <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
         </span>
@@ -602,7 +617,14 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
         <div class="form-grid">
           <div class="span-2">
             <label>{{t "session.title" "Title"}}</label>
-            <input name="title" value="{{seriesTitle}}" />
+            <input name="title" value="{{seriesTitle}}" list="{{titleSuggestionId}}" />
+            {{#if titleSuggestions.length}}
+              <datalist id="{{titleSuggestionId}}">
+                {{#each titleSuggestions}}
+                  <option value="{{this}}"></option>
+                {{/each}}
+              </datalist>
+            {{/if}}
           </div>
           <div class="span-2 markdown-field">
             <label>{{t "session.description" "Description"}}</label>
@@ -691,8 +713,9 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
               <div class="span-2">
                 <div class="registration-lookup-header">
                   <label>{{t "session.findCustomer" "Find existing customer"}}</label>
-                  <button class="icon-button circle-button add-inline" type="button" id="add-customer-modal" aria-label="{{t "customer.addTitle" "Add customer"}}">
+                  <button class="icon-button add-inline" type="button" id="add-customer-modal" aria-label="{{t "customer.addTitle" "Add customer"}}">
                     <span class="icon" aria-hidden="true">+</span>
+                    <span class="add-label">{{t "common.add" "Add"}}</span>
                   </button>
                 </div>
                 <input name="customerLookup" list="customer-list" placeholder="{{t "session.findCustomerPlaceholder" "Start typing a name or email"}}" autocomplete="off" />
@@ -724,13 +747,46 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
       <div class="modal-footer">
         <div class="meta" data-booked-meta>{{capacitySummary}}</div>
         <div class="modal-actions">
-          <button class="secondary" id="delete-session">{{t "session.delete" "Delete session"}}</button>
-          <button class="secondary" id="duplicate-session">{{t "session.duplicate" "Duplicate"}}</button>
-          <button id="save-instance">{{t "common.saveChanges" "Save changes"}}</button>
+          <button class="secondary" id="delete-session">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M6 7h12M9 7v12m6-12v12M10 4h4l1 2H9l1-2z"/></svg>
+            </span>
+            {{t "session.delete" "Delete session"}}
+          </button>
+          <button class="secondary" id="duplicate-session">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <rect x="9" y="9" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"/>
+                <path d="M5 7V5h10" fill="none" stroke="currentColor" stroke-width="2"/>
+                <path d="M5 17V7" fill="none" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </span>
+            {{t "session.duplicate" "Duplicate"}}
+          </button>
           {{#if eventSeriesId}}
-            <button class="secondary" id="delete-series">{{t "series.delete" "Delete series"}}</button>
+            <button class="secondary" id="delete-series">
+              <span class="icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M6 7h12M9 7v12m6-12v12M10 4h4l1 2H9l1-2z"/></svg>
+              </span>
+              {{t "series.delete" "Delete series"}}
+            </button>
           {{/if}}
-          <button class="secondary" id="edit-series">{{t "series.edit" "Edit series"}}</button>
+          <button class="secondary" id="edit-series">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            {{t "series.edit" "Edit series"}}
+          </button>
+          <button id="save-instance" class="primary-action">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M5 12l4 4 10-10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            {{t "common.saveChanges" "Save changes"}}
+          </button>
         </div>
       </div>
     </div>
@@ -874,7 +930,14 @@ const sessionModalTemplate = compileTemplate("session-modal", `
         </div>
         <div>
           <label>{{t "session.title" "Title"}}</label>
-          <input name="title" value="Studio Flow" />
+          <input name="title" value="Studio Flow" list="{{titleSuggestionId}}" />
+          {{#if titleSuggestions.length}}
+            <datalist id="{{titleSuggestionId}}">
+              {{#each titleSuggestions}}
+                <option value="{{this}}"></option>
+              {{/each}}
+            </datalist>
+          {{/if}}
         </div>
         <div class="span-2 markdown-field">
           <label>{{t "session.description" "Description"}}</label>
@@ -920,10 +983,6 @@ const sessionModalTemplate = compileTemplate("session-modal", `
         <div>
           <label>{{t "session.price" "Price (NIS)"}}</label>
           <input type="number" step="0.01" name="price" value="25" />
-        </div>
-        <div>
-          <label>{{t "session.currency" "Currency"}}</label>
-          <input name="currency" value="ILS" />
         </div>
         <div>
           <label>{{t "session.zoomInvite" "Zoom invite link"}}</label>
@@ -986,7 +1045,14 @@ const sessionModalTemplate = compileTemplate("session-modal", `
       <div class="modal-footer">
         <div class="meta">{{t "session.addHint" "Sessions appear on the calendar immediately."}}</div>
         <div class="modal-actions">
-          <button id="save-session">{{t "session.create" "Create session"}}</button>
+          <button id="save-session">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M5 12l4 4 10-10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            {{t "session.create" "Create session"}}
+          </button>
         </div>
       </div>
     </div>
@@ -1007,7 +1073,14 @@ const seriesModalTemplate = compileTemplate("series-modal", `
       <div class="form-grid">
         <div>
           <label>{{t "series.title" "Title"}}</label>
-          <input name="title" value="{{titleValue}}" />
+          <input name="title" value="{{titleValue}}" list="{{titleSuggestionId}}" />
+          {{#if titleSuggestions.length}}
+            <datalist id="{{titleSuggestionId}}">
+              {{#each titleSuggestions}}
+                <option value="{{this}}"></option>
+              {{/each}}
+            </datalist>
+          {{/if}}
         </div>
         <div>
           <label>{{t "series.icon" "Icon"}}</label>
@@ -1018,7 +1091,7 @@ const seriesModalTemplate = compileTemplate("series-modal", `
           <div class="color-field">
             <input class="color-input" name="color" type="color" value="{{color}}" />
             <div class="color-chip" style="background: {{color}}"></div>
-            <input class="color-text" type="text" value="{{color}}" placeholder="#f59e0b" data-color-text />
+            <input class="color-text" type="text" value="{{color}}" placeholder="#647FBC" data-color-text />
           </div>
         </div>
         <div>
@@ -1110,7 +1183,14 @@ const seriesModalTemplate = compileTemplate("series-modal", `
       <div class="modal-footer">
         <div class="meta">{{t "series.updateHint" "Series updates apply to future generated sessions."}}</div>
         <div class="modal-actions">
-          <button id="save-series">{{saveLabel}}</button>
+          <button id="save-series" class="primary-action">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M5 12l4 4 10-10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            {{saveLabel}}
+          </button>
         </div>
       </div>
     </div>
@@ -1578,21 +1658,17 @@ const planModalTemplate = compileTemplate("plan-modal", `
             {{/each}}
           </select>
         </div>
-        <div>
+        <div class="plan-field plan-field-weekly">
           <label>{{t "plans.weeklyLimit" "Weekly limit"}}</label>
           <input type="number" name="weeklyLimit" value="{{weeklyLimit}}" />
         </div>
-        <div>
+        <div class="plan-field plan-field-punch">
           <label>{{t "plans.punchUses" "Punch card uses"}}</label>
           <input type="number" name="punchCardUses" value="{{punchCardUses}}" />
         </div>
         <div>
           <label>{{t "plans.price" "Price (NIS)"}}</label>
           <input type="number" step="0.01" name="price" value="{{price}}" />
-        </div>
-        <div>
-          <label>{{t "plans.currency" "Currency"}}</label>
-          <input name="currency" value="{{currency}}" />
         </div>
         <div>
           <label>{{t "plans.remoteOnly" "Remote only"}}</label>
@@ -1619,7 +1695,14 @@ const planModalTemplate = compileTemplate("plan-modal", `
         </div>
       </div>
       <div class="modal-actions">
-        <button id="save-plan">{{saveLabel}}</button>
+        <button id="save-plan" class="primary-action">
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M5 12l4 4 10-10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          {{saveLabel}}
+        </button>
       </div>
     </div>
   </div>
@@ -1735,9 +1818,10 @@ const customersTemplate = compileTemplate("customers", `
     <button id="add-customer">{{t "customers.add" "Add customer"}}</button>     
     <button class="secondary" id="manage-statuses">{{t "customers.manageStatuses" "Manage statuses"}}</button>
     <button class="secondary" id="export-customers">{{t "customers.export" "Export CSV"}}</button>
-    <label class="secondary file-button">
-      <input type="file" id="import-customers" accept=".csv" />
-      <span>{{t "customers.import" "Import CSV"}}</span>
+    <label class="import-card" id="import-customers-zone">
+      <input type="file" id="import-customers" accept=".csv,.xlsx" />
+      <div class="import-title">{{t "customers.import" "Import"}}</div>
+      <div class="import-subtitle">{{t "customers.importHint" "Drop a CSV or Excel file"}}</div>
     </label>
   </div>
   <div class="customer-controls">
@@ -2119,7 +2203,7 @@ const settingsTemplate = compileTemplate("settings", `
           <div class="color-field">
             <input class="color-input" name="themePrimary" type="color" value="{{themePrimary}}" />
             <div class="color-chip" style="background: {{themePrimary}}"></div>
-            <input class="color-text" type="text" value="{{themePrimary}}" placeholder="#f59e0b" data-color-text />
+            <input class="color-text" type="text" value="{{themePrimary}}" placeholder="#647FBC" data-color-text />
           </div>
         </div>
         <div>
@@ -2127,7 +2211,7 @@ const settingsTemplate = compileTemplate("settings", `
           <div class="color-field">
             <input class="color-input" name="themeSecondary" type="color" value="{{themeSecondary}}" />
             <div class="color-chip" style="background: {{themeSecondary}}"></div>
-            <input class="color-text" type="text" value="{{themeSecondary}}" placeholder="#0f172a" data-color-text />
+            <input class="color-text" type="text" value="{{themeSecondary}}" placeholder="#9CB4CE" data-color-text />
           </div>
         </div>
         <div>
@@ -2135,7 +2219,7 @@ const settingsTemplate = compileTemplate("settings", `
           <div class="color-field">
             <input class="color-input" name="themeAccent" type="color" value="{{themeAccent}}" />
             <div class="color-chip" style="background: {{themeAccent}}"></div>
-            <input class="color-text" type="text" value="{{themeAccent}}" placeholder="#0ea5e9" data-color-text />
+            <input class="color-text" type="text" value="{{themeAccent}}" placeholder="#B9E0D9" data-color-text />
           </div>
         </div>
         <div>
@@ -2143,7 +2227,7 @@ const settingsTemplate = compileTemplate("settings", `
           <div class="color-field">
             <input class="color-input" name="themeBackground" type="color" value="{{themeBackground}}" />
             <div class="color-chip" style="background: {{themeBackground}}"></div>
-            <input class="color-text" type="text" value="{{themeBackground}}" placeholder="#fffbeb" data-color-text />
+            <input class="color-text" type="text" value="{{themeBackground}}" placeholder="#F8FAD2" data-color-text />
           </div>
         </div>
       </div>
@@ -2579,7 +2663,7 @@ function render(state) {
             startTimeLocal: item.startTimeLocal,
             isActive: item.isActive ? "Yes" : "No",
             icon: item.icon || "",
-            color: item.color || "#f59e0b"
+            color: item.color || "#647FBC"
         }));
         content = eventsTemplate({
             series,
@@ -2865,10 +2949,10 @@ function render(state) {
             faviconUrl,
             weekStartsOn: studio.weekStartsOn || 0,
             themeJson,
-            themePrimary: ensureHexColor(theme.primary, "#f59e0b"),
-            themeSecondary: ensureHexColor(theme.secondary, "#0f172a"),
-            themeAccent: ensureHexColor(theme.accent, "#0ea5e9"),
-            themeBackground: ensureHexColor(theme.background, "#fffbeb"),
+            themePrimary: ensureHexColor(theme.primary, "#647FBC"),
+            themeSecondary: ensureHexColor(theme.secondary, "#9CB4CE"),
+            themeAccent: ensureHexColor(theme.accent, "#B9E0D9"),
+            themeBackground: ensureHexColor(theme.background, "#F8FAD2"),
             defaultLanguageOptions,
             userLanguageOptions,
             holidayCalendarOptions
@@ -3229,6 +3313,7 @@ function bindRouteActions(route, data, state) {
         const manageStatusesBtn = document.getElementById("manage-statuses");
         const exportBtn = document.getElementById("export-customers");
         const importInput = document.getElementById("import-customers");
+        const importZone = document.getElementById("import-customers-zone");
         const filterBtn = document.getElementById("apply-customer-filters");
         const selectAll = document.getElementById("customers-select-all");
         const bulkEmail = document.getElementById("bulk-email");
@@ -3254,29 +3339,50 @@ function bindRouteActions(route, data, state) {
             });
         }
 
-        if (importInput) {
-            importInput.addEventListener("change", async () => {
-                const file = importInput.files?.[0];
-                if (!file) return;
-                const formData = new FormData();
-                formData.append("file", file);
-                importInput.disabled = true;
-                try {
-                    const result = await apiFetch("/api/admin/customers/import", {
-                        method: "POST",
-                        body: formData
-                    });
-                    const created = result?.created ?? 0;
-                    const updated = result?.updated ?? 0;
-                    const skipped = result?.skipped ?? 0;
-                    showToast(`${t("customers.importSuccess", "Customer import complete.")} (${created}/${updated}/${skipped})`, "success");
-                    actor.send({ type: "REFRESH" });
-                } catch (error) {
-                    showToast(error.message || t("customers.importError", "Unable to import customers."), "error");
-                } finally {
+        const handleImport = async (file) => {
+            if (!file) return;
+            const formData = new FormData();
+            formData.append("file", file);
+            if (importInput) importInput.disabled = true;
+            try {
+                const result = await apiFetch("/api/admin/customers/import", {
+                    method: "POST",
+                    body: formData
+                });
+                const created = result?.created ?? 0;
+                const updated = result?.updated ?? 0;
+                const skipped = result?.skipped ?? 0;
+                showToast(`${t("customers.importSuccess", "Customer import complete.")} (${created}/${updated}/${skipped})`, "success");
+                actor.send({ type: "REFRESH" });
+            } catch (error) {
+                showToast(error.message || t("customers.importError", "Unable to import customers."), "error");
+            } finally {
+                if (importInput) {
                     importInput.value = "";
                     importInput.disabled = false;
                 }
+            }
+        };
+
+        if (importInput) {
+            importInput.addEventListener("change", async () => {
+                const file = importInput.files?.[0];
+                await handleImport(file);
+            });
+        }
+
+        if (importZone) {
+            const setActive = (active) => importZone.classList.toggle("drag-over", active);
+            importZone.addEventListener("dragover", (event) => {
+                event.preventDefault();
+                setActive(true);
+            });
+            importZone.addEventListener("dragleave", () => setActive(false));
+            importZone.addEventListener("drop", async (event) => {
+                event.preventDefault();
+                setActive(false);
+                const file = event.dataTransfer?.files?.[0];
+                await handleImport(file);
             });
         }
 
@@ -3512,19 +3618,19 @@ function bindRouteActions(route, data, state) {
 
         const syncThemeInputs = (themeValue) => {
             if (themeInputs.primary) {
-                themeInputs.primary.value = ensureHexColor(themeValue.primary, themeInputs.primary.value || "#f59e0b");
+                themeInputs.primary.value = ensureHexColor(themeValue.primary, themeInputs.primary.value || "#647FBC");
                 updateColorField(themeInputs.primary);
             }
             if (themeInputs.secondary) {
-                themeInputs.secondary.value = ensureHexColor(themeValue.secondary, themeInputs.secondary.value || "#0f172a");
+                themeInputs.secondary.value = ensureHexColor(themeValue.secondary, themeInputs.secondary.value || "#9CB4CE");
                 updateColorField(themeInputs.secondary);
             }
             if (themeInputs.accent) {
-                themeInputs.accent.value = ensureHexColor(themeValue.accent, themeInputs.accent.value || "#0ea5e9");
+                themeInputs.accent.value = ensureHexColor(themeValue.accent, themeInputs.accent.value || "#B9E0D9");
                 updateColorField(themeInputs.accent);
             }
             if (themeInputs.background) {
-                themeInputs.background.value = ensureHexColor(themeValue.background, themeInputs.background.value || "#fffbeb");
+                themeInputs.background.value = ensureHexColor(themeValue.background, themeInputs.background.value || "#F8FAD2");
                 updateColorField(themeInputs.background);
             }
         };
@@ -3637,10 +3743,10 @@ function bindRouteActions(route, data, state) {
                 } else if (theme.faviconUrl) {
                     delete theme.faviconUrl;
                 }
-                theme.primary = formValues.themePrimary || theme.primary || "#f59e0b";
-                theme.secondary = formValues.themeSecondary || theme.secondary || "#0f172a";
-                theme.accent = formValues.themeAccent || theme.accent || "#0ea5e9";
-                theme.background = formValues.themeBackground || theme.background || "#fffbeb";
+                theme.primary = formValues.themePrimary || theme.primary || "#647FBC";
+                theme.secondary = formValues.themeSecondary || theme.secondary || "#9CB4CE";
+                theme.accent = formValues.themeAccent || theme.accent || "#B9E0D9";
+                theme.background = formValues.themeBackground || theme.background || "#F8FAD2";
                 const defaultLocale = formValues.defaultLocale || (state.context.studio?.defaultLocale || "en");
                 const preferredLocale = formValues.userLocale || "";
                 await apiPut("/api/admin/studio", {
@@ -4379,6 +4485,8 @@ async function openCalendarEventModal(item, data) {
         price: formatPlainPrice(plan.priceCents),
         selected: allowedPlanSet.has(String(plan.id))
     }));
+    const titleSuggestions = buildTitleSuggestions(data.plans);
+    const titleSuggestionId = createTitleSuggestionId("session-title");
 
     const modalMarkup = calendarModalTemplate({
         ...item,
@@ -4392,6 +4500,8 @@ async function openCalendarEventModal(item, data) {
         rosterHtml,
         customers,
         plans: planOptions,
+        titleSuggestions,
+        titleSuggestionId,
         capacitySummary,
         price: toCurrencyUnits(item.priceCents),
         remoteCapacity: remoteCapacityValue,
@@ -5131,11 +5241,15 @@ function openSessionModal(data, options = {}) {
         price: formatPlainPrice(plan.priceCents),
         selected: allowedPlanSet.has(String(plan.id))
     }));
+    const titleSuggestions = buildTitleSuggestions(data.plans);
+    const titleSuggestionId = createTitleSuggestionId("session-title");
     const modalMarkup = sessionModalTemplate({
         focusDate,
         rooms: data.rooms || [],
         instructors: data.instructors || [],
-        plans
+        plans,
+        titleSuggestions,
+        titleSuggestionId
     });
 
     const wrapper = document.createElement("div");
@@ -5191,7 +5305,6 @@ function openSessionModal(data, options = {}) {
         setValue("capacity", prefill.capacity);
         setValue("remoteCapacity", prefill.remoteCapacity);
         setValue("price", prefill.price);
-        setValue("currency", prefill.currency);
         setValue("remoteInviteUrl", prefill.remoteInviteUrl);
         setValue("cancellationWindowHours", prefill.cancellationWindowHours);
     }
@@ -5229,7 +5342,7 @@ function openSessionModal(data, options = {}) {
                 capacity: Number(getValue("capacity") || 0),
                 remoteCapacity: Number(getValue("remoteCapacity") || 0),
                 priceCents: toCents(Number(getValue("price") || 0)),
-                currency: getValue("currency") || "ILS",
+                currency: "ILS",
                 remoteInviteUrl: getValue("remoteInviteUrl") || "",
                 cancellationWindowHours: Number(getValue("cancellationWindowHours") || 0),
                 allowedPlanIdsJson: JSON.stringify(selectedPlanIds)
@@ -6268,7 +6381,6 @@ function openPlanModal(plan) {
         weeklyLimit: plan?.weeklyLimit ?? 2,
         punchCardUses: plan?.punchCardUses ?? 0,
         price: toCurrencyUnits(plan?.priceCents ?? 12000),
-        currency: plan?.currency || "ILS",
         remoteOnly: plan?.remoteOnly ?? false,
         validityDays: plan?.validityDays ?? "",
         dailyLimit: plan?.dailyLimit ?? "",
@@ -6295,6 +6407,23 @@ function openPlanModal(plan) {
         closeBtn.addEventListener("click", closeModal);
     }
 
+    const typeSelect = overlay.querySelector("[name=\"planType\"]");
+    const weeklyField = overlay.querySelector(".plan-field-weekly");
+    const punchField = overlay.querySelector(".plan-field-punch");
+    const updatePlanFields = () => {
+        const type = typeSelect?.value || "WeeklyLimit";
+        if (weeklyField) {
+            weeklyField.classList.toggle("hidden", type !== "WeeklyLimit");
+        }
+        if (punchField) {
+            punchField.classList.toggle("hidden", type !== "PunchCard");
+        }
+    };
+    if (typeSelect) {
+        typeSelect.addEventListener("change", updatePlanFields);
+    }
+    updatePlanFields();
+
     const saveBtn = overlay.querySelector("#save-plan");
     if (saveBtn) {
         saveBtn.addEventListener("click", async () => {
@@ -6304,11 +6433,12 @@ function openPlanModal(plan) {
             const weeklyLimit = Number(getValue("weeklyLimit"));
             const punchCardUses = Number(getValue("punchCardUses"));
             const price = Number(getValue("price"));
-            const currency = getValue("currency").trim() || "ILS";
             const active = getValue("planActive") === "true";
             const remoteOnly = getValue("planRemoteOnly") === "true";
             const validityDays = Number(getValue("planValidityDays"));
             const dailyLimit = Number(getValue("planDailyLimit"));
+            const normalizedWeeklyLimit = type === "WeeklyLimit" && Number.isFinite(weeklyLimit) ? weeklyLimit : 0;
+            const normalizedPunchUses = type === "PunchCard" && Number.isFinite(punchCardUses) ? punchCardUses : 0;
 
             if (!name) {
                 showToast(t("plans.nameRequired", "Plan name is required."), "error");
@@ -6318,10 +6448,10 @@ function openPlanModal(plan) {
             const payload = {
                 name,
                 type,
-                weeklyLimit: Number.isFinite(weeklyLimit) ? weeklyLimit : 0,
-                punchCardUses: Number.isFinite(punchCardUses) ? punchCardUses : 0,
+                weeklyLimit: normalizedWeeklyLimit,
+                punchCardUses: normalizedPunchUses,
                 priceCents: toCents(Number.isFinite(price) ? price : 0),
-                currency,
+                currency: "ILS",
                 remoteOnly,
                 validityDays: Number.isFinite(validityDays) && validityDays > 0 ? validityDays : null,
                 dailyLimit: Number.isFinite(dailyLimit) && dailyLimit > 0 ? dailyLimit : null,
@@ -6385,6 +6515,8 @@ function openSeriesModal(series, data) {
         price: formatPlainPrice(plan.priceCents),
         selected: allowedSet.has(String(plan.id))
     }));
+    const titleSuggestions = buildTitleSuggestions(data.plans);
+    const titleSuggestionId = createTitleSuggestionId("series-title");
     const modalMarkup = seriesModalTemplate({
         modalTitle: isEdit ? t("series.editTitle", "Edit series") : t("series.newTitle", "New series"),
         subtitle: isEdit
@@ -6393,7 +6525,9 @@ function openSeriesModal(series, data) {
         seriesId: series?.id || "",
         titleValue: series?.title || "Studio Flow",
         icon: series?.icon || "",
-        color: ensureHexColor(series?.color || "#f59e0b", "#f59e0b"),
+        color: ensureHexColor(series?.color || "#647FBC", "#647FBC"),
+        titleSuggestions,
+        titleSuggestionId,
         dayOptions,
         startTimeLocal: (series?.startTimeLocal || "18:00").slice(0, 5),
         durationMinutes: series?.durationMinutes ?? 60,
@@ -6445,7 +6579,7 @@ function openSeriesModal(series, data) {
             const payload = {
                 title: getValue("title"),
                 icon: getValue("icon"),
-                color: getValue("color") || "#f59e0b",
+                color: getValue("color") || "#647FBC",
                 description: getValue("description") || "",
                 instructorId: getValue("instructorId") || null,
                 roomId: getValue("roomId") || null,
@@ -6762,6 +6896,21 @@ function formatPlainPrice(cents) {
     return new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(amount);
 }
 
+function buildTitleSuggestions(plans) {
+    const suggestions = new Set();
+    (plans || []).forEach(plan => {
+        const name = String(plan?.name || "").trim();
+        if (name) {
+            suggestions.add(name);
+        }
+    });
+    return Array.from(suggestions);
+}
+
+function createTitleSuggestionId(prefix) {
+    return `${prefix}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
 function normalizeBookingStatus(value) {
     if (typeof value === "string") {
         if (value === "Confirmed") {
@@ -6883,7 +7032,7 @@ function buildEventMap(items, timeZone) {
             seriesIcon,
             registeredSummary: isHoliday ? "" : `${booked}/${capacity}`,
             remoteSummary: remoteCapacity > 0 && !isHoliday ? `${remoteBooked}/${remoteCapacity}` : "",
-            price: formatMoney(item.priceCents, item.currency),
+            price: formatPlainPrice(item.priceCents),
             eventStyle,
             birthdayNames: [],
             birthdayCount: 0,

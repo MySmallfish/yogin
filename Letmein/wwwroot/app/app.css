@@ -3,11 +3,11 @@
 :root {
   --ink: #111827;
   --muted: #6b7280;
-  --mint: #fef9c3;
-  --wave: #fffbeb;
-  --accent: #f59e0b;
-  --accent-dark: #b45309;
-  --rose: #f59e0b;
+  --mint: #f8fad2;
+  --wave: #b9e0d9;
+  --accent: #647fbc;
+  --accent-dark: #4b6398;
+  --rose: #647fbc;
   --surface: rgba(255, 255, 255, 0.92);
   --line: rgba(15, 23, 42, 0.12);
   --radius: 20px;
@@ -21,9 +21,9 @@ body {
   margin: 0;
   font-family: "Manrope", sans-serif;
   color: var(--ink);
-  background: radial-gradient(circle at 15% 20%, #fef9c3, transparent 50%),
-              radial-gradient(circle at 85% 10%, #e0f2fe, transparent 40%),
-              linear-gradient(160deg, #f8fafc, #fffbeb 90%);
+  background: radial-gradient(circle at 15% 20%, #b9e0d9, transparent 50%),
+              radial-gradient(circle at 85% 10%, #9cb4ce, transparent 40%),
+              linear-gradient(160deg, #f8fafc, #f8fad2 90%);
   min-height: 100vh;
 }
 
@@ -81,8 +81,8 @@ html[lang^="he"] .hero-title {
 }
 
 .navbar a.active {
-  background: rgba(245, 158, 11, 0.15);
-  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(100, 127, 188, 0.15);
+  border-color: rgba(100, 127, 188, 0.4);
   color: var(--accent-dark);
 }
 

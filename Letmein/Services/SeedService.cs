@@ -32,7 +32,7 @@ public class SeedService
             Name = "Letmein Demo Studio",
             Timezone = "UTC",
             WeekStartsOn = 1,
-            ThemeJson = "{\"primary\":\"#f97316\",\"secondary\":\"#0f172a\"}",
+            ThemeJson = "{\"primary\":\"#647FBC\",\"secondary\":\"#9CB4CE\",\"accent\":\"#B9E0D9\",\"background\":\"#F8FAD2\"}",
             DefaultLocale = "en"
         };
 
@@ -153,7 +153,7 @@ public class SeedService
             PriceCents = 2500,
             Currency = "ILS",
             Icon = "flow",
-            Color = "#f59e0b",
+            Color = "#647FBC",
             CancellationWindowHours = 6,
             IsActive = true
         };
