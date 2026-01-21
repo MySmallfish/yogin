@@ -626,12 +626,9 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
               </datalist>
             {{/if}}
           </div>
-          <div class="span-2 markdown-field">
+          <div class="span-2">
             <label>{{t "session.description" "Description"}}</label>
-            <div class="markdown-split">
-              <textarea name="description" rows="4" data-markdown-source="session-description" placeholder="{{t "series.descriptionHint" "Markdown text or URL"}}">{{seriesDescription}}</textarea>
-              <div class="markdown-preview" data-markdown-preview="session-description"></div>
-            </div>
+            <textarea name="description" rows="4" placeholder="{{t "series.descriptionHintPlain" "Add description"}}">{{seriesDescription}}</textarea>
           </div>
         </div>
       </div>
@@ -939,12 +936,9 @@ const sessionModalTemplate = compileTemplate("session-modal", `
             </datalist>
           {{/if}}
         </div>
-        <div class="span-2 markdown-field">
+        <div class="span-2">
           <label>{{t "session.description" "Description"}}</label>
-          <div class="markdown-split">
-            <textarea name="description" rows="4" data-markdown-source="session-create-description" placeholder="{{t "series.descriptionHint" "Markdown text or URL"}}"></textarea>
-            <div class="markdown-preview" data-markdown-preview="session-create-description"></div>
-          </div>
+          <textarea name="description" rows="4" placeholder="{{t "series.descriptionHintPlain" "Add description"}}"></textarea>
         </div>
         <div>
           <label>{{t "session.instructor" "Instructor"}}</label>
@@ -1142,12 +1136,9 @@ const seriesModalTemplate = compileTemplate("series-modal", `
             {{/each}}
           </select>
         </div>
-        <div class="span-2 markdown-field">
+        <div class="span-2">
           <label>{{t "series.description" "Description"}}</label>
-          <div class="markdown-split">
-            <textarea name="description" rows="4" data-markdown-source="series-description" placeholder="{{t "series.descriptionHint" "Markdown text or URL"}}">{{description}}</textarea>
-            <div class="markdown-preview" data-markdown-preview="series-description"></div>
-          </div>
+          <textarea name="description" rows="4" placeholder="{{t "series.descriptionHintPlain" "Add description"}}">{{description}}</textarea>
         </div>
         <div>
           <label>{{t "series.recurrence" "Recurrence (weeks)"}}</label>
@@ -3091,7 +3082,9 @@ function bindRouteActions(route, data, state) {
 
         navButtons.forEach(btn => {
             btn.addEventListener("click", () => {
-                const direction = btn.getAttribute("data-nav") === "prev" ? -1 : 1;
+                const baseDirection = btn.getAttribute("data-nav") === "prev" ? -1 : 1;
+                const isRtl = document.documentElement.dir === "rtl";
+                const direction = isRtl ? baseDirection * -1 : baseDirection;
                 const baseDate = dateInput?.value || currentDate;
                 const nextDate = shiftCalendarDate(currentView, baseDate, direction);
                 actor.send({ type: "SET_CALENDAR", view: currentView, date: nextDate });
@@ -4172,6 +4165,10 @@ function escapeHtml(value) {
         .replace(/'/g, "&#39;");
 }
 
+function renderPlainText(value) {
+    return escapeHtml(value).replace(/\n/g, "<br>");
+}
+
 function renderMarkdown(value) {
     if (!value) return "";
     const escaped = escapeHtml(value);
@@ -4526,7 +4523,6 @@ async function openCalendarEventModal(item, data) {
     };
     cleanupEscape = bindModalEscape(closeModal);
     bindModalBackdrop(overlay);
-    bindMarkdownPreview(overlay);
 
     const closeBtn = overlay.querySelector("#close-modal");
     if (closeBtn) {
@@ -5102,7 +5098,6 @@ function openInstructorModal(instructor) {
     };
     cleanupEscape = bindModalEscape(closeModal);
     bindModalBackdrop(overlay);
-    bindMarkdownPreview(overlay);
     const closeBtn = overlay.querySelector("#close-instructor");
     if (closeBtn) {
         closeBtn.addEventListener("click", closeModal);
@@ -5117,7 +5112,7 @@ function openDescriptionModal(title, description) {
     }
     const modalMarkup = descriptionModalTemplate({
         title: title || t("session.descriptionTitle", "Description"),
-        html: renderMarkdown(description || "")
+        html: renderPlainText(description || "")
     });
     const wrapper = document.createElement("div");
     wrapper.innerHTML = modalMarkup;
@@ -5266,7 +5261,6 @@ function openSessionModal(data, options = {}) {
     };
     cleanupEscape = bindModalEscape(closeModal);
     bindModalBackdrop(overlay);
-    bindMarkdownPreview(overlay);
 
     const closeBtn = overlay.querySelector("#close-session");
     if (closeBtn) {

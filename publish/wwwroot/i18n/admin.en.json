@@ -259,6 +259,7 @@
     "series.room":  "Room",
     "series.description":  "Description",
     "series.descriptionHint":  "Markdown text or URL",
+    "series.descriptionHintPlain":  "Add description",
     "series.recurrence":  "Recurrence (weeks)",
     "series.cancellationWindow":  "Cancellation window (hours)",
     "series.active":  "Active",

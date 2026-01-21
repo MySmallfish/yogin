@@ -1061,6 +1061,7 @@ button .icon svg {
   display: flex;
   align-items: center;
   gap: 6px;
+  width: 100%;
 }
 
 .birthday-chevron {
@@ -1073,6 +1074,8 @@ button .icon svg {
   justify-content: center;
   background: rgba(var(--accent-rgb), 0.16);
   color: var(--slate);
+  flex: 0 0 20px;
+  line-height: 1;
 }
 
 .birthday-chevron svg {
@@ -1842,6 +1845,19 @@ button .icon svg {
   white-space: nowrap;
 }
 
+#calendar-today {
+  height: 40px;
+  min-width: 64px;
+  border-radius: 999px;
+}
+
+#add-session {
+  height: 40px;
+  border-radius: 999px;
+  padding: 0 16px;
+  white-space: nowrap;
+}
+
 .export-menu {
   position: relative;
 }
@@ -1994,7 +2010,7 @@ button .icon svg {
   pointer-events: none;
 }
 
-.plan-pill span {
+.plan-pill > span {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -2023,7 +2039,7 @@ button .icon svg {
   color: var(--ink);
 }
 
-.plan-pill:hover span {
+.plan-pill:hover > span {
   border-color: rgba(var(--accent-rgb), 0.45);
   background: rgba(var(--accent-rgb), 0.08);
 }
