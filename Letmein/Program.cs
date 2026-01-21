@@ -556,6 +556,8 @@ publicApi.MapGet("/studios/{slug}/event-instances/{id:guid}", async (string slug
         remoteInviteUrl = instance.RemoteInviteUrl,
         instance.CancellationWindowHours,
         instance.Status,
+        icon = instance.Icon ?? "",
+        color = instance.Color ?? "",
         booked,
         available,
         remoteBooked,
@@ -781,6 +783,8 @@ adminApi.MapGet("/calendar", async (ClaimsPrincipal user, DateOnly? from, DateOn
             instance.Currency,
             cancellationWindowHours = instance.CancellationWindowHours,
             notes = instance.Notes,
+            icon = instance.Icon ?? "",
+            color = instance.Color ?? "",
             booked,
             remoteBooked,
             remoteInviteUrl = instance.RemoteInviteUrl,
@@ -875,7 +879,7 @@ adminApi.MapGet("/calendar/export/ics", async (ClaimsPrincipal user, DateOnly? f
         return Results.NotFound();
     }
     var payload = BuildCalendarIcs(rows, studio.Name);
-    return Results.File(Encoding.UTF8.GetBytes(payload), "text/calendar", "letmein-calendar.ics");
+    return Results.File(Encoding.UTF8.GetBytes(payload), "text/calendar", "yogin-calendar.ics");
 });
 
 adminApi.MapGet("/calendar/export/csv", async (ClaimsPrincipal user, DateOnly? from, DateOnly? to, bool? mine, AppDbContext db) =>
@@ -892,7 +896,7 @@ adminApi.MapGet("/calendar/export/csv", async (ClaimsPrincipal user, DateOnly? f
     var payload = BuildCalendarCsv(rows, tz);
     var encoding = new UTF8Encoding(true);
     var bytes = encoding.GetPreamble().Concat(encoding.GetBytes(payload)).ToArray();
-    return Results.File(bytes, "text/csv; charset=utf-8", "letmein-calendar.csv");
+    return Results.File(bytes, "text/csv; charset=utf-8", "yogin-calendar.csv");
 });
 
 adminApi.MapPost("/event-instances", async (ClaimsPrincipal user, EventInstanceCreateRequest request, AppDbContext db) =>
@@ -1949,7 +1953,7 @@ adminApi.MapGet("/customers/export/csv", async (ClaimsPrincipal user, AppDbConte
 
     var encoding = new UTF8Encoding(true);
     var bytes = encoding.GetPreamble().Concat(encoding.GetBytes(sb.ToString())).ToArray();
-    return Results.File(bytes, "text/csv; charset=utf-8", "letmein-customers.csv");
+    return Results.File(bytes, "text/csv; charset=utf-8", "yogin-customers.csv");
 });
 
 adminApi.MapPost("/customers/import", async (ClaimsPrincipal user, HttpRequest request, AppDbContext db) =>
@@ -3043,14 +3047,14 @@ adminApi.MapPost("/users/{id:guid}/invite", async (ClaimsPrincipal user, Guid id
 
     var host = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
     var portalUrl = $"{host}{portalPath}";
-    var studioName = studio?.Name ?? "Letmein Studio";
+    var studioName = studio?.Name ?? "Yogin Studio";
     var studioSlug = studio?.Slug ?? "";
     var role = primaryRole.ToString();
     var rolesLabel = string.Join(", ", rolesList.Select(r => r.ToString()));
 
-    var subject = $"{studioName} access on Letmein";
+    var subject = $"{studioName} access on Yogin";
     var body = $"Hi {userRow.DisplayName},\n\n" +
-               $"You have been invited to {studioName} on Letmein.\n\n" +
+               $"You have been invited to {studioName} on Yogin.\n\n" +
                $"Role: {role}\n" +
                $"Roles: {rolesLabel}\n" +
                $"Login URL: {portalUrl}\n" +
@@ -5260,13 +5264,13 @@ static string BuildCalendarIcs(IEnumerable<CalendarExportRow> rows, string calen
     var sb = new StringBuilder();
     sb.AppendLine("BEGIN:VCALENDAR");
     sb.AppendLine("VERSION:2.0");
-    sb.AppendLine("PRODID:-//Letmein//Calendar Export//EN");
+    sb.AppendLine("PRODID:-//Yogin//Calendar Export//EN");
     sb.AppendLine($"X-WR-CALNAME:{EscapeIcs(calendarName)}");
     var stamp = DateTime.UtcNow.ToString("yyyyMMdd'T'HHmmss'Z'");
     foreach (var row in rows)
     {
         sb.AppendLine("BEGIN:VEVENT");
-        sb.AppendLine($"UID:{Guid.NewGuid()}@letmein");
+        sb.AppendLine($"UID:{Guid.NewGuid()}@yogin");
         sb.AppendLine($"DTSTAMP:{stamp}");
         sb.AppendLine($"DTSTART:{row.StartUtc:yyyyMMdd'T'HHmmss'Z'}");
         sb.AppendLine($"DTEND:{row.EndUtc:yyyyMMdd'T'HHmmss'Z'}");

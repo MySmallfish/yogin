@@ -1,6 +1,6 @@
 # Terms & Conditions
 
-Welcome to Letmein. By using this site, you agree to the terms below.
+Welcome to Yogin. By using this site, you agree to the terms below.
 
 ## Studio bookings
 - Class availability is first-come, first-served.

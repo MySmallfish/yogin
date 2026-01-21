@@ -29,7 +29,7 @@ public class SeedService
         {
             Id = Guid.NewGuid(),
             Slug = "demo",
-            Name = "Letmein Demo Studio",
+            Name = "Yogin Demo Studio",
             Timezone = "UTC",
             WeekStartsOn = 1,
             ThemeJson = "{\"primary\":\"#647FBC\",\"secondary\":\"#9CB4CE\",\"accent\":\"#B9E0D9\",\"background\":\"#F8FAD2\"}",

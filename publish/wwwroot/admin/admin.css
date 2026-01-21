@@ -478,7 +478,7 @@ textarea {
 
 .color-field {
   display: grid;
-  grid-template-columns: 48px 24px 1fr;
+  grid-template-columns: 48px 24px 1fr auto;
   gap: 10px;
   align-items: center;
 }
@@ -518,6 +518,15 @@ textarea {
 .color-text {
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
+}
+
+.color-reset {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--slate);
 }
 
 select[multiple] {
@@ -774,8 +783,12 @@ button .icon svg {
 
 .nav-arrow {
   height: 40px;
-  min-width: 48px;
-  padding: 0 10px;
+  width: 40px;
+  min-width: 40px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 999px;
   border: 1px solid var(--line);
   background: white;
@@ -799,6 +812,10 @@ button .icon svg {
   display: flex;
   gap: 8px;
   align-items: center;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  overflow: visible;
 }
 
 .calendar-actions button {
@@ -813,6 +830,11 @@ button .icon svg {
 }
 
 .calendar-export .icon-button {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 8px 10px;
   border-radius: 999px;
   border: 1px solid var(--line);
@@ -1856,6 +1878,8 @@ button .icon svg {
   border-radius: 999px;
   padding: 0 16px;
   white-space: nowrap;
+  flex-shrink: 0;
+  min-width: 120px;
 }
 
 .export-menu {
@@ -2014,8 +2038,8 @@ button .icon svg {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  justify-content: flex-start;
+  gap: 8px;
   width: 100%;
   padding: 8px 14px;
   border-radius: 999px;
@@ -2033,6 +2057,81 @@ button .icon svg {
   font-size: 12px;
   font-weight: 600;
   color: var(--muted);
+}
+
+.icon-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-field input {
+  flex: 1;
+}
+
+.icon-preview {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  background: white;
+  color: var(--ink);
+}
+
+.icon-preview.is-empty {
+  color: var(--muted);
+}
+
+.icon-picker-modal .icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(36px, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.icon-picker-modal .icon-option {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.icon-picker-modal .icon-option:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+}
+
+.icon-picker-trigger {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--slate);
+}
+
+.event-actions-menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.event-actions-menu .icon svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2px;
 }
 
 .plan-pill:hover {

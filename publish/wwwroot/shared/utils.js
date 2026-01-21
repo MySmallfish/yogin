@@ -1,7 +1,7 @@
 export function formatDateTime(iso, timeZone) {
     if (!iso) return "";
     const date = new Date(iso);
-    return new Intl.DateTimeFormat("he-IL", {
+    return new Intl.DateTimeFormat(getLocaleFromSettings(), {
         weekday: "short",
         month: "short",
         day: "numeric",
@@ -13,17 +13,27 @@ export function formatDateTime(iso, timeZone) {
 export function formatMoney(cents, currency) {
     const amount = (cents || 0) / 100;
     const safeCurrency = currency || "ILS";
-    const currencyParts = new Intl.NumberFormat("he-IL", {
+    const locale = getLocaleFromSettings();
+    const currencyParts = new Intl.NumberFormat(locale, {
         style: "currency",
         currency: safeCurrency,
         currencyDisplay: "narrowSymbol",
         maximumFractionDigits: 0
     }).formatToParts(amount);
     const symbol = currencyParts.find(part => part.type === "currency")?.value || safeCurrency;
-    const number = new Intl.NumberFormat("he-IL", {
+    const number = new Intl.NumberFormat(locale, {
         maximumFractionDigits: 0
     }).format(amount);
     return `${symbol}${number}`;
+}
+
+function getLocaleFromSettings() {
+    const raw = (document?.documentElement?.lang || "").trim().replace("_", "-").toLowerCase();
+    if (!raw) return "en-IL";
+    if (raw.includes("-")) return raw;
+    if (raw === "he") return "he-IL";
+    if (raw === "en") return "en-IL";
+    return `${raw}-IL`;
 }
 
 export function toDateInputValue(date) {

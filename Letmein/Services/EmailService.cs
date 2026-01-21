@@ -13,7 +13,7 @@ public interface IEmailService
 public class EmailSettings
 {
     public string FromEmail { get; set; } = "";
-    public string FromName { get; set; } = "Letmein";
+    public string FromName { get; set; } = "Yogin";
     public SmtpSettings Smtp { get; set; } = new();
 }
 

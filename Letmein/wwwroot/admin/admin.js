@@ -16,6 +16,22 @@ function debugLog(...args) {
     console.info("[admin]", ...args);
 }
 
+const ICON_OPTIONS = [
+    "\u{1F9D8}",
+    "\u{1F4AA}",
+    "\u{1F525}",
+    "\u{1F343}",
+    "\u{1F31E}",
+    "\u{1F300}",
+    "\u{1F3B5}",
+    "\u{26A1}",
+    "\u{1F3C3}",
+    "\u{1F93E}",
+    "\u{1F3AF}",
+    "\u{1F9E0}",
+    "\u{2764}\u{FE0F}"
+];
+
 const layoutTemplate = compileTemplate("layout", `
   <div class="app-shell">
     <aside class="sidebar">
@@ -42,18 +58,32 @@ const layoutTemplate = compileTemplate("layout", `
       </div>
       <nav class="nav">
         <div class="nav-section">
-          <div class="nav-title">{{t "nav.section.schedule" "Schedule"}}</div>
           <a href="#/calendar" data-route="calendar">
             <span class="nav-short" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 8H4v10h16V10z"/></svg>
             </span>
             <span class="nav-label">{{t "nav.calendar" "Calendar"}}</span>
           </a>
-          <a href="#/events" data-route="events">
+          <a href="#/reports" data-route="reports">
             <span class="nav-short" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M17 1l4 4-4 4V6H7a4 4 0 0 0-4 4v1H1v-1a6 6 0 0 1 6-6h10V1zm-10 22l-4-4 4-4v3h10a4 4 0 0 0 4-4v-1h2v1a6 6 0 0 1-6 6H7v3z"/></svg>
+              <svg viewBox="0 0 24 24"><path d="M3 3h2v18H3V3zm8 6h2v12h-2V9zm8-4h2v16h-2V5z"/></svg>
             </span>
-            <span class="nav-label">{{t "nav.events" "Event series"}}</span>
+            <span class="nav-label">{{t "nav.reports" "Reports"}}</span>
+          </a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-title">{{t "nav.section.customers" "Customers"}}</div>
+          <a href="#/customers" data-route="customers">
+            <span class="nav-short" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M16 11a3 3 0 1 0-2.999-3A3 3 0 0 0 16 11zm-8 0a3 3 0 1 0-2.999-3A3 3 0 0 0 8 11zm0 2c-2.67 0-8 1.34-8 4v3h10v-3c0-.7.2-1.34.56-1.9C9.71 13.4 8.9 13 8 13zm8 0c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4z"/></svg>
+            </span>
+            <span class="nav-label">{{t "nav.customers" "Customers"}}</span>
+          </a>
+          <a href="#/guests" data-route="guests">
+            <span class="nav-short" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M15 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm-7 2c-3.3 0-8 1.67-8 5v3h10v-3c0-1.37.47-2.56 1.3-3.54C10.1 14.43 9.08 14 8 14zm12-1h-2V9h-2v4h-4v2h4v4h2v-4h2z"/></svg>
+            </span>
+            <span class="nav-label">{{t "nav.guests" "Guests"}}</span>
           </a>
         </div>
         <div class="nav-section">
@@ -70,14 +100,11 @@ const layoutTemplate = compileTemplate("layout", `
             </span>
             <span class="nav-label">{{t "nav.plans" "Plans"}}</span>
           </a>
-        </div>
-        <div class="nav-section">
-          <div class="nav-title">{{t "nav.section.people" "People"}}</div>
-          <a href="#/customers" data-route="customers">
+          <a href="#/events" data-route="events">
             <span class="nav-short" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M16 11a3 3 0 1 0-2.999-3A3 3 0 0 0 16 11zm-8 0a3 3 0 1 0-2.999-3A3 3 0 0 0 8 11zm0 2c-2.67 0-8 1.34-8 4v3h10v-3c0-.7.2-1.34.56-1.9C9.71 13.4 8.9 13 8 13zm8 0c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4z"/></svg>
+              <svg viewBox="0 0 24 24"><path d="M17 1l4 4-4 4V6H7a4 4 0 0 0-4 4v1H1v-1a6 6 0 0 1 6-6h10V1zm-10 22l-4-4 4-4v3h10a4 4 0 0 0 4-4v-1h2v1a6 6 0 0 1-6 6H7v3z"/></svg>
             </span>
-            <span class="nav-label">{{t "nav.customers" "Customers"}}</span>
+            <span class="nav-label">{{t "nav.events" "Serieses"}}</span>
           </a>
           <a href="#/users" data-route="users">
             <span class="nav-short" aria-hidden="true">
@@ -85,36 +112,21 @@ const layoutTemplate = compileTemplate("layout", `
             </span>
             <span class="nav-label">{{t "nav.users" "Users"}}</span>
           </a>
-          <a href="#/guests" data-route="guests">
-            <span class="nav-short" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M15 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm-7 2c-3.3 0-8 1.67-8 5v3h10v-3c0-1.37.47-2.56 1.3-3.54C10.1 14.43 9.08 14 8 14zm12-1h-2V9h-2v4h-4v2h4v4h2v-4h2z"/></svg>
-            </span>
-            <span class="nav-label">{{t "nav.guests" "Guests"}}</span>
-          </a>
-        </div>
-        <div class="nav-section">
-          <div class="nav-title">{{t "nav.section.insights" "Insights"}}</div>
-          <a href="#/reports" data-route="reports">
-            <span class="nav-short" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M3 3h2v18H3V3zm8 6h2v12h-2V9zm8-4h2v16h-2V5z"/></svg>
-            </span>
-            <span class="nav-label">{{t "nav.reports" "Reports"}}</span>
-          </a>
           <a href="#/payroll" data-route="payroll">
             <span class="nav-short" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M12 3c-5.52 0-10 1.79-10 4s4.48 4 10 4 10-1.79 10-4-4.48-4-10-4zm0 10c-5.52 0-10 1.79-10 4s4.48 4 10 4 10-1.79 10-4-4.48-4-10-4z"/></svg>
             </span>
             <span class="nav-label">{{t "nav.payroll" "Payroll"}}</span>
           </a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-title">{{t "nav.section.admin" "Admin"}}</div>
           <a href="#/audit" data-route="audit">
             <span class="nav-short" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M9 2h6a2 2 0 0 1 2 2h3v18H4V4h3a2 2 0 0 1 2-2zm0 4h6V4H9v2zm-1 9l2 2 4-4 1.5 1.5L10 19l-3.5-3.5L8 15z"/></svg>
             </span>
-            <span class="nav-label">{{t "nav.audit" "Audit"}}</span>
+            <span class="nav-label">{{t "nav.audit" "Audit log"}}</span>
           </a>
-        </div>
-        <div class="nav-section">
-          <div class="nav-title">{{t "nav.section.settings" "Settings"}}</div>
           <a href="#/settings" data-route="settings">
             <span class="nav-short" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M19.4 13a7.96 7.96 0 0 0 .1-1 7.96 7.96 0 0 0-.1-1l2.1-1.6-2-3.4-2.5 1a7.42 7.42 0 0 0-1.7-1L15 2h-6l-.3 2.9c-.6.2-1.2.6-1.7 1l-2.5-1-2 3.4L4.6 11a7.96 7.96 0 0 0-.1 1 7.96 7.96 0 0 0 .1 1L2.5 14.6l2 3.4 2.5-1c.5.4 1.1.8 1.7 1L9 22h6l.3-2.9c.6-.2 1.2-.6 1.7-1l2.5 1 2-3.4L19.4 13zM12 15.5A3.5 3.5 0 1 1 15.5 12 3.5 3.5 0 0 1 12 15.5z"/></svg>
@@ -660,6 +672,33 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
               </select>
             </div>
             <div>
+              <label>{{t "session.icon" "Icon"}}</label>
+              <div class="icon-field">
+                <span class="icon-preview" data-icon-preview>{{instanceIcon}}</span>
+                <input name="icon" value="{{instanceIcon}}" placeholder="{{seriesIcon}}" />
+                <button type="button" class="icon-button icon-picker-trigger" data-icon-picker data-icon-target="[name=&quot;icon&quot;]" aria-label="{{t "session.pickIcon" "Pick icon"}}">
+                  <span class="icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M4 5h6v6H4V5zm10 0h6v6h-6V5zM4 13h6v6H4v-6zm10 0h6v6h-6v-6z"/></svg>
+                  </span>
+                </button>
+              </div>
+              <div class="meta">{{t "session.iconHint" "Leave blank to use the series icon."}}</div>
+            </div>
+            <div>
+              <label>{{t "session.color" "Color"}}</label>
+              <div class="color-field" data-series-color="{{seriesColor}}">
+                <input class="color-input" name="color" type="color" value="{{colorValue}}" />
+                <div class="color-chip" style="background: {{colorValue}}"></div>
+                <input class="color-text" type="text" value="{{colorValue}}" placeholder="{{seriesColor}}" data-color-text />
+                <button type="button" class="icon-button color-reset" data-color-reset aria-label="{{t "session.useSeriesColor" "Use series color"}}">
+                  <span class="icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M5 12a7 7 0 1 0 7-7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 5v4h4" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                  </span>
+                </button>
+              </div>
+              <div class="meta">{{t "session.colorHint" "Leave blank to use the series color."}}</div>
+            </div>
+            <div>
               <label>{{t "session.capacity" "Capacity"}}</label>
               <input type="number" name="capacity" value="{{capacity}}" />      
             </div>
@@ -668,7 +707,7 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
               <input type="number" name="remoteCapacity" value="{{remoteCapacity}}" />
             </div>
             <div>
-              <label>{{t "session.price" "Price (NIS)"}}</label>
+              <label>{{t "session.price" "Price"}}</label>
               <input type="number" step="0.01" name="price" value="{{price}}" />
             </div>
             <div>
@@ -907,6 +946,30 @@ const confirmModalTemplate = compileTemplate("confirm-modal", `
   </div>
 `);
 
+const iconPickerTemplate = compileTemplate("icon-picker-modal", `
+  <div class="modal-overlay" id="icon-picker-modal">
+    <div class="modal modal-compact icon-picker-modal">
+      <div class="modal-header">
+        <div>
+          <h3>{{t "session.pickIcon" "Pick icon"}}</h3>
+          <div class="muted">{{t "session.pickIconHint" "Choose an icon for this session."}}</div>
+        </div>
+        <button class="modal-close" id="close-icon-picker" type="button" aria-label="{{t "common.close" "Close"}}"></button>
+      </div>
+      <div class="icon-grid">
+        {{#each icons}}
+          <button type="button" class="icon-option" data-icon="{{this}}">
+            <span aria-hidden="true">{{this}}</span>
+          </button>
+        {{/each}}
+      </div>
+      <div class="modal-footer">
+        <button class="secondary" id="clear-icon">{{t "common.clear" "Clear"}}</button>
+      </div>
+    </div>
+  </div>
+`);
+
 const sessionModalTemplate = compileTemplate("session-modal", `
   <div class="modal-overlay" id="session-modal">
     <div class="modal">
@@ -975,7 +1038,7 @@ const sessionModalTemplate = compileTemplate("session-modal", `
           <input type="number" name="remoteCapacity" value="0" />
         </div>
         <div>
-          <label>{{t "session.price" "Price (NIS)"}}</label>
+          <label>{{t "session.price" "Price"}}</label>
           <input type="number" step="0.01" name="price" value="25" />
         </div>
         <div>
@@ -1078,7 +1141,15 @@ const seriesModalTemplate = compileTemplate("series-modal", `
         </div>
         <div>
           <label>{{t "series.icon" "Icon"}}</label>
-          <input name="icon" value="{{icon}}" placeholder="flow" />
+          <div class="icon-field">
+            <span class="icon-preview" data-icon-preview>{{icon}}</span>
+            <input name="icon" value="{{icon}}" placeholder="flow" />
+            <button type="button" class="icon-button icon-picker-trigger" data-icon-picker data-icon-target="[name=&quot;icon&quot;]" aria-label="{{t "session.pickIcon" "Pick icon"}}">
+              <span class="icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 5h6v6H4V5zm10 0h6v6h-6V5zM4 13h6v6H4v-6zm10 0h6v6h-6v-6z"/></svg>
+              </span>
+            </button>
+          </div>
         </div>
         <div>
           <label>{{t "series.color" "Color"}}</label>
@@ -1113,7 +1184,7 @@ const seriesModalTemplate = compileTemplate("series-modal", `
           <input type="number" name="remoteCapacity" value="{{remoteCapacity}}" />
         </div>
         <div>
-          <label>{{t "series.price" "Price (NIS)"}}</label>
+          <label>{{t "series.price" "Price"}}</label>
           <input type="number" step="0.01" name="price" value="{{price}}" />
         </div>
         <div>
@@ -1658,7 +1729,7 @@ const planModalTemplate = compileTemplate("plan-modal", `
           <input type="number" name="punchCardUses" value="{{punchCardUses}}" />
         </div>
         <div>
-          <label>{{t "plans.price" "Price (NIS)"}}</label>
+          <label>{{t "plans.price" "Price"}}</label>
           <input type="number" step="0.01" name="price" value="{{price}}" />
         </div>
         <div>
@@ -2960,7 +3031,7 @@ function render(state) {
         title: titleMap[route] || "Admin",
         subtitle,
         content,
-        studioName: studio.name || "Letmein Studio",
+        studioName: studio.name || "Yogin Studio",
         logoUrl: theme.logoUrl || "",
         userName,
         userEmail,
@@ -4043,14 +4114,37 @@ function bindColorField(container) {
     const colorInput = container.querySelector("input[type=\"color\"]");
     const textInput = container.querySelector("[data-color-text]");
     if (!colorInput || !textInput) return;
+    const seriesColor = ensureHexColor(container.getAttribute("data-series-color") || "", "");
     colorInput.addEventListener("input", () => updateColorField(colorInput));
     textInput.addEventListener("input", () => {
+        if (!textInput.value.trim()) {
+            if (seriesColor) {
+                colorInput.value = seriesColor;
+                updateColorField(colorInput);
+            }
+            return;
+        }
         const normalized = normalizeHexInput(textInput.value);
         if (!normalized) return;
         colorInput.value = normalized;
         updateColorField(colorInput);
     });
     updateColorField(colorInput);
+}
+
+function bindColorResets(container) {
+    if (!container) return;
+    container.querySelectorAll("[data-color-reset]").forEach(button => {
+        button.addEventListener("click", () => {
+            const field = button.closest(".color-field");
+            if (!field) return;
+            const colorInput = field.querySelector("input[type=\"color\"]");
+            const seriesColor = ensureHexColor(field.getAttribute("data-series-color") || "", "");
+            if (!colorInput || !seriesColor) return;
+            colorInput.value = seriesColor;
+            updateColorField(colorInput);
+        });
+    });
 }
 
 function getInitials(value) {
@@ -4436,6 +4530,11 @@ async function openCalendarEventModal(item, data) {
     const descriptionValue = (item.seriesDescription || item.description || "").trim();
     const hasDescription = descriptionValue.length > 0;
     const descriptionIsUrl = /^https?:\/\//i.test(descriptionValue);
+    const seriesIconValue = item.seriesIcon || "";
+    const seriesColorValue = ensureHexColor(item.seriesColor || "#647FBC", "#647FBC");
+    const instanceIconValue = item.icon || "";
+    const instanceColorValue = ensureHexColor(item.color || "", "");
+    const colorValue = instanceColorValue || seriesColorValue;
 
     const statuses = [
         {
@@ -4482,7 +4581,7 @@ async function openCalendarEventModal(item, data) {
         price: formatPlainPrice(plan.priceCents),
         selected: allowedPlanSet.has(String(plan.id))
     }));
-    const titleSuggestions = buildTitleSuggestions(data.plans);
+    const titleSuggestions = buildTitleSuggestions(data);
     const titleSuggestionId = createTitleSuggestionId("session-title");
 
     const modalMarkup = calendarModalTemplate({
@@ -4500,6 +4599,10 @@ async function openCalendarEventModal(item, data) {
         titleSuggestions,
         titleSuggestionId,
         capacitySummary,
+        instanceIcon: instanceIconValue,
+        seriesIcon: seriesIconValue,
+        seriesColor: seriesColorValue,
+        colorValue,
         price: toCurrencyUnits(item.priceCents),
         remoteCapacity: remoteCapacityValue,
         remoteInviteUrl: item.remoteInviteUrl || "",
@@ -4523,6 +4626,13 @@ async function openCalendarEventModal(item, data) {
     };
     cleanupEscape = bindModalEscape(closeModal);
     bindModalBackdrop(overlay);
+    overlay.querySelectorAll(".color-field").forEach(field => bindColorField(field));
+    bindIconPicker(overlay);
+    bindIconPreview(overlay);
+    overlay.querySelectorAll(".color-field").forEach(field => bindColorField(field));
+    bindColorResets(overlay);
+    bindIconPicker(overlay);
+    bindIconPreview(overlay);
 
     const closeBtn = overlay.querySelector("#close-modal");
     if (closeBtn) {
@@ -4652,7 +4762,7 @@ async function openCalendarEventModal(item, data) {
     if (saveBtn) {
         saveBtn.addEventListener("click", async () => {
             const formValues = {};
-            ["title", "description", "status", "roomId", "instructorId", "capacity", "remoteCapacity", "price", "remoteInviteUrl"].forEach(field => {
+            ["title", "description", "status", "roomId", "instructorId", "icon", "color", "capacity", "remoteCapacity", "price", "remoteInviteUrl"].forEach(field => {
                 const element = overlay.querySelector(`[name="${field}"]`);
                 formValues[field] = element ? element.value : "";
             });
@@ -4665,6 +4775,13 @@ async function openCalendarEventModal(item, data) {
             const remoteInviteUrlValue = formValues.remoteInviteUrl || "";
             const titleValue = formValues.title?.trim() || "";
             const descriptionValue = formValues.description?.trim() || "";
+            const iconInputValue = formValues.icon?.trim() || "";
+            const colorInputValue = formValues.color?.trim() || "";
+            const normalizedColorInput = ensureHexColor(colorInputValue, "");
+            const effectiveIconValue = iconInputValue || seriesIconValue;
+            const effectiveColorValue = normalizedColorInput || seriesColorValue;
+            const nextIconOverride = iconInputValue && iconInputValue !== seriesIconValue ? iconInputValue : "";
+            const nextColorOverride = effectiveColorValue && effectiveColorValue !== seriesColorValue ? effectiveColorValue : "";
             const selectedPlanIds = Array.from(overlay.querySelectorAll("input[name=\"instancePlanIds\"]:checked"))
                 .map(input => input.value)
                 .filter(Boolean);
@@ -4682,6 +4799,8 @@ async function openCalendarEventModal(item, data) {
                 remoteCapacityValue !== Number(item.remoteCapacity || 0) ||
                 priceValue !== toCurrencyUnits(Number(item.priceCents || 0)) ||
                 remoteInviteUrlValue !== (item.remoteInviteUrl || "") ||
+                effectiveIconValue !== seriesIconValue ||
+                effectiveColorValue !== seriesColorValue ||
                 selectedPlanSignature !== seriesSignature;
 
             const saveInstance = async (applyToSeries) => {
@@ -4700,6 +4819,8 @@ async function openCalendarEventModal(item, data) {
                     payload.priceCents = toCents(priceValue);
                     payload.currency = item.currency || "ILS";
                 }
+                if (nextIconOverride !== (item.icon || "")) payload.icon = nextIconOverride;
+                if (nextColorOverride !== (item.color || "")) payload.color = nextColorOverride;
                 if (remoteInviteUrlValue !== (item.remoteInviteUrl || "")) payload.remoteInviteUrl = remoteInviteUrlValue;
                 if (allowedPlanIdsJson !== null) payload.allowedPlanIdsJson = allowedPlanIdsJson;
 
@@ -4725,6 +4846,8 @@ async function openCalendarEventModal(item, data) {
                             description: descriptionValue,
                             instructorId: normalizedInstructorId,
                             roomId: normalizedRoomId,
+                            icon: effectiveIconValue,
+                            color: effectiveColorValue,
                             defaultCapacity: capacityValue,
                             remoteCapacity: remoteCapacityValue,
                             priceCents: toCents(priceValue),
@@ -5219,6 +5342,77 @@ function confirmWithModal(options) {
     });
 }
 
+function bindIconPreview(container) {
+    if (!container) return;
+    container.querySelectorAll(".icon-field").forEach(field => {
+        const input = field.querySelector("input[name=\"icon\"]");
+        const preview = field.querySelector("[data-icon-preview]");
+        if (!input || !preview) return;
+        const update = () => {
+            const value = input.value?.trim() || input.getAttribute("placeholder") || "";
+            preview.textContent = value;
+            preview.classList.toggle("is-empty", !value);
+        };
+        input.addEventListener("input", update);
+        update();
+    });
+}
+
+function openIconPicker(targetInput) {
+    if (!targetInput) return;
+    const existing = document.getElementById("icon-picker-modal");
+    if (existing) {
+        clearModalEscape();
+        existing.remove();
+    }
+    const modalMarkup = iconPickerTemplate({ icons: ICON_OPTIONS });
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = modalMarkup;
+    const overlay = wrapper.firstElementChild;
+    if (!overlay) return;
+    document.body.appendChild(overlay);
+    let cleanupEscape = () => {};
+    const closeModal = () => {
+        cleanupEscape();
+        overlay.remove();
+    };
+    cleanupEscape = bindModalEscape(closeModal);
+    bindModalBackdrop(overlay);
+    const closeBtn = overlay.querySelector("#close-icon-picker");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", closeModal);
+    }
+    const clearBtn = overlay.querySelector("#clear-icon");
+    if (clearBtn) {
+        clearBtn.addEventListener("click", () => {
+            targetInput.value = "";
+            targetInput.dispatchEvent(new Event("input", { bubbles: true }));
+            closeModal();
+        });
+    }
+    overlay.querySelectorAll(".icon-option").forEach(button => {
+        button.addEventListener("click", () => {
+            const icon = button.getAttribute("data-icon") || "";
+            targetInput.value = icon;
+            targetInput.dispatchEvent(new Event("input", { bubbles: true }));
+            closeModal();
+        });
+    });
+}
+
+function bindIconPicker(container) {
+    if (!container) return;
+    container.querySelectorAll("[data-icon-picker]").forEach(button => {
+        button.addEventListener("click", () => {
+            const selector = button.getAttribute("data-icon-target") || "input[name=\"icon\"]";
+            const target = container.querySelector(selector) || document.querySelector(selector);
+            if (target) {
+                openIconPicker(target);
+            }
+        });
+    });
+}
+
 function openSessionModal(data, options = {}) {
     const existing = document.getElementById("session-modal");
     if (existing) {
@@ -5236,7 +5430,7 @@ function openSessionModal(data, options = {}) {
         price: formatPlainPrice(plan.priceCents),
         selected: allowedPlanSet.has(String(plan.id))
     }));
-    const titleSuggestions = buildTitleSuggestions(data.plans);
+    const titleSuggestions = buildTitleSuggestions(data);
     const titleSuggestionId = createTitleSuggestionId("session-title");
     const modalMarkup = sessionModalTemplate({
         focusDate,
@@ -6509,7 +6703,7 @@ function openSeriesModal(series, data) {
         price: formatPlainPrice(plan.priceCents),
         selected: allowedSet.has(String(plan.id))
     }));
-    const titleSuggestions = buildTitleSuggestions(data.plans);
+    const titleSuggestions = buildTitleSuggestions(data);
     const titleSuggestionId = createTitleSuggestionId("series-title");
     const modalMarkup = seriesModalTemplate({
         modalTitle: isEdit ? t("series.editTitle", "Edit series") : t("series.newTitle", "New series"),
@@ -6559,7 +6753,6 @@ function openSeriesModal(series, data) {
         closeBtn.addEventListener("click", closeModal);
     }
 
-    bindColorField(overlay.querySelector(".color-field"));
 
     const saveBtn = overlay.querySelector("#save-series");
     if (saveBtn) {
@@ -6886,16 +7079,24 @@ function toCents(value) {
 
 function formatPlainPrice(cents) {
     const amount = toCurrencyUnits(cents);
-    const locale = document.documentElement.lang || navigator.language || "en";
+    const locale = getLocaleFromSettings();
     return new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(amount);
 }
 
-function buildTitleSuggestions(plans) {
+function buildTitleSuggestions(data) {
     const suggestions = new Set();
-    (plans || []).forEach(plan => {
-        const name = String(plan?.name || "").trim();
-        if (name) {
-            suggestions.add(name);
+    (data?.items || []).forEach(item => {
+        const title = String(item?.seriesTitle || "").trim();
+        if (!title) return;
+        const isSeries = item?.eventSeriesId && String(item.eventSeriesId) !== "00000000-0000-0000-0000-000000000000";
+        if (isSeries) {
+            suggestions.add(title);
+        }
+    });
+    (data?.series || []).forEach(series => {
+        const title = String(series?.title || "").trim();
+        if (title) {
+            suggestions.add(title);
         }
     });
     return Array.from(suggestions);
@@ -7132,9 +7333,28 @@ function openEventActionsMenu(anchor, item, data) {
     const menu = document.createElement("div");
     menu.className = "event-actions-menu";
     menu.innerHTML = `
-        <button type="button" data-action="edit">${t("calendar.actionEdit", "Edit session")}</button>
-        <button type="button" data-action="duplicate">${t("calendar.actionDuplicate", "Duplicate session")}</button>
-        <button type="button" data-action="delete">${t("calendar.actionDelete", "Delete session")}</button>
+        <button type="button" data-action="edit">
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+          </span>
+          ${t("calendar.actionEdit", "Edit session")}
+        </button>
+        <button type="button" data-action="duplicate">
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <rect x="9" y="9" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"/>
+              <path d="M5 7V5h10" fill="none" stroke="currentColor" stroke-width="2"/>
+              <path d="M5 17V7" fill="none" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </span>
+          ${t("calendar.actionDuplicate", "Duplicate session")}
+        </button>
+        <button type="button" data-action="delete">
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M6 7h12M9 7v12m6-12v12M10 4h4l1 2H9l1-2z"/></svg>
+          </span>
+          ${t("calendar.actionDelete", "Delete session")}
+        </button>
     `;
 
     document.body.appendChild(menu);
@@ -7281,15 +7501,24 @@ function addDays(date, amount) {
     return next;
 }
 
+function getLocaleFromSettings() {
+    const raw = (document.documentElement.lang || "").trim().replace("_", "-").toLowerCase();
+    if (!raw) return "en-IL";
+    if (raw.includes("-")) return raw;
+    if (raw === "he") return "he-IL";
+    if (raw === "en") return "en-IL";
+    return `${raw}-IL`;
+}
+
 function formatTimeOnly(date, timeZone) {
-    return new Intl.DateTimeFormat("he-IL", {
+    return new Intl.DateTimeFormat(getLocaleFromSettings(), {
         hour: "numeric",
         minute: "2-digit"
     }).format(date);
 }
 
 function formatTimeInput(date, timeZone) {
-    const parts = new Intl.DateTimeFormat("he-IL", {
+    const parts = new Intl.DateTimeFormat(getLocaleFromSettings(), {
         hour: "2-digit",
         minute: "2-digit",
         hourCycle: "h23"
@@ -7300,14 +7529,14 @@ function formatTimeInput(date, timeZone) {
 }
 
 function formatMonthDay(date, timeZone) {
-    return new Intl.DateTimeFormat("he-IL", {
+    return new Intl.DateTimeFormat(getLocaleFromSettings(), {
         month: "short",
         day: "numeric"
     }).format(date);
 }
 
 function formatFullDate(date, timeZone) {
-    return new Intl.DateTimeFormat("he-IL", {
+    return new Intl.DateTimeFormat(getLocaleFromSettings(), {
         weekday: "long",
         month: "long",
         day: "numeric",
@@ -7316,7 +7545,7 @@ function formatFullDate(date, timeZone) {
 }
 
 function formatMonthYear(date, timeZone) {
-    return new Intl.DateTimeFormat("he-IL", {
+    return new Intl.DateTimeFormat(getLocaleFromSettings(), {
         month: "long",
         year: "numeric"
     }).format(date);
@@ -7341,7 +7570,7 @@ function getWeekNumber(date) {
 function getWeekdayNames(weekStartsOn) {
     const base = new Date(2024, 0, 7, 12);
     const names = Array.from({ length: 7 }, (_, index) =>
-        new Intl.DateTimeFormat("he-IL", { weekday: "short" }).format(addDays(base, index)));
+        new Intl.DateTimeFormat(getLocaleFromSettings(), { weekday: "short" }).format(addDays(base, index)));
     return names.slice(weekStartsOn).concat(names.slice(0, weekStartsOn));
 }
 

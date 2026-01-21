@@ -33,7 +33,7 @@ const layoutTemplate = compileTemplate("layout", `
 
 const loginTemplate = compileTemplate("login", `
   <div class="login-card">
-    <h2>{{t "login.title" "Welcome to Letmein"}}</h2>
+    <h2>{{t "login.title" "Welcome to Yogin"}}</h2>
     <p>{{t "login.subtitle" "Sign in or create an account to register for classes."}}</p>
     {{#if error}}
       <div class="notice">{{error}}</div>
@@ -1028,7 +1028,7 @@ function render(state) {
     }
 
     root.innerHTML = layoutTemplate({
-        title: titleMap[route] || "Letmein",
+        title: titleMap[route] || "Yogin",
         subtitle: t("page.subtitle", "Reserve your next session"),
         content
     });
