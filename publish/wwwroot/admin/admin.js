@@ -284,7 +284,11 @@ const calendarTemplate = compileTemplate("calendar", `
               <div class="calendar-event {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
                 <button class="event-actions" type="button" aria-label="{{t "calendar.actions" "Actions"}}">
                   <span class="icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><path d="M5 12a2 2 0 1 0 0 0zm7 0a2 2 0 1 0 0 0zm7 0a2 2 0 1 0 0 0z"/></svg>
+                    <svg viewBox="0 0 24 24">
+                      <circle cx="5" cy="12" r="2"></circle>
+                      <circle cx="12" cy="12" r="2"></circle>
+                      <circle cx="19" cy="12" r="2"></circle>
+                    </svg>
                   </span>
                 </button>
                 <div class="event-time">{{timeRange}}</div>
@@ -330,7 +334,11 @@ const calendarTemplate = compileTemplate("calendar", `
                   <div class="calendar-event compact {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
                     <button class="event-actions" type="button" aria-label="{{t "calendar.actions" "Actions"}}">
                       <span class="icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M5 12a2 2 0 1 0 0 0zm7 0a2 2 0 1 0 0 0zm7 0a2 2 0 1 0 0 0z"/></svg>
+                        <svg viewBox="0 0 24 24">
+                          <circle cx="5" cy="12" r="2"></circle>
+                          <circle cx="12" cy="12" r="2"></circle>
+                          <circle cx="19" cy="12" r="2"></circle>
+                        </svg>
                       </span>
                     </button>
                     <div class="event-time">{{timeRange}}</div>
@@ -1836,7 +1844,7 @@ const eventsTemplate = compileTemplate("events", `
           <td>{{dayLabel}}</td>
           <td>{{startTimeLocal}}</td>
           <td>{{defaultCapacity}}</td>
-          <td>{{isActive}}</td>
+          <td>{{activeLabel}}</td>
           <td>
             <button class="secondary" data-edit="{{id}}">{{t "common.edit" "Edit"}}</button>
             <button data-generate="{{id}}">{{t "events.generate" "Generate"}}</button>
@@ -2731,7 +2739,7 @@ function render(state) {
             ...item,
             dayLabel: dayNames[item.dayOfWeek] || "",
             startTimeLocal: item.startTimeLocal,
-            isActive: item.isActive ? "Yes" : "No",
+            activeLabel: item.isActive ? t("common.yes", "Yes") : t("common.no", "No"),
             icon: item.icon || "",
             color: item.color || "#647FBC"
         }));
@@ -3590,11 +3598,25 @@ function bindRouteActions(route, data, state) {
             btn.addEventListener("click", async () => {
                 const id = btn.getAttribute("data-user-invite");
                 if (!id) return;
+                btn.disabled = true;
                 try {
                     const invite = await requestInvite(id, true);
                     showToast(`${t("users.inviteSent", "Invite sent to")} ${invite.email}.`, "success");
                 } catch (error) {
-                    showToast(error.message || t("users.inviteError", "Unable to generate invite."), "error");
+                    const message = (error.message || "").toLowerCase();
+                    if (message.includes("email") && message.includes("configured")) {
+                        try {
+                            const invite = await requestInvite(id, false);
+                            openInviteEmail(invite);
+                            showToast(t("users.inviteMailto", "Opened email client."), "success");
+                        } catch (fallbackError) {
+                            showToast(fallbackError.message || t("users.inviteError", "Unable to generate invite."), "error");
+                        }
+                    } else {
+                        showToast(error.message || t("users.inviteError", "Unable to generate invite."), "error");
+                    }
+                } finally {
+                    btn.disabled = false;
                 }
             });
         });
@@ -3641,11 +3663,25 @@ function bindRouteActions(route, data, state) {
             btn.addEventListener("click", async () => {
                 const id = btn.getAttribute("data-guest-invite");
                 if (!id) return;
+                btn.disabled = true;
                 try {
                     const invite = await requestInvite(id, true);
                     showToast(`${t("guests.inviteSent", "Invite sent to")} ${invite.email}.`, "success");
                 } catch (error) {
-                    showToast(error.message || t("guests.inviteError", "Unable to send invite."), "error");
+                    const message = (error.message || "").toLowerCase();
+                    if (message.includes("email") && message.includes("configured")) {
+                        try {
+                            const invite = await requestInvite(id, false);
+                            openInviteEmail(invite);
+                            showToast(t("guests.inviteMailto", "Opened email client."), "success");
+                        } catch (fallbackError) {
+                            showToast(fallbackError.message || t("guests.inviteError", "Unable to send invite."), "error");
+                        }
+                    } else {
+                        showToast(error.message || t("guests.inviteError", "Unable to send invite."), "error");
+                    }
+                } finally {
+                    btn.disabled = false;
                 }
             });
         });
@@ -3995,6 +4031,13 @@ function toggleInstructorFields(roles) {
 
 async function requestInvite(id, sendEmail) {
     return apiPost(`/api/admin/users/${id}/invite`, { sendEmail });
+}
+
+function openInviteEmail(invite) {
+    if (!invite?.email) return;
+    const subject = encodeURIComponent(invite.subject || "");
+    const body = encodeURIComponent(invite.body || "");
+    window.location.href = `mailto:${invite.email}?subject=${subject}&body=${body}`;
 }
 
 async function copyInvite(invite) {
