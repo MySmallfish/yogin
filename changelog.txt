@@ -1,0 +1,2 @@
+﻿# Changelog
+- 2026-01-21: Added changelog policy to AGENTS.md and started recording tasks in changelog.txt.
