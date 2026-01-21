@@ -199,8 +199,10 @@ const loginTemplate = compileTemplate("login", `
 
 const calendarTemplate = compileTemplate("calendar", `
   <div class="calendar-toolbar">
-    <div class="calendar-top">
-      <div class="calendar-views">
+    <div class="calendar-grid">
+      <div class="calendar-left">
+        <div class="calendar-left-row">
+          <div class="calendar-views">
         <button class="secondary view-btn {{#if isDay}}active{{/if}}" data-view="day">
           <span class="icon" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 6H4v10h16V8z"/></svg>
@@ -225,48 +227,50 @@ const calendarTemplate = compileTemplate("calendar", `
           </span>
           {{t "calendar.list" "List"}}
         </button>
+          </div>
+          <div class="calendar-nav">
+            <button class="icon-button nav-arrow" data-nav="prev" aria-label="{{t "calendar.prev" "Prev"}}">
+              <span class="icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
+              </span>
+            </button>
+            <button class="secondary" id="calendar-today">{{t "calendar.today" "Today"}}</button>
+            <input type="date" id="calendar-date" value="{{focusDate}}" />
+            <button class="icon-button nav-arrow" data-nav="next" aria-label="{{t "calendar.next" "Next"}}">
+              <span class="icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+              </span>
+            </button>
+          </div>
+        </div>
+        <div class="calendar-range">
+          {{#if weekNumberLabel}}<span class="calendar-week-number">{{weekNumberLabel}}</span>{{/if}}
+          <span>{{rangeLabel}}</span>
+          {{#if hebrewDateLabel}}<span class="calendar-hebrew">{{hebrewDateLabel}}</span>{{/if}}
+        </div>
       </div>
-      <div class="calendar-range">
-        {{#if weekNumberLabel}}<span class="calendar-week-number">{{weekNumberLabel}}</span>{{/if}}
-        <span>{{rangeLabel}}</span>
-        {{#if hebrewDateLabel}}<span class="calendar-hebrew">{{hebrewDateLabel}}</span>{{/if}}
-      </div>
-    </div>
-    <div class="calendar-bottom">
-      <div class="calendar-nav">
-        <button class="icon-button nav-arrow" data-nav="prev" aria-label="{{t "calendar.prev" "Prev"}}">
-          <span class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
-          </span>
-        </button>
-        <button class="secondary" id="calendar-today">{{t "calendar.today" "Today"}}</button>
-        <input type="date" id="calendar-date" value="{{focusDate}}" />
-        <button class="icon-button nav-arrow" data-nav="next" aria-label="{{t "calendar.next" "Next"}}">
-          <span class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
-          </span>
-        </button>
-      </div>
-      <div class="calendar-actions">
-        <input type="search" id="calendar-search" placeholder="{{t "calendar.search" "Search sessions"}}" value="{{search}}" />
-        <div class="calendar-export" aria-label="{{t "calendar.export" "Export"}}">
-          <button class="icon-button export-btn" data-export="outlook" title="{{t "calendar.exportOutlook" "Outlook (.ics)"}}" aria-label="{{t "calendar.exportOutlook" "Outlook (.ics)"}}">
-            <span class="icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 8H4v10h16V10z"/></svg>
-            </span>
-            <span class="sr-only">{{t "calendar.exportOutlook" "Outlook (.ics)"}}</span>
-          </button>
-          <button class="icon-button export-btn" data-export="excel" title="{{t "calendar.exportExcel" "Excel (.csv)"}}" aria-label="{{t "calendar.exportExcel" "Excel (.csv)"}}">
-            <span class="icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M4 3h12l4 4v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm11 1v4h4M7 9l2 3-2 3h2l1-2 1 2h2l-2-3 2-3h-2l-1 2-1-2H7z"/></svg>
-            </span>
-            <span class="sr-only">{{t "calendar.exportExcel" "Excel (.csv)"}}</span>
+      <div class="calendar-right">
+        <div class="calendar-actions">
+          <input type="search" id="calendar-search" placeholder="{{t "calendar.search" "Search sessions"}}" value="{{search}}" />
+          <div class="calendar-export" aria-label="{{t "calendar.export" "Export"}}">
+            <button class="icon-button export-btn" data-export="outlook" title="{{t "calendar.exportOutlook" "Outlook (.ics)"}}" aria-label="{{t "calendar.exportOutlook" "Outlook (.ics)"}}">
+              <span class="icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 8H4v10h16V10z"/></svg>
+              </span>
+              <span class="sr-only">{{t "calendar.exportOutlook" "Outlook (.ics)"}}</span>
+            </button>
+            <button class="icon-button export-btn" data-export="excel" title="{{t "calendar.exportExcel" "Excel (.csv)"}}" aria-label="{{t "calendar.exportExcel" "Excel (.csv)"}}">
+              <span class="icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 3h12l4 4v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm11 1v4h4M7 9l2 3-2 3h2l1-2 1 2h2l-2-3 2-3h-2l-1 2-1-2H7z"/></svg>
+              </span>
+              <span class="sr-only">{{t "calendar.exportExcel" "Excel (.csv)"}}</span>
+            </button>
+          </div>
+          <button id="add-session">
+            <span class="icon" aria-hidden="true">+</span>
+            {{t "calendar.addSession" "Add session"}}
           </button>
         </div>
-        <button id="add-session">
-          <span class="icon" aria-hidden="true">+</span>
-          {{t "calendar.addSession" "Add session"}}
-        </button>
       </div>
     </div>
   </div>

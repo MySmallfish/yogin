@@ -13,6 +13,8 @@ if not exist "%SETTINGS%" (
   exit /b 1
 )
 
+call :stopserver
+
 echo Publishing...
 dotnet publish "%ROOT%Letmein\Letmein.csproj" -c Release -o "%PUBLISH_DIR%"
 if errorlevel 1 exit /b 1
@@ -25,12 +27,12 @@ if errorlevel 1 (
 )
 
 if not exist "%ROOT%node_modules" (
-  npm install
+  call npm install
   if errorlevel 1 exit /b 1
 )
 
 echo Installing Playwright browsers...
-npx playwright install
+call npx playwright install
 if errorlevel 1 exit /b 1
 
 echo Starting local test server...
@@ -47,13 +49,14 @@ set PLAYWRIGHT_BASE_URL=%TEST_BASE_URL%
 set ADMIN_EMAIL=admin@letmein.local
 set ADMIN_PASSWORD=admin123
 set STUDIO_SLUG=demo
-npm run test:e2e
+call npm run test:e2e
 if errorlevel 1 (
   call :stopserver
   exit /b 1
 )
 
 call :stopserver
+powershell -NoProfile -Command "Start-Sleep -Seconds 1"
 
 echo Creating zip...
 powershell -NoProfile -Command "Compress-Archive -Path '%PUBLISH_DIR%\*' -DestinationPath '%ZIP_FILE%' -Force"
@@ -75,4 +78,5 @@ if exist "%TEST_PID_FILE%" (
   )
   del "%TEST_PID_FILE%" >nul 2>nul
 )
+powershell -NoProfile -Command "$procs=Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like '*Letmein.dll*' }; foreach($p in $procs){ Stop-Process -Id $p.ProcessId -Force }"
 exit /b 0

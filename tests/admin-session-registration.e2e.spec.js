@@ -32,16 +32,17 @@ test('register a customer to a session from the calendar', async ({ page }) => {
 
   await page.click('[data-view="list"]');
   await page.fill('#calendar-search', sessionTitle);
+  await page.dispatchEvent('#calendar-search', 'input');
   const row = page.locator('.calendar-list tbody tr', { hasText: sessionTitle }).first();
   await expect(row).toBeVisible({ timeout: 20000 });
   await row.click();
 
-  await expect(page.locator('#session-modal')).toBeVisible();
+  await expect(page.locator('#calendar-modal')).toBeVisible({ timeout: 20000 });
   const lookupValue = `${fullName} (${email})`;
-  await page.fill('#session-modal input[name="customerLookup"]', lookupValue);
-  await page.dispatchEvent('#session-modal input[name="customerLookup"]', 'change');
-  await page.click('#register-customer');
+  await page.fill('#calendar-modal input[name="customerLookup"]', lookupValue);
+  await page.dispatchEvent('#calendar-modal input[name="customerLookup"]', 'change');
+  await page.click('#calendar-modal #register-customer');
 
-  const rosterRow = page.locator('.roster .customer-name', { hasText: fullName }).first();
+  const rosterRow = page.locator('#calendar-modal .roster .customer-name', { hasText: fullName }).first();
   await expect(rosterRow).toBeVisible({ timeout: 20000 });
 });

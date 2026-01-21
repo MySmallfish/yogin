@@ -6,10 +6,11 @@ const uniqueTitle = () => `E2E Session ${Date.now()}`;
 test.describe('Admin calendar', () => {
   test('toolbar layout and navigation render', async ({ page }) => {
     await loginAsAdmin(page);
-    await expect(page.locator('.calendar-top')).toBeVisible();
-    await expect(page.locator('.calendar-bottom')).toBeVisible();
-    await expect(page.locator('.calendar-bottom .calendar-nav')).toBeVisible();
-    await expect(page.locator('.calendar-bottom .calendar-actions')).toBeVisible();
+    await expect(page.locator('.calendar-grid')).toBeVisible();
+    await expect(page.locator('.calendar-left')).toBeVisible();
+    await expect(page.locator('.calendar-right')).toBeVisible();
+    await expect(page.locator('.calendar-left .calendar-nav')).toBeVisible();
+    await expect(page.locator('.calendar-right .calendar-actions')).toBeVisible();
   });
 
   test('create a one-time session and find it in list', async ({ page }) => {

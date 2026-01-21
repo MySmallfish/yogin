@@ -750,19 +750,34 @@ button .icon svg {
   margin-bottom: 20px;
 }
 
-.calendar-top {
+.calendar-grid {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
   align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
-.calendar-bottom {
+.calendar-left {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1 1 520px;
+  min-width: 320px;
+}
+
+.calendar-left-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
+}
+
+.calendar-right {
+  display: flex;
+  justify-content: flex-end;
+  flex: 1 1 360px;
+  min-width: 280px;
 }
 
 .calendar-views {
@@ -787,7 +802,6 @@ button .icon svg {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 0 0 auto;
 }
 
 .calendar-nav button {
@@ -831,6 +845,7 @@ button .icon svg {
   justify-content: flex-end;
   overflow: visible;
   min-width: 0;
+  width: 100%;
 }
 
 .calendar-actions button {
@@ -879,7 +894,7 @@ button .icon svg {
 
 .calendar-actions input[type="search"] {
   min-width: 160px;
-  flex: 1 1 220px;
+  flex: 1 1 260px;
   border-radius: 999px;
   border: 1px solid var(--line);
   padding: 8px 14px;
@@ -895,8 +910,16 @@ button .icon svg {
   gap: 10px;
 }
 
-[dir="rtl"] .calendar-top {
+[dir="rtl"] .calendar-left {
   align-items: flex-end;
+}
+
+[dir="rtl"] .calendar-left-row {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .calendar-actions {
+  flex-direction: row-reverse;
 }
 
 [dir="rtl"] .calendar-range {
@@ -2359,20 +2382,6 @@ html[dir="rtl"] .nav a,
 
 [dir="rtl"] .nav-title {
   text-align: right;
-}
-
-html[dir="rtl"] .calendar-toolbar,
-[dir="rtl"] .calendar-toolbar {
-  flex-direction: column;
-}
-
-html[dir="rtl"] .calendar-views,
-html[dir="rtl"] .calendar-nav,
-html[dir="rtl"] .calendar-actions,
-[dir="rtl"] .calendar-views,
-[dir="rtl"] .calendar-nav,
-[dir="rtl"] .calendar-actions {
-  flex-direction: row-reverse;
 }
 
 html[dir="rtl"] .calendar-range,

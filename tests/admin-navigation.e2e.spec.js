@@ -6,7 +6,7 @@ test('admin routes render without errors', async ({ page }) => {
 
   const routes = [
     { route: 'calendar', selector: '.calendar-toolbar' },
-    { route: 'reports', selector: '.cards .card' },
+    { route: 'reports', selector: '.cards .card:first-child' },
     { route: 'customers', selector: '#add-customer' },
     { route: 'guests', selector: '#add-guest' },
     { route: 'rooms', selector: '#add-room' },
