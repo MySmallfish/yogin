@@ -751,18 +751,20 @@ button .icon svg {
 }
 
 .calendar-grid {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(280px, 1fr);
+  grid-template-areas: "nav actions";
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
+  column-gap: 16px;
+  row-gap: 12px;
+  direction: ltr;
 }
 
 .calendar-left {
+  grid-area: nav;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  flex: 1 1 520px;
   min-width: 320px;
 }
 
@@ -774,9 +776,9 @@ button .icon svg {
 }
 
 .calendar-right {
+  grid-area: actions;
   display: flex;
   justify-content: flex-end;
-  flex: 1 1 360px;
   min-width: 280px;
 }
 
@@ -848,6 +850,11 @@ button .icon svg {
   width: 100%;
 }
 
+.calendar-actions #add-session {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .calendar-actions button {
   height: 40px;
   min-width: 32px;
@@ -914,14 +921,22 @@ button .icon svg {
   align-items: flex-end;
 }
 
-[dir="rtl"] .calendar-left-row {
-  flex-direction: row-reverse;
+[dir="rtl"] .calendar-left,
+[dir="rtl"] .calendar-right {
+  direction: rtl;
+}
+
+[dir="rtl"] .calendar-right {
+  justify-content: flex-start;
 }
 
 [dir="rtl"] .calendar-actions {
-  flex-direction: row-reverse;
+  justify-content: flex-start;
 }
 
+[dir="rtl"] .nav-arrow .icon svg {
+  transform: scaleX(-1);
+}
 [dir="rtl"] .calendar-range {
   justify-content: flex-end;
 }
@@ -1133,26 +1148,35 @@ button .icon svg {
   width: 100%;
 }
 
+.event-icon-corner {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  font-size: 18px;
+  opacity: 0.9;
+}
+
 .birthday-chevron {
-  margin-inline-start: auto;
-  width: 20px;
-  height: 20px;
+  margin-inline-start: 8px;
+  width: 18px;
+  height: 18px;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: rgba(var(--accent-rgb), 0.16);
   color: var(--slate);
-  flex: 0 0 20px;
+  flex: 0 0 18px;
   line-height: 1;
 }
 
 .birthday-chevron svg {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   stroke: currentColor;
   fill: none;
   stroke-width: 2px;
+  display: block;
 }
 
 .event-icon {
@@ -1564,25 +1588,6 @@ button .icon svg {
   font-weight: 600;
 }
 
-.birthday-chevron {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-inline-start: 6px;
-  width: 18px;
-  height: 18px;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.08);
-  color: var(--slate);
-}
-
-.birthday-chevron svg {
-  width: 10px;
-  height: 10px;
-  stroke: currentColor;
-  fill: none;
-  stroke-width: 2;
-}
 
 .birthday-list {
   display: grid;
@@ -2398,6 +2403,11 @@ html[dir="rtl"] .event-icon,
 [dir="rtl"] .event-icon {
   margin-right: 0;
   margin-left: 6px;
+}
+
+[dir="rtl"] .event-icon-corner {
+  right: auto;
+  left: 10px;
 }
 
 .hidden {

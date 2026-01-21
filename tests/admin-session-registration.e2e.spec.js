@@ -27,6 +27,7 @@ test('register a customer to a session from the calendar', async ({ page }) => {
   await page.fill('#session-modal input[name="date"]', tomorrowISO());
   await page.fill('#session-modal input[name="startTimeLocal"]', '08:00');
   await page.fill('#session-modal input[name="durationMinutes"]', '45');
+  await page.fill('#session-modal input[name="capacity"]', '10');
   await page.click('#save-session');
   await page.locator('#session-modal').waitFor({ state: 'detached', timeout: 20000 });
 
@@ -41,8 +42,13 @@ test('register a customer to a session from the calendar', async ({ page }) => {
   const lookupValue = `${fullName} (${email})`;
   await page.fill('#calendar-modal input[name="customerLookup"]', lookupValue);
   await page.dispatchEvent('#calendar-modal input[name="customerLookup"]', 'change');
+  const registerResponse = page.waitForResponse((response) =>
+    response.url().includes('/registrations') && response.request().method() === 'POST'
+  );
   await page.click('#calendar-modal #register-customer');
+  const response = await registerResponse;
+  expect(response.ok()).toBeTruthy();
 
-  const rosterRow = page.locator('#calendar-modal .roster .customer-name', { hasText: fullName }).first();
+  const rosterRow = page.locator('#calendar-modal .roster-table .customer-name', { hasText: fullName }).first();
   await expect(rosterRow).toBeVisible({ timeout: 20000 });
 });
