@@ -199,71 +199,75 @@ const loginTemplate = compileTemplate("login", `
 
 const calendarTemplate = compileTemplate("calendar", `
   <div class="calendar-toolbar">
-    <div class="calendar-views">
-      <button class="secondary view-btn {{#if isDay}}active{{/if}}" data-view="day">
-        <span class="icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 6H4v10h16V8z"/></svg>
-        </span>
-        {{t "calendar.day" "Day"}}
-      </button>
-      <button class="secondary view-btn {{#if isWeek}}active{{/if}}" data-view="week">
-        <span class="icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M3 5h18a2 2 0 0 1 2 2v2H1V7a2 2 0 0 1 2-2zm-2 6h22v6a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-6zm4 2v2h4v-2H5zm6 0v2h4v-2h-4zm6 0v2h2v-2h-2z"/></svg>
-        </span>
-        {{t "calendar.week" "Week"}}
-      </button>
-      <button class="secondary view-btn {{#if isMonth}}active{{/if}}" data-view="month">
-        <span class="icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v3H2V6a2 2 0 0 1 2-2h3V2zm15 9H2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-9z"/></svg>
-        </span>
-        {{t "calendar.month" "Month"}}
-      </button>
-      <button class="secondary view-btn {{#if isList}}active{{/if}}" data-view="list">
-        <span class="icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M4 6h3v3H4V6zm5 1h11v1H9V7zm-5 6h3v3H4v-3zm5 1h11v1H9v-1zm-5 6h3v3H4v-3zm5 1h11v1H9v-1z"/></svg>
-        </span>
-        {{t "calendar.list" "List"}}
-      </button>
-    </div>
-    <div class="calendar-nav">
-      <button class="icon-button nav-arrow" data-nav="prev" aria-label="{{t "calendar.prev" "Prev"}}">
-        <span class="icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
-        </span>
-      </button>
-      <button class="secondary" id="calendar-today">{{t "calendar.today" "Today"}}</button>
-      <input type="date" id="calendar-date" value="{{focusDate}}" />
-      <button class="icon-button nav-arrow" data-nav="next" aria-label="{{t "calendar.next" "Next"}}">
-        <span class="icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
-        </span>
-      </button>
-    </div>
-    <div class="calendar-actions">
-      <input type="search" id="calendar-search" placeholder="{{t "calendar.search" "Search sessions"}}" value="{{search}}" />
-      <div class="calendar-export" aria-label="{{t "calendar.export" "Export"}}">
-        <button class="icon-button export-btn" data-export="outlook" title="{{t "calendar.exportOutlook" "Outlook (.ics)"}}" aria-label="{{t "calendar.exportOutlook" "Outlook (.ics)"}}">
+    <div class="calendar-top">
+      <div class="calendar-views">
+        <button class="secondary view-btn {{#if isDay}}active{{/if}}" data-view="day">
           <span class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 8H4v10h16V10z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 6H4v10h16V8z"/></svg>
           </span>
-          <span class="sr-only">{{t "calendar.exportOutlook" "Outlook (.ics)"}}</span>
+          {{t "calendar.day" "Day"}}
         </button>
-        <button class="icon-button export-btn" data-export="excel" title="{{t "calendar.exportExcel" "Excel (.csv)"}}" aria-label="{{t "calendar.exportExcel" "Excel (.csv)"}}">
+        <button class="secondary view-btn {{#if isWeek}}active{{/if}}" data-view="week">
           <span class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M4 3h12l4 4v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm11 1v4h4M7 9l2 3-2 3h2l1-2 1 2h2l-2-3 2-3h-2l-1 2-1-2H7z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M3 5h18a2 2 0 0 1 2 2v2H1V7a2 2 0 0 1 2-2zm-2 6h22v6a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-6zm4 2v2h4v-2H5zm6 0v2h4v-2h-4zm6 0v2h2v-2h-2z"/></svg>
           </span>
-          <span class="sr-only">{{t "calendar.exportExcel" "Excel (.csv)"}}</span>
+          {{t "calendar.week" "Week"}}
+        </button>
+        <button class="secondary view-btn {{#if isMonth}}active{{/if}}" data-view="month">
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v3H2V6a2 2 0 0 1 2-2h3V2zm15 9H2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-9z"/></svg>
+          </span>
+          {{t "calendar.month" "Month"}}
+        </button>
+        <button class="secondary view-btn {{#if isList}}active{{/if}}" data-view="list">
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M4 6h3v3H4V6zm5 1h11v1H9V7zm-5 6h3v3H4v-3zm5 1h11v1H9v-1zm-5 6h3v3H4v-3zm5 1h11v1H9v-1z"/></svg>
+          </span>
+          {{t "calendar.list" "List"}}
         </button>
       </div>
-      <button id="add-session">
-        <span class="icon" aria-hidden="true">+</span>
-        {{t "calendar.addSession" "Add session"}}
-      </button>
+      <div class="calendar-range">
+        {{#if weekNumberLabel}}<span class="calendar-week-number">{{weekNumberLabel}}</span>{{/if}}
+        <span>{{rangeLabel}}</span>
+        {{#if hebrewDateLabel}}<span class="calendar-hebrew">{{hebrewDateLabel}}</span>{{/if}}
+      </div>
     </div>
-    <div class="calendar-range">
-      {{#if weekNumberLabel}}<span class="calendar-week-number">{{weekNumberLabel}}</span>{{/if}}
-      <span>{{rangeLabel}}</span>
-      {{#if hebrewDateLabel}}<span class="calendar-hebrew">{{hebrewDateLabel}}</span>{{/if}}
+    <div class="calendar-bottom">
+      <div class="calendar-nav">
+        <button class="icon-button nav-arrow" data-nav="prev" aria-label="{{t "calendar.prev" "Prev"}}">
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
+          </span>
+        </button>
+        <button class="secondary" id="calendar-today">{{t "calendar.today" "Today"}}</button>
+        <input type="date" id="calendar-date" value="{{focusDate}}" />
+        <button class="icon-button nav-arrow" data-nav="next" aria-label="{{t "calendar.next" "Next"}}">
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+          </span>
+        </button>
+      </div>
+      <div class="calendar-actions">
+        <input type="search" id="calendar-search" placeholder="{{t "calendar.search" "Search sessions"}}" value="{{search}}" />
+        <div class="calendar-export" aria-label="{{t "calendar.export" "Export"}}">
+          <button class="icon-button export-btn" data-export="outlook" title="{{t "calendar.exportOutlook" "Outlook (.ics)"}}" aria-label="{{t "calendar.exportOutlook" "Outlook (.ics)"}}">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 8H4v10h16V10z"/></svg>
+            </span>
+            <span class="sr-only">{{t "calendar.exportOutlook" "Outlook (.ics)"}}</span>
+          </button>
+          <button class="icon-button export-btn" data-export="excel" title="{{t "calendar.exportExcel" "Excel (.csv)"}}" aria-label="{{t "calendar.exportExcel" "Excel (.csv)"}}">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 3h12l4 4v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm11 1v4h4M7 9l2 3-2 3h2l1-2 1 2h2l-2-3 2-3h-2l-1 2-1-2H7z"/></svg>
+            </span>
+            <span class="sr-only">{{t "calendar.exportExcel" "Excel (.csv)"}}</span>
+          </button>
+        </div>
+        <button id="add-session">
+          <span class="icon" aria-hidden="true">+</span>
+          {{t "calendar.addSession" "Add session"}}
+        </button>
+      </div>
     </div>
   </div>
   <div class="calendar-body">

@@ -745,11 +745,24 @@ button .icon svg {
 
 .calendar-toolbar {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.calendar-top {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.calendar-bottom {
+  display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 20px;
+  flex-wrap: nowrap;
 }
 
 .calendar-views {
@@ -774,6 +787,7 @@ button .icon svg {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: 0 0 auto;
 }
 
 .calendar-nav button {
@@ -813,9 +827,10 @@ button .icon svg {
   gap: 8px;
   align-items: center;
   flex: 1 1 auto;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
   overflow: visible;
+  min-width: 0;
 }
 
 .calendar-actions button {
@@ -863,7 +878,8 @@ button .icon svg {
 }
 
 .calendar-actions input[type="search"] {
-  min-width: 220px;
+  min-width: 160px;
+  flex: 1 1 220px;
   border-radius: 999px;
   border: 1px solid var(--line);
   padding: 8px 14px;
@@ -877,6 +893,14 @@ button .icon svg {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+[dir="rtl"] .calendar-top {
+  align-items: flex-end;
+}
+
+[dir="rtl"] .calendar-range {
+  justify-content: flex-end;
 }
 
 .calendar-week-number {
@@ -2339,7 +2363,7 @@ html[dir="rtl"] .nav a,
 
 html[dir="rtl"] .calendar-toolbar,
 [dir="rtl"] .calendar-toolbar {
-  flex-direction: row-reverse;
+  flex-direction: column;
 }
 
 html[dir="rtl"] .calendar-views,
