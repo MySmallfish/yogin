@@ -1071,6 +1071,19 @@ button .icon svg {
   box-shadow: 0 6px 12px rgba(15, 23, 42, 0.08);
 }
 
+.calendar-event.birthday .event-actions,
+.calendar-event.birthday .event-share {
+  display: none;
+}
+
+.calendar-event.has-birthday-list .event-title {
+  justify-content: space-between;
+}
+
+.calendar-event.has-birthday-list .birthday-chevron {
+  margin-inline-start: auto;
+}
+
 .event-actions-menu {
   position: absolute;
   min-width: 160px;
@@ -1384,6 +1397,20 @@ button .icon svg {
   max-width: 560px;
 }
 
+.modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-inline-end: 4px;
+}
+
+.modal.modal-scroll {
+  overflow: hidden;
+}
+
 .modal-header {
   display: flex;
   justify-content: space-between;
@@ -1689,6 +1716,21 @@ button .icon svg {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+}
+
+.registration-lookup-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.registration-lookup-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.registration-lookup-row .add-inline {
+  flex-shrink: 0;
 }
 
 .add-inline {
