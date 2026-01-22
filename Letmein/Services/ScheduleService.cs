@@ -1,4 +1,5 @@
-﻿using Letmein.Data;
+using System.Text.Json;
+using Letmein.Data;
 using Letmein.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -36,44 +37,53 @@ public class ScheduleService
         var fromLocal = from.ToDateTime(TimeOnly.MinValue);
         var toLocal = to.ToDateTime(TimeOnly.MinValue);
         var occurrences = new List<EventInstance>();
+        var intervalWeeks = Math.Max(series.RecurrenceIntervalWeeks, 1);
+        var days = ResolveSeriesDays(series);
+        var seen = new HashSet<DateTime>();
 
-        var current = NextOccurrence(fromLocal, (DayOfWeek)series.DayOfWeek, series.StartTimeLocal, series.RecurrenceIntervalWeeks);
-        while (current < toLocal)
+        foreach (var day in days)
         {
-            var startLocal = current;
-            var endLocal = startLocal.AddMinutes(series.DurationMinutes);
-            var startUtc = TimeZoneInfo.ConvertTimeToUtc(startLocal, tz);
-            var endUtc = TimeZoneInfo.ConvertTimeToUtc(endLocal, tz);
-
-            var exists = await _db.EventInstances
-                .AnyAsync(i => i.EventSeriesId == series.Id && i.StartUtc == startUtc, ct);
-            var conflicts = !exists && await HasOverlapAsync(studio.Id, startUtc, endUtc, series.RoomId, series.InstructorId, ct);
-            if (!exists && !conflicts)
+            var current = NextOccurrence(fromLocal, (DayOfWeek)day, series.StartTimeLocal, intervalWeeks);
+            while (current < toLocal)
             {
-                occurrences.Add(new EventInstance
+                var startLocal = current;
+                var endLocal = startLocal.AddMinutes(series.DurationMinutes);
+                var startUtc = TimeZoneInfo.ConvertTimeToUtc(startLocal, tz);
+                var endUtc = TimeZoneInfo.ConvertTimeToUtc(endLocal, tz);
+
+                if (seen.Add(startUtc))
                 {
-                    Id = Guid.NewGuid(),
-                    StudioId = studio.Id,
-                    EventSeriesId = series.Id,
-                    InstructorId = series.InstructorId,
-                    RoomId = series.RoomId,
-                    StartUtc = startUtc,
-                    EndUtc = endUtc,
-                    Capacity = series.DefaultCapacity,
-                    RemoteCapacity = series.RemoteCapacity,
-                    PriceCents = series.PriceCents,
-                    Currency = series.Currency,
-                    RemoteInviteUrl = series.RemoteInviteUrl,
-                    CancellationWindowHours = series.CancellationWindowHours,
-                    Status = EventStatus.Scheduled
-                });
-            }
-            else if (conflicts)
-            {
-                _logger.LogInformation("Skipped session for series {SeriesId} at {StartUtc} due to overlap.", series.Id, startUtc);
-            }
+                    var exists = await _db.EventInstances
+                        .AnyAsync(i => i.EventSeriesId == series.Id && i.StartUtc == startUtc, ct);
+                    var conflicts = !exists && await HasOverlapAsync(studio.Id, startUtc, endUtc, series.RoomId, series.InstructorId, ct);
+                    if (!exists && !conflicts)
+                    {
+                        occurrences.Add(new EventInstance
+                        {
+                            Id = Guid.NewGuid(),
+                            StudioId = studio.Id,
+                            EventSeriesId = series.Id,
+                            InstructorId = series.InstructorId,
+                            RoomId = series.RoomId,
+                            StartUtc = startUtc,
+                            EndUtc = endUtc,
+                            Capacity = series.DefaultCapacity,
+                            RemoteCapacity = series.RemoteCapacity,
+                            PriceCents = series.PriceCents,
+                            Currency = series.Currency,
+                            RemoteInviteUrl = series.RemoteInviteUrl,
+                            CancellationWindowHours = series.CancellationWindowHours,
+                            Status = EventStatus.Scheduled
+                        });
+                    }
+                    else if (conflicts)
+                    {
+                        _logger.LogInformation("Skipped session for series {SeriesId} at {StartUtc} due to overlap.", series.Id, startUtc);
+                    }
+                }
 
-            current = current.AddDays(7 * Math.Max(series.RecurrenceIntervalWeeks, 1));
+                current = current.AddDays(7 * intervalWeeks);
+            }
         }
 
         if (occurrences.Count > 0)
@@ -135,5 +145,37 @@ public class ScheduleService
     {
         return TimeZoneInfo.Local;
     }
+
+    private static List<int> ResolveSeriesDays(EventSeries series)
+    {
+        var parsed = new List<int>();
+        if (!string.IsNullOrWhiteSpace(series.DaysOfWeekJson))
+        {
+            try
+            {
+                var days = JsonSerializer.Deserialize<List<int>>(series.DaysOfWeekJson);
+                if (days != null)
+                {
+                    parsed = days;
+                }
+            }
+            catch
+            {
+                parsed = new List<int>();
+            }
+        }
+
+        if (parsed.Count == 0)
+        {
+            parsed.Add(series.DayOfWeek);
+        }
+
+        return parsed
+            .Where(day => day >= 0 && day <= 6)
+            .Distinct()
+            .ToList();
+    }
 }
+
+
 

@@ -13,7 +13,8 @@ test('create a series and generate sessions', async ({ page }) => {
   await page.click('#add-series');
   await expect(page.locator('#series-modal')).toBeVisible();
   await page.fill('#series-modal input[name="title"]', title);
-  await page.selectOption('#series-modal select[name="dayOfWeek"]', '2');
+  await page.check('#series-modal input[name="seriesDays"][value="2"]');
+  await page.check('#series-modal input[name="seriesDays"][value="4"]');
   await page.fill('#series-modal input[name="startTimeLocal"]', '07:00');
   await page.fill('#series-modal input[name="durationMinutes"]', '45');
   await page.fill('#series-modal input[name="capacity"]', '10');

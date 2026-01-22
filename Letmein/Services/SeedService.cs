@@ -1,4 +1,5 @@
-﻿using Letmein.Data;
+using System.Text.Json;
+using Letmein.Data;
 using Letmein.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -146,6 +147,7 @@ public class SeedService
             InstructorId = instructor.Id,
             RoomId = room.Id,
             DayOfWeek = (int)DayOfWeek.Tuesday,
+            DaysOfWeekJson = JsonSerializer.Serialize(new[] { (int)DayOfWeek.Tuesday }),
             StartTimeLocal = new TimeSpan(18, 0, 0),
             DurationMinutes = 60,
             RecurrenceIntervalWeeks = 1,
@@ -184,4 +186,5 @@ public class SeedService
         _logger.LogInformation("Seeded demo studio with admin login admin@letmein.local / admin123");
     }
 }
+
 

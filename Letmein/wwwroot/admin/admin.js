@@ -58,11 +58,7 @@ const layoutTemplate = compileTemplate("layout", `
       </div>
       <nav class="nav">
         <div class="nav-section">
-          <div class="nav-title">{{t "nav.section.calendar" "Calendar"}}</div>
-          <a href="#/calendar" data-route="calendar">
-            <span class="nav-short" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 8H4v10h16V10z"/></svg>
-            </span>
+          <a href="#/calendar" data-route="calendar" class="nav-group">
             <span class="nav-label">{{t "nav.calendar" "Calendar"}}</span>
           </a>
           <a href="#/events" data-route="events">
@@ -79,20 +75,12 @@ const layoutTemplate = compileTemplate("layout", `
           </a>
         </div>
         <div class="nav-section">
-          <div class="nav-title">{{t "nav.section.customers" "Customers"}}</div>
-          <a href="#/customers" data-route="customers">
-            <span class="nav-short" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M16 11a3 3 0 1 0-2.999-3A3 3 0 0 0 16 11zm-8 0a3 3 0 1 0-2.999-3A3 3 0 0 0 8 11zm0 2c-2.67 0-8 1.34-8 4v3h10v-3c0-.7.2-1.34.56-1.9C9.71 13.4 8.9 13 8 13zm8 0c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4z"/></svg>
-            </span>
+          <a href="#/customers" data-route="customers" class="nav-group">
             <span class="nav-label">{{t "nav.customers" "Customers"}}</span>
           </a>
         </div>
         <div class="nav-section">
-          <div class="nav-title">{{t "nav.section.admin" "Admin"}}</div>
-          <a href="#/reports" data-route="reports">
-            <span class="nav-short" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M3 3h2v18H3V3zm8 6h2v12h-2V9zm8-4h2v16h-2V5z"/></svg>
-            </span>
+          <a href="#/reports" data-route="reports" class="nav-group">
             <span class="nav-label">{{t "nav.reports" "Reports"}}</span>
           </a>
           <a href="#/plans" data-route="plans">
@@ -198,56 +186,8 @@ const loginTemplate = compileTemplate("login", `
 const calendarTemplate = compileTemplate("calendar", `
   <div class="calendar-toolbar">
     <div class="calendar-grid">
-      <div class="calendar-left">
-        <div class="calendar-left-row">
-          <div class="calendar-views">
-        <button class="secondary view-btn {{#if isDay}}active{{/if}}" data-view="day">
-          <span class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 6H4v10h16V8z"/></svg>
-          </span>
-          {{t "calendar.day" "Day"}}
-        </button>
-        <button class="secondary view-btn {{#if isWeek}}active{{/if}}" data-view="week">
-          <span class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M3 5h18a2 2 0 0 1 2 2v2H1V7a2 2 0 0 1 2-2zm-2 6h22v6a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-6zm4 2v2h4v-2H5zm6 0v2h4v-2h-4zm6 0v2h2v-2h-2z"/></svg>
-          </span>
-          {{t "calendar.week" "Week"}}
-        </button>
-        <button class="secondary view-btn {{#if isMonth}}active{{/if}}" data-view="month">
-          <span class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v3H2V6a2 2 0 0 1 2-2h3V2zm15 9H2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-9z"/></svg>
-          </span>
-          {{t "calendar.month" "Month"}}
-        </button>
-        <button class="secondary view-btn {{#if isList}}active{{/if}}" data-view="list">
-          <span class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M4 6h3v3H4V6zm5 1h11v1H9V7zm-5 6h3v3H4v-3zm5 1h11v1H9v-1zm-5 6h3v3H4v-3zm5 1h11v1H9v-1z"/></svg>
-          </span>
-          {{t "calendar.list" "List"}}
-        </button>
-          </div>
-          <div class="calendar-nav">
-            <button class="icon-button nav-arrow" data-nav="prev" aria-label="{{t "calendar.prev" "Prev"}}">
-              <span class="icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
-              </span>
-            </button>
-            <button class="secondary" id="calendar-today">{{t "calendar.today" "Today"}}</button>
-            <input type="date" id="calendar-date" value="{{focusDate}}" />
-            <button class="icon-button nav-arrow" data-nav="next" aria-label="{{t "calendar.next" "Next"}}">
-              <span class="icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
-              </span>
-            </button>
-          </div>
-        </div>
-        <div class="calendar-range">
-          {{#if weekNumberLabel}}<span class="calendar-week-number">{{weekNumberLabel}}</span>{{/if}}
-          <span>{{rangeLabel}}</span>
-        </div>
-      </div>
-      <div class="calendar-right">
-        <div class="calendar-actions">
+      <div class="calendar-actions-col">
+        <div class="calendar-actions-row">
           <input type="search" id="calendar-search" placeholder="{{t "calendar.search" "Search sessions"}}" value="{{search}}" />
           <div class="calendar-export" aria-label="{{t "calendar.export" "Export"}}">
             <button class="icon-button export-btn" data-export="outlook" title="{{t "calendar.exportOutlook" "Outlook (.ics)"}}" aria-label="{{t "calendar.exportOutlook" "Outlook (.ics)"}}">
@@ -267,6 +207,56 @@ const calendarTemplate = compileTemplate("calendar", `
             <span class="icon" aria-hidden="true">+</span>
             {{t "calendar.addSession" "Add session"}}
           </button>
+        </div>
+      </div>
+      <div class="calendar-nav-col">
+        <div class="calendar-nav-row">
+          <div class="calendar-views-stack">
+            <div class="calendar-views">
+              <button class="secondary view-btn {{#if isDay}}active{{/if}}" data-view="day">
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 6H4v10h16V8z"/></svg>
+                </span>
+                {{t "calendar.day" "Day"}}
+              </button>
+              <button class="secondary view-btn {{#if isWeek}}active{{/if}}" data-view="week">
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M3 5h18a2 2 0 0 1 2 2v2H1V7a2 2 0 0 1 2-2zm-2 6h22v6a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-6zm4 2v2h4v-2H5zm6 0v2h4v-2h-4zm6 0v2h2v-2h-2z"/></svg>
+                </span>
+                {{t "calendar.week" "Week"}}
+              </button>
+              <button class="secondary view-btn {{#if isMonth}}active{{/if}}" data-view="month">
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v3H2V6a2 2 0 0 1 2-2h3V2zm15 9H2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-9z"/></svg>
+                </span>
+                {{t "calendar.month" "Month"}}
+              </button>
+              <button class="secondary view-btn {{#if isList}}active{{/if}}" data-view="list">
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M4 6h3v3H4V6zm5 1h11v1H9V7zm-5 6h3v3H4v-3zm5 1h11v1H9v-1zm-5 6h3v3H4v-3zm5 1h11v1H9v-1z"/></svg>
+                </span>
+                {{t "calendar.list" "List"}}
+              </button>
+            </div>
+            <div class="calendar-range">
+              {{#if weekNumberLabel}}<span class="calendar-week-number">{{weekNumberLabel}}</span>{{/if}}
+              <span>{{rangeLabel}}</span>
+            </div>
+          </div>
+          <div class="calendar-nav">
+            <button class="icon-button nav-arrow" data-nav="prev" aria-label="{{t "calendar.prev" "Prev"}}">
+              <span class="icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
+              </span>
+            </button>
+            <button class="secondary" id="calendar-today">{{t "calendar.today" "Today"}}</button>
+            <input type="date" id="calendar-date" value="{{focusDate}}" />
+            <button class="icon-button nav-arrow" data-nav="next" aria-label="{{t "calendar.next" "Next"}}">
+              <span class="icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -969,7 +959,7 @@ const birthdayModalTemplate = compileTemplate("birthday-modal", `
   <div class="modal-overlay" id="birthday-modal">
     <div class="modal modal-compact">
       <div class="modal-header">
-        <div>
+        <div class="span-2">
           <h3>{{title}}</h3>
           {{#if subtitle}}
             <div class="muted">{{subtitle}}</div>
@@ -1264,14 +1254,17 @@ const seriesModalTemplate = compileTemplate("series-modal", `
               <input class="color-text" type="text" value="{{color}}" placeholder="#647FBC" data-color-text />
             </div>
           </div>
-          <div>
-            <label>{{t "series.dayOfWeek" "Day of week"}}</label>
-            <select name="dayOfWeek">
-              {{#each dayOptions}}
-                <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
-              {{/each}}
-            </select>
+        <div>
+          <label>{{t "series.daysOfWeek" "Days of week"}}</label>
+          <div class="weekday-pills">
+            {{#each dayOptions}}
+              <label class="weekday-pill">
+                <input type="checkbox" name="seriesDays" value="{{value}}" {{#if selected}}checked{{/if}} />
+                {{label}}
+              </label>
+            {{/each}}
           </div>
+        </div>
           <div>
             <label>{{t "series.startTime" "Start time"}}</label>
             <input type="time" name="startTimeLocal" value="{{startTimeLocal}}" />
@@ -2927,7 +2920,13 @@ function render(state) {
         const dayNames = getWeekdayNames(0);
         const series = (data.series || []).map(item => ({
             ...item,
-            dayLabel: dayNames[item.dayOfWeek] || "",
+            dayLabel: (() => {
+                const days = resolveSeriesDays(item);
+                if (days.length) {
+                    return days.map(day => dayNames[day] || "").filter(Boolean).join(", ");
+                }
+                return dayNames[item.dayOfWeek] || "";
+            })(),
             startTimeLocal: (item.startTimeLocal || "").slice(0, 5),
             activeLabel: item.isActive ? t("common.yes", "Yes") : t("common.no", "No"),
             icon: item.icon || "",
@@ -4232,6 +4231,33 @@ function parseGuidListJson(value) {
         }
     } catch {
         return [];
+    }
+    return [];
+}
+
+function parseNumberListJson(value) {
+    if (!value) return [];
+    try {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed)) {
+            return parsed
+                .map(item => Number(item))
+                .filter(item => Number.isFinite(item));
+        }
+    } catch {
+        return [];
+    }
+    return [];
+}
+
+function resolveSeriesDays(series) {
+    const parsed = parseNumberListJson(series?.daysOfWeekJson || series?.daysOfWeek || "");
+    if (parsed.length) {
+        return Array.from(new Set(parsed)).filter(day => day >= 0 && day <= 6);
+    }
+    const fallback = Number(series?.dayOfWeek);
+    if (Number.isFinite(fallback)) {
+        return [fallback];
     }
     return [];
 }
@@ -5980,29 +6006,28 @@ function openSessionModal(data, options = {}) {
                     toDate.setDate(toDate.getDate() + generateWeeks * 7);
                     const to = toDateInputValue(toDate);
 
-                    for (const dayOfWeek of selectedDays) {
-                        const series = await apiPost("/api/admin/event-series", {
-                            title: payload.title,
-                            description: payload.description || "",
-                            instructorId: payload.instructorId,
-                            roomId: payload.roomId,
-                            planCategoryId: payload.planCategoryId,
-                            dayOfWeek,
-                            startTimeLocal: payload.startTimeLocal,
-                            durationMinutes: payload.durationMinutes,
-                            recurrenceIntervalWeeks,
-                            defaultCapacity: payload.capacity,
-                            remoteCapacity: payload.remoteCapacity,
-                            priceCents: payload.priceCents,
-                            currency: payload.currency,
-                            remoteInviteUrl: payload.remoteInviteUrl,
-                            allowedPlanIdsJson: payload.allowedPlanIdsJson,
-                            cancellationWindowHours: payload.cancellationWindowHours,
-                            isActive: true
-                        });
+                    const series = await apiPost("/api/admin/event-series", {
+                        title: payload.title,
+                        description: payload.description || "",
+                        instructorId: payload.instructorId,
+                        roomId: payload.roomId,
+                        planCategoryId: payload.planCategoryId,
+                        dayOfWeek: selectedDays[0],
+                        daysOfWeekJson: JSON.stringify(selectedDays),
+                        startTimeLocal: payload.startTimeLocal,
+                        durationMinutes: payload.durationMinutes,
+                        recurrenceIntervalWeeks,
+                        defaultCapacity: payload.capacity,
+                        remoteCapacity: payload.remoteCapacity,
+                        priceCents: payload.priceCents,
+                        currency: payload.currency,
+                        remoteInviteUrl: payload.remoteInviteUrl,
+                        allowedPlanIdsJson: payload.allowedPlanIdsJson,
+                        cancellationWindowHours: payload.cancellationWindowHours,
+                        isActive: true
+                    });
 
-                        await apiPost(`/api/admin/event-series/${series.id}/generate-instances?from=${startDate}&to=${to}`, {});
-                    }
+                    await apiPost(`/api/admin/event-series/${series.id}/generate-instances?from=${startDate}&to=${to}`, {});
                 } else {
                     const date = getValue("date") || focusDate;
                     await apiPost("/api/admin/event-instances", {
@@ -7233,15 +7258,16 @@ function openSeriesModal(series, data) {
 
     const isEdit = Boolean(series?.id);
     const dayNames = getWeekdayNames(0);
-    const selectedDay = series?.dayOfWeek ?? 2;
+    const selectedDays = resolveSeriesDays(series);
+    const safeDays = selectedDays.length ? selectedDays : [2];
     const dayOptions = [
-        { value: 1, label: dayNames[1] || t("weekday.monday", "Monday"), selected: selectedDay === 1 },
-        { value: 2, label: dayNames[2] || t("weekday.tuesday", "Tuesday"), selected: selectedDay === 2 },
-        { value: 3, label: dayNames[3] || t("weekday.wednesday", "Wednesday"), selected: selectedDay === 3 },
-        { value: 4, label: dayNames[4] || t("weekday.thursday", "Thursday"), selected: selectedDay === 4 },
-        { value: 5, label: dayNames[5] || t("weekday.friday", "Friday"), selected: selectedDay === 5 },
-        { value: 6, label: dayNames[6] || t("weekday.saturday", "Saturday"), selected: selectedDay === 6 },
-        { value: 0, label: dayNames[0] || t("weekday.sunday", "Sunday"), selected: selectedDay === 0 }
+        { value: 1, label: dayNames[1] || t("weekday.monday", "Monday"), selected: safeDays.includes(1) },
+        { value: 2, label: dayNames[2] || t("weekday.tuesday", "Tuesday"), selected: safeDays.includes(2) },
+        { value: 3, label: dayNames[3] || t("weekday.wednesday", "Wednesday"), selected: safeDays.includes(3) },
+        { value: 4, label: dayNames[4] || t("weekday.thursday", "Thursday"), selected: safeDays.includes(4) },
+        { value: 5, label: dayNames[5] || t("weekday.friday", "Friday"), selected: safeDays.includes(5) },
+        { value: 6, label: dayNames[6] || t("weekday.saturday", "Saturday"), selected: safeDays.includes(6) },
+        { value: 0, label: dayNames[0] || t("weekday.sunday", "Sunday"), selected: safeDays.includes(0) }
     ];
     const rooms = [
         { id: "", name: t("common.unassigned", "Unassigned"), selected: !series?.roomId },
@@ -7314,6 +7340,9 @@ function openSeriesModal(series, data) {
     };
     cleanupEscape = bindModalEscape(closeModal);
     bindModalBackdrop(overlay);
+    overlay.querySelectorAll(".color-field").forEach(field => bindColorField(field));
+    bindIconPicker(overlay);
+    bindIconPreview(overlay);
 
     const closeBtn = overlay.querySelector("#close-series");
     if (closeBtn) {
@@ -7338,6 +7367,13 @@ function openSeriesModal(series, data) {
             const getValue = (name) => overlay.querySelector(`[name="${name}"]`)?.value ?? "";
             const startTimeValue = getValue("startTimeLocal");
             const startTimeLocal = startTimeValue.length === 5 ? `${startTimeValue}:00` : startTimeValue;
+            const selectedDays = Array.from(overlay.querySelectorAll("input[name=\"seriesDays\"]:checked"))
+                .map(input => Number(input.value))
+                .filter(value => Number.isFinite(value));
+            if (!selectedDays.length) {
+                showToast(t("series.daysRequired", "Select at least one day of week."), "error");
+                return;
+            }
             const allowedPlanIds = Array.from(overlay.querySelectorAll("input[name=\"planIds\"]:checked"))
                 .map(input => input.value)
                 .filter(Boolean);
@@ -7349,7 +7385,8 @@ function openSeriesModal(series, data) {
                 instructorId: getValue("instructorId") || null,
                 roomId: getValue("roomId") || null,
                 planCategoryId: getValue("planCategoryId") || null,
-                dayOfWeek: Number(getValue("dayOfWeek")),
+                dayOfWeek: selectedDays[0],
+                daysOfWeekJson: JSON.stringify(selectedDays),
                 startTimeLocal,
                 durationMinutes: Number(getValue("durationMinutes")),
                 recurrenceIntervalWeeks: Number(getValue("recurrenceIntervalWeeks") || 1),
@@ -7983,7 +8020,6 @@ async function shareSessionLink(item, data) {
 function openEventActionsMenu(anchor, item, data) {
     if (!anchor || !item) return;
     closeEventActionsMenu();
-    const hasSeries = item.eventSeriesId && String(item.eventSeriesId) !== "00000000-0000-0000-0000-000000000000";
     const menu = document.createElement("div");
     menu.className = "event-actions-menu";
     menu.innerHTML = `
@@ -8030,18 +8066,6 @@ function openEventActionsMenu(anchor, item, data) {
           </span>
           ${t("calendar.actionDelete", "Delete session")}
         </button>
-        ${hasSeries ? `
-        <button type="button" data-action="delete-series">
-          <span class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-              <path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <path d="M8 6V4h8v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <path d="M19 6l-1 14H6L5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <path d="M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </span>
-          ${t("calendar.actionDeleteSeries", "Delete series")}
-        </button>` : ""}
     `;
 
     document.body.appendChild(menu);
@@ -8105,23 +8129,6 @@ function openEventActionsMenu(anchor, item, data) {
                 actor.send({ type: "REFRESH" });
             } catch (error) {
                 showToast(error.message || t("calendar.deleteError", "Unable to delete session."), "error");
-            }
-        }
-        if (action === "delete-series") {
-            if (!hasSeries) return;
-            const confirmed = await confirmWithModal({
-                title: t("events.deleteConfirmTitle", "Delete series?"),
-                message: t("events.deleteConfirmMessage", "This will remove the series and its future sessions."),
-                confirmLabel: t("events.delete", "Delete"),
-                cancelLabel: t("common.cancel", "Cancel")
-            });
-            if (!confirmed) return;
-            try {
-                await apiDelete(`/api/admin/event-series/${item.eventSeriesId}`);
-                showToast(t("events.deleteSuccess", "Series deleted."), "success");
-                actor.send({ type: "REFRESH" });
-            } catch (error) {
-                showToast(error.message || t("events.deleteError", "Unable to delete series."), "error");
             }
         }
     });

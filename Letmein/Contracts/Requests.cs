@@ -24,6 +24,7 @@ public record EventSeriesRequest(
     Guid? RoomId,
     Guid? PlanCategoryId,
     int DayOfWeek,
+    string? DaysOfWeekJson,
     TimeSpan StartTimeLocal,
     int DurationMinutes,
     int RecurrenceIntervalWeeks,

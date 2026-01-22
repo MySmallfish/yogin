@@ -1463,6 +1463,7 @@ adminApi.MapDelete("/event-instances/{id:guid}", async (ClaimsPrincipal user, Gu
 adminApi.MapPost("/event-series", async (ClaimsPrincipal user, EventSeriesRequest request, AppDbContext db, ScheduleService scheduleService) =>
 {
     var studioId = GetStudioId(user);
+    var seriesDays = ResolveDaysOfWeek(request.DaysOfWeekJson, request.DayOfWeek);
     var series = new EventSeries
     {
         Id = Guid.NewGuid(),
@@ -1472,7 +1473,8 @@ adminApi.MapPost("/event-series", async (ClaimsPrincipal user, EventSeriesReques
         InstructorId = request.InstructorId,
         RoomId = request.RoomId,
         PlanCategoryId = await ResolvePlanCategoryIdAsync(db, studioId, request.PlanCategoryId),
-        DayOfWeek = request.DayOfWeek,
+        DayOfWeek = seriesDays.FirstOrDefault(),
+        DaysOfWeekJson = JsonSerializer.Serialize(seriesDays),
         StartTimeLocal = request.StartTimeLocal,
         DurationMinutes = request.DurationMinutes,
         RecurrenceIntervalWeeks = request.RecurrenceIntervalWeeks,
@@ -1524,12 +1526,14 @@ adminApi.MapPut("/event-series/{id:guid}", async (ClaimsPrincipal user, Guid id,
         return Results.NotFound();
     }
 
+    var seriesDays = ResolveDaysOfWeek(request.DaysOfWeekJson, request.DayOfWeek);
     series.Title = request.Title;
     series.Description = request.Description;
     series.InstructorId = request.InstructorId;
     series.RoomId = request.RoomId;
     series.PlanCategoryId = await ResolvePlanCategoryIdAsync(db, studioId, request.PlanCategoryId);
-    series.DayOfWeek = request.DayOfWeek;
+    series.DayOfWeek = seriesDays.FirstOrDefault();
+    series.DaysOfWeekJson = JsonSerializer.Serialize(seriesDays);
     series.StartTimeLocal = request.StartTimeLocal;
     series.DurationMinutes = request.DurationMinutes;
     series.RecurrenceIntervalWeeks = request.RecurrenceIntervalWeeks;
@@ -5661,6 +5665,60 @@ static List<Guid> ParseGuidList(string? json)
     {
         return new List<Guid>();
     }
+}
+
+static List<int> ParseIntList(string? json)
+{
+    if (string.IsNullOrWhiteSpace(json))
+    {
+        return new List<int>();
+    }
+
+    var trimmed = json.Trim();
+    if (trimmed.StartsWith("[", StringComparison.Ordinal))
+    {
+        try
+        {
+            var parsed = JsonSerializer.Deserialize<List<int>>(trimmed);
+            if (parsed != null)
+            {
+                return parsed;
+            }
+        }
+        catch
+        {
+            // Fall back to comma-separated parsing.
+        }
+    }
+
+    return trimmed
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .Select(value =>
+        {
+            if (int.TryParse(value, out var parsed))
+            {
+                return parsed;
+            }
+            return int.MinValue;
+        })
+        .Where(value => value != int.MinValue)
+        .ToList();
+}
+
+static List<int> ResolveDaysOfWeek(string? json, int fallbackDay)
+{
+    var parsed = ParseIntList(json)
+        .Where(value => value >= 0 && value <= 6)
+        .Distinct()
+        .OrderBy(value => value)
+        .ToList();
+
+    if (parsed.Count == 0)
+    {
+        parsed.Add(fallbackDay);
+    }
+
+    return parsed;
 }
 
 static List<string> ParseStringListJson(string? json)

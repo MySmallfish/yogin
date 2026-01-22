@@ -4,3 +4,4 @@
 - 2026-01-22: Added plan categories management and category-based plan filtering for sessions and series.
 - 2026-01-22: Fixed calendar context actions (register/edit series), improved modal scrolling, updated delete icons, aligned registration lookup, added series remote capacity column and time formatting, fixed birthday controls, and ensured series icon picker + invite mailto fallback.
 - 2026-01-22: Fixed calendar nav direction and removed Hebrew date label, added time editing in session modal, removed edit-series from context menu, renamed Users to Team and filtered guest-only users, aligned customer city/address row, added generate confirmation, and added in-app invite email composer with backend send endpoint.
+- 2026-01-22: Switched calendar toolbar to a two-column layout with actions and navigation rows, added multi-day series support end-to-end, and expanded Playwright coverage with plan category management tests.

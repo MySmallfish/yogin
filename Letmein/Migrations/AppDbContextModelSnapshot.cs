@@ -491,6 +491,10 @@ namespace Letmein.Migrations
                     b.Property<int>("DayOfWeek")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("DaysOfWeekJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("DefaultCapacity")
                         .HasColumnType("INTEGER");
 

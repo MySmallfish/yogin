@@ -58,11 +58,7 @@ const layoutTemplate = compileTemplate("layout", `
       </div>
       <nav class="nav">
         <div class="nav-section">
-          <div class="nav-title">{{t "nav.section.calendar" "Calendar"}}</div>
-          <a href="#/calendar" data-route="calendar">
-            <span class="nav-short" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 8H4v10h16V10z"/></svg>
-            </span>
+          <a href="#/calendar" data-route="calendar" class="nav-group">
             <span class="nav-label">{{t "nav.calendar" "Calendar"}}</span>
           </a>
           <a href="#/events" data-route="events">
@@ -79,20 +75,12 @@ const layoutTemplate = compileTemplate("layout", `
           </a>
         </div>
         <div class="nav-section">
-          <div class="nav-title">{{t "nav.section.customers" "Customers"}}</div>
-          <a href="#/customers" data-route="customers">
-            <span class="nav-short" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M16 11a3 3 0 1 0-2.999-3A3 3 0 0 0 16 11zm-8 0a3 3 0 1 0-2.999-3A3 3 0 0 0 8 11zm0 2c-2.67 0-8 1.34-8 4v3h10v-3c0-.7.2-1.34.56-1.9C9.71 13.4 8.9 13 8 13zm8 0c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4z"/></svg>
-            </span>
+          <a href="#/customers" data-route="customers" class="nav-group">
             <span class="nav-label">{{t "nav.customers" "Customers"}}</span>
           </a>
         </div>
         <div class="nav-section">
-          <div class="nav-title">{{t "nav.section.admin" "Admin"}}</div>
-          <a href="#/reports" data-route="reports">
-            <span class="nav-short" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M3 3h2v18H3V3zm8 6h2v12h-2V9zm8-4h2v16h-2V5z"/></svg>
-            </span>
+          <a href="#/reports" data-route="reports" class="nav-group">
             <span class="nav-label">{{t "nav.reports" "Reports"}}</span>
           </a>
           <a href="#/plans" data-route="plans">
@@ -198,57 +186,8 @@ const loginTemplate = compileTemplate("login", `
 const calendarTemplate = compileTemplate("calendar", `
   <div class="calendar-toolbar">
     <div class="calendar-grid">
-      <div class="calendar-left">
-        <div class="calendar-left-row">
-          <div class="calendar-views">
-        <button class="secondary view-btn {{#if isDay}}active{{/if}}" data-view="day">
-          <span class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 6H4v10h16V8z"/></svg>
-          </span>
-          {{t "calendar.day" "Day"}}
-        </button>
-        <button class="secondary view-btn {{#if isWeek}}active{{/if}}" data-view="week">
-          <span class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M3 5h18a2 2 0 0 1 2 2v2H1V7a2 2 0 0 1 2-2zm-2 6h22v6a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-6zm4 2v2h4v-2H5zm6 0v2h4v-2h-4zm6 0v2h2v-2h-2z"/></svg>
-          </span>
-          {{t "calendar.week" "Week"}}
-        </button>
-        <button class="secondary view-btn {{#if isMonth}}active{{/if}}" data-view="month">
-          <span class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v3H2V6a2 2 0 0 1 2-2h3V2zm15 9H2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-9z"/></svg>
-          </span>
-          {{t "calendar.month" "Month"}}
-        </button>
-        <button class="secondary view-btn {{#if isList}}active{{/if}}" data-view="list">
-          <span class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M4 6h3v3H4V6zm5 1h11v1H9V7zm-5 6h3v3H4v-3zm5 1h11v1H9v-1zm-5 6h3v3H4v-3zm5 1h11v1H9v-1z"/></svg>
-          </span>
-          {{t "calendar.list" "List"}}
-        </button>
-          </div>
-          <div class="calendar-nav">
-            <button class="icon-button nav-arrow" data-nav="prev" aria-label="{{t "calendar.prev" "Prev"}}">
-              <span class="icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
-              </span>
-            </button>
-            <button class="secondary" id="calendar-today">{{t "calendar.today" "Today"}}</button>
-            <input type="date" id="calendar-date" value="{{focusDate}}" />
-            <button class="icon-button nav-arrow" data-nav="next" aria-label="{{t "calendar.next" "Next"}}">
-              <span class="icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
-              </span>
-            </button>
-          </div>
-        </div>
-        <div class="calendar-range">
-          {{#if weekNumberLabel}}<span class="calendar-week-number">{{weekNumberLabel}}</span>{{/if}}
-          <span>{{rangeLabel}}</span>
-          {{#if hebrewDateLabel}}<span class="calendar-hebrew">{{hebrewDateLabel}}</span>{{/if}}
-        </div>
-      </div>
-      <div class="calendar-right">
-        <div class="calendar-actions">
+      <div class="calendar-actions-col">
+        <div class="calendar-actions-row">
           <input type="search" id="calendar-search" placeholder="{{t "calendar.search" "Search sessions"}}" value="{{search}}" />
           <div class="calendar-export" aria-label="{{t "calendar.export" "Export"}}">
             <button class="icon-button export-btn" data-export="outlook" title="{{t "calendar.exportOutlook" "Outlook (.ics)"}}" aria-label="{{t "calendar.exportOutlook" "Outlook (.ics)"}}">
@@ -270,6 +209,56 @@ const calendarTemplate = compileTemplate("calendar", `
           </button>
         </div>
       </div>
+      <div class="calendar-nav-col">
+        <div class="calendar-nav-row">
+          <div class="calendar-views-stack">
+            <div class="calendar-views">
+              <button class="secondary view-btn {{#if isDay}}active{{/if}}" data-view="day">
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 6H4v10h16V8z"/></svg>
+                </span>
+                {{t "calendar.day" "Day"}}
+              </button>
+              <button class="secondary view-btn {{#if isWeek}}active{{/if}}" data-view="week">
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M3 5h18a2 2 0 0 1 2 2v2H1V7a2 2 0 0 1 2-2zm-2 6h22v6a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-6zm4 2v2h4v-2H5zm6 0v2h4v-2h-4zm6 0v2h2v-2h-2z"/></svg>
+                </span>
+                {{t "calendar.week" "Week"}}
+              </button>
+              <button class="secondary view-btn {{#if isMonth}}active{{/if}}" data-view="month">
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v3H2V6a2 2 0 0 1 2-2h3V2zm15 9H2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-9z"/></svg>
+                </span>
+                {{t "calendar.month" "Month"}}
+              </button>
+              <button class="secondary view-btn {{#if isList}}active{{/if}}" data-view="list">
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M4 6h3v3H4V6zm5 1h11v1H9V7zm-5 6h3v3H4v-3zm5 1h11v1H9v-1zm-5 6h3v3H4v-3zm5 1h11v1H9v-1z"/></svg>
+                </span>
+                {{t "calendar.list" "List"}}
+              </button>
+            </div>
+            <div class="calendar-range">
+              {{#if weekNumberLabel}}<span class="calendar-week-number">{{weekNumberLabel}}</span>{{/if}}
+              <span>{{rangeLabel}}</span>
+            </div>
+          </div>
+          <div class="calendar-nav">
+            <button class="icon-button nav-arrow" data-nav="prev" aria-label="{{t "calendar.prev" "Prev"}}">
+              <span class="icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
+              </span>
+            </button>
+            <button class="secondary" id="calendar-today">{{t "calendar.today" "Today"}}</button>
+            <input type="date" id="calendar-date" value="{{focusDate}}" />
+            <button class="icon-button nav-arrow" data-nav="next" aria-label="{{t "calendar.next" "Next"}}">
+              <span class="icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
   <div class="calendar-body">
@@ -279,7 +268,7 @@ const calendarTemplate = compileTemplate("calendar", `
         {{#if day.hasEvents}}
           <div class="calendar-events">
             {{#each day.events}}
-              <div class="calendar-event {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
+              <div class="calendar-event {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
                 {{#unless isBirthday}}
                   <button class="event-actions" type="button" aria-label="{{t "calendar.actions" "Actions"}}">
                     <span class="icon" aria-hidden="true">
@@ -336,7 +325,7 @@ const calendarTemplate = compileTemplate("calendar", `
             {{#if hasEvents}}
               <div class="calendar-day-events">
                 {{#each events}}
-                  <div class="calendar-event compact {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
+                  <div class="calendar-event compact {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
                     {{#unless isBirthday}}
                       <button class="event-actions" type="button" aria-label="{{t "calendar.actions" "Actions"}}">
                         <span class="icon" aria-hidden="true">
@@ -394,7 +383,7 @@ const calendarTemplate = compileTemplate("calendar", `
                 {{#if hasEvents}}
                   <div class="calendar-month-events">
                     {{#each eventsPreview}}
-                      <div class="calendar-event mini {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
+                      <div class="calendar-event mini {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
                         <span class="event-time">{{time}}</span>
                         <span class="event-title">
                           {{title}}
@@ -614,7 +603,12 @@ const rosterTemplate = compileTemplate("roster", `
             {{#if canRemove}}
               <button type="button" class="icon-button roster-remove" data-remove-booking="{{bookingId}}" data-customer-name="{{customerName}}" aria-label="{{t "roster.remove" "Remove"}} {{customerName}}" title="{{t "roster.remove" "Remove"}}">
                 <span class="icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M6 7h12M9 7v12m6-12v12M10 4h4l1 2H9l1-2z"/></svg>
+                  <svg viewBox="0 0 24 24">
+                    <path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M8 6V4h8v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M19 6l-1 14H6L5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
                 </span>
               </button>
             {{/if}}
@@ -630,7 +624,7 @@ const rosterTemplate = compileTemplate("roster", `
 
 const calendarModalTemplate = compileTemplate("calendar-modal", `
   <div class="modal-overlay" id="calendar-modal">
-    <div class="modal">
+    <div class="modal modal-scroll">
       <div class="modal-header">
         <div>
           <h3>{{seriesTitle}}</h3>
@@ -653,26 +647,27 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
         </div>
         <button class="modal-close" id="close-modal" type="button" aria-label="{{t "common.close" "Close"}}"></button>
       </div>
-      <div class="session-header-fields">
-        <div class="form-grid">
-          <div class="span-2">
-            <label>{{t "session.title" "Title"}}</label>
-            <input name="title" value="{{seriesTitle}}" list="{{titleSuggestionId}}" />
-            {{#if titleSuggestions.length}}
-              <datalist id="{{titleSuggestionId}}">
-                {{#each titleSuggestions}}
-                  <option value="{{this}}"></option>
-                {{/each}}
-              </datalist>
-            {{/if}}
-          </div>
-          <div class="span-2">
-            <label>{{t "session.description" "Description"}}</label>
-            <textarea name="description" rows="4" placeholder="{{t "series.descriptionHintPlain" "Add description"}}">{{seriesDescription}}</textarea>
+      <div class="modal-body">
+        <div class="session-header-fields">
+          <div class="form-grid">
+            <div class="span-2">
+              <label>{{t "session.title" "Title"}}</label>
+              <input name="title" value="{{seriesTitle}}" list="{{titleSuggestionId}}" />
+              {{#if titleSuggestions.length}}
+                <datalist id="{{titleSuggestionId}}">
+                  {{#each titleSuggestions}}
+                    <option value="{{this}}"></option>
+                  {{/each}}
+                </datalist>
+              {{/if}}
+            </div>
+            <div class="span-2">
+              <label>{{t "session.description" "Description"}}</label>
+              <textarea name="description" rows="4" placeholder="{{t "series.descriptionHintPlain" "Add description"}}">{{seriesDescription}}</textarea>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="modal-columns">
+        <div class="modal-columns">
         <div class="modal-column modal-column-details">
           <div class="form-grid">
             <div>
@@ -682,6 +677,14 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
                   <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
                 {{/each}}
               </select>
+            </div>
+            <div>
+              <label>{{t "session.startTime" "Start time"}}</label>
+              <input type="time" name="startTimeLocal" value="{{startTimeLocal}}" />
+            </div>
+            <div>
+              <label>{{t "session.duration" "Duration (min)"}}</label>
+              <input type="number" name="durationMinutes" value="{{durationMinutes}}" />
             </div>
             <div>
               <label>{{t "session.room" "Room"}}</label>
@@ -783,14 +786,14 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
             <div class="meta registration-hint">{{t "session.addCustomerHint" "Select an existing customer or add a new one."}}</div>
             <div class="form-grid">
               <div class="span-2">
-                <div class="registration-lookup-header">
-                  <label>{{t "session.findCustomer" "Find existing customer"}}</label>
+                <label>{{t "session.findCustomer" "Find existing customer"}}</label>
+                <div class="registration-lookup-row">
+                  <input name="customerLookup" list="customer-list" placeholder="{{t "session.findCustomerPlaceholder" "Start typing a name or email"}}" autocomplete="off" />
                   <button class="icon-button add-inline" type="button" id="add-customer-modal" aria-label="{{t "customer.addTitle" "Add customer"}}">
                     <span class="icon" aria-hidden="true">+</span>
                     <span class="add-label">{{t "common.add" "Add"}}</span>
                   </button>
                 </div>
-                <input name="customerLookup" list="customer-list" placeholder="{{t "session.findCustomerPlaceholder" "Start typing a name or email"}}" autocomplete="off" />
                 <input type="hidden" name="customerId" />
                 <datalist id="customer-list">
                   {{#each customers}}
@@ -815,13 +818,19 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
             </div>
           </div>
         </div>
+        </div>
       </div>
       <div class="modal-footer">
         <div class="meta" data-booked-meta>{{capacitySummary}}</div>
         <div class="modal-actions">
           <button class="secondary" id="delete-session">
             <span class="icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M6 7h12M9 7v12m6-12v12M10 4h4l1 2H9l1-2z"/></svg>
+              <svg viewBox="0 0 24 24">
+                <path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M8 6V4h8v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M19 6l-1 14H6L5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
             </span>
             {{t "session.delete" "Delete session"}}
           </button>
@@ -838,7 +847,12 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
           {{#if eventSeriesId}}
             <button class="secondary" id="delete-series">
               <span class="icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M6 7h12M9 7v12m6-12v12M10 4h4l1 2H9l1-2z"/></svg>
+                <svg viewBox="0 0 24 24">
+                  <path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M8 6V4h8v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M19 6l-1 14H6L5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
               </span>
               {{t "series.delete" "Delete series"}}
             </button>
@@ -945,7 +959,7 @@ const birthdayModalTemplate = compileTemplate("birthday-modal", `
   <div class="modal-overlay" id="birthday-modal">
     <div class="modal modal-compact">
       <div class="modal-header">
-        <div>
+        <div class="span-2">
           <h3>{{title}}</h3>
           {{#if subtitle}}
             <div class="muted">{{subtitle}}</div>
@@ -1001,6 +1015,42 @@ const iconPickerTemplate = compileTemplate("icon-picker-modal", `
       </div>
       <div class="modal-footer">
         <button class="secondary" id="clear-icon">{{t "common.clear" "Clear"}}</button>
+      </div>
+    </div>
+  </div>
+`);
+
+const inviteEmailTemplate = compileTemplate("invite-email-modal", `
+  <div class="modal-overlay" id="invite-email-modal">
+    <div class="modal modal-compact modal-scroll">
+      <div class="modal-header">
+        <div>
+          <h3>{{t "invite.emailTitle" "Send invite email"}}</h3>
+          <div class="muted">{{t "invite.emailSubtitle" "Review and send the invite message."}}</div>
+        </div>
+        <button class="modal-close" id="close-invite-email" type="button" aria-label="{{t "common.close" "Close"}}"></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="span-2">
+            <label>{{t "invite.emailTo" "To"}}</label>
+            <input name="inviteTo" value="{{email}}" disabled />
+          </div>
+          <div class="span-2">
+            <label>{{t "invite.emailSubject" "Subject"}}</label>
+            <input name="inviteSubject" value="{{subject}}" />
+          </div>
+          <div class="span-2">
+            <label>{{t "invite.emailBody" "Message"}}</label>
+            <textarea name="inviteBody" rows="8">{{body}}</textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="modal-actions">
+          <button class="secondary" id="cancel-invite-email">{{t "common.cancel" "Cancel"}}</button>
+          <button id="send-invite-email" class="primary-action">{{t "invite.emailSend" "Send email"}}</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1162,7 +1212,7 @@ const sessionModalTemplate = compileTemplate("session-modal", `
 
 const seriesModalTemplate = compileTemplate("series-modal", `
   <div class="modal-overlay" id="series-modal">
-    <div class="modal">
+    <div class="modal modal-scroll">
       <div class="modal-header">
         <div>
           <h3>{{modalTitle}}</h3>
@@ -1170,129 +1220,134 @@ const seriesModalTemplate = compileTemplate("series-modal", `
         </div>
         <button class="modal-close" id="close-series" type="button" aria-label="{{t "common.close" "Close"}}"></button>
       </div>
-      <input type="hidden" name="seriesId" value="{{seriesId}}" />
-      <div class="form-grid">
-        <div>
-          <label>{{t "series.title" "Title"}}</label>
-          <input name="title" value="{{titleValue}}" list="{{titleSuggestionId}}" />
-          {{#if titleSuggestions.length}}
-            <datalist id="{{titleSuggestionId}}">
-              {{#each titleSuggestions}}
-                <option value="{{this}}"></option>
-              {{/each}}
-            </datalist>
-          {{/if}}
-        </div>
-        <div>
-          <label>{{t "series.icon" "Icon"}}</label>
-          <div class="icon-field">
-            <span class="icon-preview" data-icon-preview>{{icon}}</span>
-            <input name="icon" value="{{icon}}" placeholder="flow" />
-            <button type="button" class="icon-button icon-picker-trigger" data-icon-picker data-icon-target="[name=&quot;icon&quot;]" aria-label="{{t "session.pickIcon" "Pick icon"}}">
-              <span class="icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M4 5h6v6H4V5zm10 0h6v6h-6V5zM4 13h6v6H4v-6zm10 0h6v6h-6v-6z"/></svg>
-              </span>
-            </button>
+      <div class="modal-body">
+        <input type="hidden" name="seriesId" value="{{seriesId}}" />
+        <div class="form-grid">
+          <div>
+            <label>{{t "series.title" "Title"}}</label>
+            <input name="title" value="{{titleValue}}" list="{{titleSuggestionId}}" />
+            {{#if titleSuggestions.length}}
+              <datalist id="{{titleSuggestionId}}">
+                {{#each titleSuggestions}}
+                  <option value="{{this}}"></option>
+                {{/each}}
+              </datalist>
+            {{/if}}
           </div>
-        </div>
-        <div>
-          <label>{{t "series.color" "Color"}}</label>
-          <div class="color-field">
-            <input class="color-input" name="color" type="color" value="{{color}}" />
-            <div class="color-chip" style="background: {{color}}"></div>
-            <input class="color-text" type="text" value="{{color}}" placeholder="#647FBC" data-color-text />
+          <div>
+            <label>{{t "series.icon" "Icon"}}</label>
+            <div class="icon-field">
+              <span class="icon-preview" data-icon-preview>{{icon}}</span>
+              <input name="icon" value="{{icon}}" placeholder="flow" />
+              <button type="button" class="icon-button icon-picker-trigger" data-icon-picker data-icon-target="[name=&quot;icon&quot;]" aria-label="{{t "session.pickIcon" "Pick icon"}}">
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M4 5h6v6H4V5zm10 0h6v6h-6V5zM4 13h6v6H4v-6zm10 0h6v6h-6v-6z"/></svg>
+                </span>
+              </button>
+            </div>
           </div>
-        </div>
+          <div>
+            <label>{{t "series.color" "Color"}}</label>
+            <div class="color-field">
+              <input class="color-input" name="color" type="color" value="{{color}}" />
+              <div class="color-chip" style="background: {{color}}"></div>
+              <input class="color-text" type="text" value="{{color}}" placeholder="#647FBC" data-color-text />
+            </div>
+          </div>
         <div>
-          <label>{{t "series.dayOfWeek" "Day of week"}}</label>
-          <select name="dayOfWeek">
+          <label>{{t "series.daysOfWeek" "Days of week"}}</label>
+          <div class="weekday-pills">
             {{#each dayOptions}}
-              <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+              <label class="weekday-pill">
+                <input type="checkbox" name="seriesDays" value="{{value}}" {{#if selected}}checked{{/if}} />
+                {{label}}
+              </label>
             {{/each}}
-          </select>
+          </div>
         </div>
-        <div>
-          <label>{{t "series.startTime" "Start time"}}</label>
-          <input type="time" name="startTimeLocal" value="{{startTimeLocal}}" />
+          <div>
+            <label>{{t "series.startTime" "Start time"}}</label>
+            <input type="time" name="startTimeLocal" value="{{startTimeLocal}}" />
+          </div>
+          <div>
+            <label>{{t "series.duration" "Duration (min)"}}</label>
+            <input type="number" name="durationMinutes" value="{{durationMinutes}}" />
+          </div>
+          <div>
+            <label>{{t "series.capacity" "Capacity"}}</label>
+            <input type="number" name="capacity" value="{{defaultCapacity}}" />
+          </div>
+          <div>
+            <label>{{t "series.remoteCapacity" "Remote capacity"}}</label>
+            <input type="number" name="remoteCapacity" value="{{remoteCapacity}}" />
+          </div>
+          <div>
+            <label>{{t "series.price" "Price"}}</label>
+            <input type="number" step="0.01" name="price" value="{{price}}" />
+          </div>
+          <div>
+            <label>{{t "series.zoomInvite" "Zoom invite link"}}</label>
+            <input name="remoteInviteUrl" value="{{remoteInviteUrl}}" placeholder="https://zoom.us/j/..." />
+          </div>
+          <div>
+            <label>{{t "series.instructor" "Instructor"}}</label>
+            <select name="instructorId">
+              {{#each instructors}}
+                <option value="{{id}}" {{#if selected}}selected{{/if}}>{{displayName}}</option>
+              {{/each}}
+            </select>
+          </div>
+          <div>
+            <label>{{t "series.room" "Room"}}</label>
+            <select name="roomId">
+              {{#each rooms}}
+                <option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>
+              {{/each}}
+            </select>
+          </div>
+          <div>
+            <label>{{t "series.category" "Category"}}</label>
+            <select name="planCategoryId">
+              {{#each planCategories}}
+                <option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>
+              {{/each}}
+            </select>
+          </div>
+          <div class="span-2">
+            <label>{{t "series.description" "Description"}}</label>
+            <textarea name="description" rows="4" placeholder="{{t "series.descriptionHintPlain" "Add description"}}">{{description}}</textarea>
+          </div>
+          <div>
+            <label>{{t "series.recurrence" "Recurrence (weeks)"}}</label>
+            <input type="number" name="recurrenceIntervalWeeks" value="{{recurrenceIntervalWeeks}}" />
+          </div>
+          <div>
+            <label>{{t "series.cancellationWindow" "Cancellation window (hours)"}}</label>
+            <input type="number" name="cancellationWindowHours" value="{{cancellationWindowHours}}" />
+          </div>
+          <div>
+            <label>{{t "series.active" "Active"}}</label>
+            <select name="isActive">
+              <option value="true" {{#if isActive}}selected{{/if}}>{{t "common.yes" "Yes"}}</option>
+              <option value="false" {{#unless isActive}}selected{{/unless}}>{{t "common.no" "No"}}</option>
+            </select>
+          </div>
         </div>
-        <div>
-          <label>{{t "series.duration" "Duration (min)"}}</label>
-          <input type="number" name="durationMinutes" value="{{durationMinutes}}" />
-        </div>
-        <div>
-          <label>{{t "series.capacity" "Capacity"}}</label>
-          <input type="number" name="capacity" value="{{defaultCapacity}}" />
-        </div>
-        <div>
-          <label>{{t "series.remoteCapacity" "Remote capacity"}}</label>
-          <input type="number" name="remoteCapacity" value="{{remoteCapacity}}" />
-        </div>
-        <div>
-          <label>{{t "series.price" "Price"}}</label>
-          <input type="number" step="0.01" name="price" value="{{price}}" />
-        </div>
-        <div>
-          <label>{{t "series.zoomInvite" "Zoom invite link"}}</label>
-          <input name="remoteInviteUrl" value="{{remoteInviteUrl}}" placeholder="https://zoom.us/j/..." />
-        </div>
-        <div>
-          <label>{{t "series.instructor" "Instructor"}}</label>
-          <select name="instructorId">
-            {{#each instructors}}
-              <option value="{{id}}" {{#if selected}}selected{{/if}}>{{displayName}}</option>
+        <div class="plan-picker">
+          <label>{{t "series.allowedPlans" "Allowed plans"}}</label>
+          <div class="plan-options">
+            {{#each plans}}
+              <label class="plan-pill">
+                <input type="checkbox" name="planIds" value="{{id}}" {{#if selected}}checked{{/if}} />
+                <span>
+                  <span class="plan-name">{{name}}</span>
+                  <span class="plan-price">{{price}}</span>
+                </span>
+              </label>
             {{/each}}
-          </select>
+          </div>
+          <div class="meta">{{t "series.allowedPlansHint" "Leave empty to allow all plans + drop-ins."}}</div>
         </div>
-        <div>
-          <label>{{t "series.room" "Room"}}</label>
-          <select name="roomId">
-            {{#each rooms}}
-              <option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>
-            {{/each}}
-          </select>
-        </div>
-        <div>
-          <label>{{t "series.category" "Category"}}</label>
-          <select name="planCategoryId">
-            {{#each planCategories}}
-              <option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>
-            {{/each}}
-          </select>
-        </div>
-        <div class="span-2">
-          <label>{{t "series.description" "Description"}}</label>
-          <textarea name="description" rows="4" placeholder="{{t "series.descriptionHintPlain" "Add description"}}">{{description}}</textarea>
-        </div>
-        <div>
-          <label>{{t "series.recurrence" "Recurrence (weeks)"}}</label>
-          <input type="number" name="recurrenceIntervalWeeks" value="{{recurrenceIntervalWeeks}}" />
-        </div>
-        <div>
-          <label>{{t "series.cancellationWindow" "Cancellation window (hours)"}}</label>
-          <input type="number" name="cancellationWindowHours" value="{{cancellationWindowHours}}" />
-        </div>
-        <div>
-          <label>{{t "series.active" "Active"}}</label>
-          <select name="isActive">
-            <option value="true" {{#if isActive}}selected{{/if}}>{{t "common.yes" "Yes"}}</option>
-            <option value="false" {{#unless isActive}}selected{{/unless}}>{{t "common.no" "No"}}</option>
-          </select>
-        </div>
-      </div>
-      <div class="plan-picker">
-        <label>{{t "series.allowedPlans" "Allowed plans"}}</label>
-        <div class="plan-options">
-          {{#each plans}}
-            <label class="plan-pill">
-              <input type="checkbox" name="planIds" value="{{id}}" {{#if selected}}checked{{/if}} />
-              <span>
-                <span class="plan-name">{{name}}</span>
-                <span class="plan-price">{{price}}</span>
-              </span>
-            </label>
-          {{/each}}
-        </div>
-        <div class="meta">{{t "series.allowedPlansHint" "Leave empty to allow all plans + drop-ins."}}</div>
       </div>
       <div class="modal-footer">
         <div class="meta">{{t "series.updateHint" "Series updates apply to future generated sessions."}}</div>
@@ -1363,7 +1418,7 @@ const customerModalTemplate = compileTemplate("customer-modal", `
           <label>{{t "customer.city" "City"}}</label>
           <input name="city" value="{{city}}" />
         </div>
-        <div class="span-2">
+        <div>
           <label>{{t "customer.address" "Address"}}</label>
           <input name="address" value="{{address}}" />
         </div>
@@ -1941,6 +1996,7 @@ const eventsTemplate = compileTemplate("events", `
           <th>{{t "events.day" "Day"}}</th>
           <th>{{t "events.time" "Time"}}</th>
           <th>{{t "events.capacity" "Capacity"}}</th>
+          <th>{{t "events.remoteCapacity" "Remote"}}</th>
           <th>{{t "events.active" "Active"}}</th>
           <th>{{t "events.actions" "Actions"}}</th>
         </tr>
@@ -1954,13 +2010,19 @@ const eventsTemplate = compileTemplate("events", `
           <td>{{dayLabel}}</td>
           <td>{{startTimeLocal}}</td>
           <td>{{defaultCapacity}}</td>
+          <td>{{remoteCapacity}}</td>
           <td>{{activeLabel}}</td>
           <td>
             <button class="secondary" data-edit="{{id}}">{{t "common.edit" "Edit"}}</button>
             <button data-generate="{{id}}">{{t "events.generate" "Generate"}}</button>
             <button class="secondary" data-delete-series="{{id}}">
               <span class="icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M6 7h12M9 7v12m6-12v12M10 4h4l1 2H9l1-2z"/></svg>
+                <svg viewBox="0 0 24 24">
+                  <path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M8 6V4h8v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M19 6l-1 14H6L5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
               </span>
               {{t "events.delete" "Delete"}}
             </button>
@@ -2858,11 +2920,18 @@ function render(state) {
         const dayNames = getWeekdayNames(0);
         const series = (data.series || []).map(item => ({
             ...item,
-            dayLabel: dayNames[item.dayOfWeek] || "",
-            startTimeLocal: item.startTimeLocal,
+            dayLabel: (() => {
+                const days = resolveSeriesDays(item);
+                if (days.length) {
+                    return days.map(day => dayNames[day] || "").filter(Boolean).join(", ");
+                }
+                return dayNames[item.dayOfWeek] || "";
+            })(),
+            startTimeLocal: (item.startTimeLocal || "").slice(0, 5),
             activeLabel: item.isActive ? t("common.yes", "Yes") : t("common.no", "No"),
             icon: item.icon || "",
-            color: item.color || "#647FBC"
+            color: item.color || "#647FBC",
+            remoteCapacity: item.remoteCapacity ?? 0
         }));
         content = eventsTemplate({
             series,
@@ -2917,8 +2986,10 @@ function render(state) {
         ];
         const users = (data.users || [])
             .filter(item => {
-                if (!filters.role) return true;
                 const roles = item.roles || [item.role];
+                const guestOnly = roles.length === 1 && roles[0] === "Guest";
+                if (guestOnly) return false;
+                if (!filters.role) return true;
                 return roles.includes(filters.role);
             })
             .map(item => ({
@@ -3290,9 +3361,7 @@ function bindRouteActions(route, data, state) {
 
         navButtons.forEach(btn => {
             btn.addEventListener("click", () => {
-                const baseDirection = btn.getAttribute("data-nav") === "prev" ? -1 : 1;
-                const isRtl = document.documentElement.dir === "rtl";
-                const direction = isRtl ? baseDirection * -1 : baseDirection;
+                const direction = btn.getAttribute("data-nav") === "prev" ? -1 : 1;
                 const baseDate = dateInput?.value || currentDate;
                 const nextDate = shiftCalendarDate(currentView, baseDate, direction);
                 actor.send({ type: "SET_CALENDAR", view: currentView, date: nextDate });
@@ -3428,10 +3497,18 @@ function bindRouteActions(route, data, state) {
             btn.addEventListener("click", async () => {
                 const seriesId = btn.getAttribute("data-generate");
                 if (!seriesId) return;
+                const confirmed = await confirmWithModal({
+                    title: t("events.generateConfirmTitle", "Generate sessions?"),
+                    message: t("events.generateConfirmMessage", "This will create sessions for the next 8 weeks."),
+                    confirmLabel: t("events.generateConfirm", "Generate"),
+                    cancelLabel: t("common.cancel", "Cancel")
+                });
+                if (!confirmed) return;
                 btn.disabled = true;
                 try {
-                    await apiPost(`/api/admin/event-series/${seriesId}/generate-instances`, {});
-                    showToast(t("events.generateSuccess", "Sessions generated."), "success");
+                    const result = await apiPost(`/api/admin/event-series/${seriesId}/generate-instances`, {});
+                    const count = result?.created ?? 0;
+                    showToast(t("events.generateSuccess", "Sessions generated.") + ` ${count}`, "success");
                     actor.send({ type: "REFRESH" });
                 } catch (error) {
                     showToast(error.message || t("events.generateError", "Unable to generate sessions."), "error");
@@ -3738,16 +3815,27 @@ function bindRouteActions(route, data, state) {
                 if (!id) return;
                 btn.disabled = true;
                 try {
-                    const invite = await requestInvite(id, true);
-                    showToast(`${t("users.inviteSent", "Invite sent to")} ${invite.email}.`, "success");
+                    const invite = await requestInvite(id, false);
+                    openInviteEmailModal({
+                        email: invite.email || "",
+                        subject: invite.subject || "",
+                        body: invite.body || "",
+                        onSend: async (subject, body) => {
+                            try {
+                                await sendInviteEmail(id, subject, body);
+                            } catch (error) {
+                                const message = String(error?.message || "");
+                                if (message.toLowerCase().includes("configured")) {
+                                    openInviteEmail({ email: invite.email, subject, body });
+                                    showToast(t("users.inviteMailto", "Opened email client."), "success");
+                                    return { fallback: true };
+                                }
+                                throw error;
+                            }
+                        }
+                    });
                 } catch (error) {
-                    try {
-                        const invite = await requestInvite(id, false);
-                        openInviteEmail(invite);
-                        showToast(t("users.inviteMailto", "Opened email client."), "success");
-                    } catch (fallbackError) {
-                        showToast(fallbackError.message || error.message || t("users.inviteError", "Unable to generate invite."), "error");
-                    }
+                    showToast(error.message || t("users.inviteError", "Unable to generate invite."), "error");
                 } finally {
                     btn.disabled = false;
                 }
@@ -3798,16 +3886,27 @@ function bindRouteActions(route, data, state) {
                 if (!id) return;
                 btn.disabled = true;
                 try {
-                    const invite = await requestInvite(id, true);
-                    showToast(`${t("guests.inviteSent", "Invite sent to")} ${invite.email}.`, "success");
+                    const invite = await requestInvite(id, false);
+                    openInviteEmailModal({
+                        email: invite.email || "",
+                        subject: invite.subject || "",
+                        body: invite.body || "",
+                        onSend: async (subject, body) => {
+                            try {
+                                await sendInviteEmail(id, subject, body);
+                            } catch (error) {
+                                const message = String(error?.message || "");
+                                if (message.toLowerCase().includes("configured")) {
+                                    openInviteEmail({ email: invite.email, subject, body });
+                                    showToast(t("guests.inviteMailto", "Opened email client."), "success");
+                                    return { fallback: true };
+                                }
+                                throw error;
+                            }
+                        }
+                    });
                 } catch (error) {
-                    try {
-                        const invite = await requestInvite(id, false);
-                        openInviteEmail(invite);
-                        showToast(t("guests.inviteMailto", "Opened email client."), "success");
-                    } catch (fallbackError) {
-                        showToast(fallbackError.message || error.message || t("guests.inviteError", "Unable to send invite."), "error");
-                    }
+                    showToast(error.message || t("guests.inviteError", "Unable to send invite."), "error");
                 } finally {
                     btn.disabled = false;
                 }
@@ -4132,6 +4231,33 @@ function parseGuidListJson(value) {
         }
     } catch {
         return [];
+    }
+    return [];
+}
+
+function parseNumberListJson(value) {
+    if (!value) return [];
+    try {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed)) {
+            return parsed
+                .map(item => Number(item))
+                .filter(item => Number.isFinite(item));
+        }
+    } catch {
+        return [];
+    }
+    return [];
+}
+
+function resolveSeriesDays(series) {
+    const parsed = parseNumberListJson(series?.daysOfWeekJson || series?.daysOfWeek || "");
+    if (parsed.length) {
+        return Array.from(new Set(parsed)).filter(day => day >= 0 && day <= 6);
+    }
+    const fallback = Number(series?.dayOfWeek);
+    if (Number.isFinite(fallback)) {
+        return [fallback];
     }
     return [];
 }
@@ -4609,7 +4735,7 @@ function resetUserForm() {
     toggleInstructorFields("Admin");
 }
 
-async function openCalendarEventModal(item, data) {
+async function openCalendarEventModal(item, data, options = {}) {
     const existing = document.getElementById("calendar-modal");
     if (existing) {
         clearModalEscape();
@@ -4626,6 +4752,10 @@ async function openCalendarEventModal(item, data) {
     const timeRange = end ? `${formatTimeOnly(start, timeZone)} - ${formatTimeOnly(end, timeZone)}` : formatTimeOnly(start, timeZone);
     const startLabel = formatFullDate(start, timeZone);
     const sessionDateKey = getDateKeyInTimeZone(start, timeZone);
+    const startTimeLocal = formatTimeInput(start, timeZone);
+    const durationMinutes = end
+        ? Math.max(1, Math.round((end.getTime() - start.getTime()) / 60000))
+        : (item.durationMinutes || 60);
 
     let roster = [];
     try {
@@ -4788,6 +4918,8 @@ async function openCalendarEventModal(item, data) {
         seriesColor: seriesColorValue,
         colorValue,
         price: toCurrencyUnits(item.priceCents),
+        startTimeLocal,
+        durationMinutes,
         remoteCapacity: remoteCapacityValue,
         remoteInviteUrl: item.remoteInviteUrl || "",
         hasRemoteCapacity: remoteCapacityValue > 0,
@@ -4810,6 +4942,10 @@ async function openCalendarEventModal(item, data) {
     };
     cleanupEscape = bindModalEscape(closeModal);
     bindModalBackdrop(overlay);
+    overlay.querySelectorAll(".color-field").forEach(field => bindColorField(field));
+    bindColorResets(overlay);
+    bindIconPicker(overlay);
+    bindIconPreview(overlay);
     overlay.querySelectorAll(".color-field").forEach(field => bindColorField(field));
     bindIconPicker(overlay);
     bindIconPreview(overlay);
@@ -4852,9 +4988,20 @@ async function openCalendarEventModal(item, data) {
 
     const editSeriesBtn = overlay.querySelector("#edit-series");
     if (editSeriesBtn) {
-        editSeriesBtn.addEventListener("click", () => {
+        editSeriesBtn.addEventListener("click", async () => {
+            if (!item.eventSeriesId || String(item.eventSeriesId) === "00000000-0000-0000-0000-000000000000") return;
             closeModal();
-            window.location.hash = `#/events?series=${item.eventSeriesId}`;
+            try {
+                const series = await apiGet(`/api/admin/event-series/${item.eventSeriesId}`);
+                openSeriesModal(series, {
+                    rooms: data.rooms || [],
+                    instructors: data.instructors || [],
+                    plans: data.plans || [],
+                    planCategories: data.planCategories || []
+                });
+            } catch (error) {
+                showToast(error.message || t("series.loadError", "Unable to load series details."), "error");
+            }
         });
     }
 
@@ -4957,7 +5104,7 @@ async function openCalendarEventModal(item, data) {
     if (saveBtn) {
         saveBtn.addEventListener("click", async () => {
             const formValues = {};
-            ["title", "description", "status", "roomId", "instructorId", "icon", "color", "capacity", "remoteCapacity", "price", "remoteInviteUrl", "planCategoryId"].forEach(field => {
+            ["title", "description", "status", "roomId", "instructorId", "icon", "color", "capacity", "remoteCapacity", "price", "remoteInviteUrl", "planCategoryId", "startTimeLocal", "durationMinutes"].forEach(field => {
                 const element = overlay.querySelector(`[name="${field}"]`);
                 formValues[field] = element ? element.value : "";
             });
@@ -4973,6 +5120,8 @@ async function openCalendarEventModal(item, data) {
             const descriptionValue = formValues.description?.trim() || "";
             const iconInputValue = formValues.icon?.trim() || "";
             const colorInputValue = formValues.color?.trim() || "";
+            const startTimeValue = (formValues.startTimeLocal || startTimeLocal || "").trim();
+            const durationValue = Number(formValues.durationMinutes || durationMinutes || 0);
             const normalizedColorInput = ensureHexColor(colorInputValue, "");
             const effectiveIconValue = iconInputValue || seriesIconValue;
             const effectiveColorValue = normalizedColorInput || seriesColorValue;
@@ -4987,12 +5136,31 @@ async function openCalendarEventModal(item, data) {
             const allowedPlanIdsJson = shouldOverridePlans ? JSON.stringify(selectedPlanIds) : null;
             const seriesCategoryId = String(seriesPlanCategoryId || "");
             const instanceCategoryId = String(instancePlanCategoryId || "");
+            const toLocalDateTime = (dateKey, timeValue) => {
+                const [year, month, day] = dateKey.split("-").map(Number);
+                const [hours, minutes] = String(timeValue || "0:0").split(":").map(Number);
+                return new Date(year, (month || 1) - 1, day || 1, hours || 0, minutes || 0, 0, 0);
+            };
+            if (!startTimeValue || durationValue <= 0) {
+                showToast(t("session.requiredFields", "Title, time, and duration are required."), "error");
+                return;
+            }
+            const nextStartLocal = toLocalDateTime(sessionDateKey, startTimeValue);
+            const nextEndLocal = new Date(nextStartLocal.getTime() + durationValue * 60000);
+            const nextStartUtc = nextStartLocal.toISOString();
+            const nextEndUtc = nextEndLocal.toISOString();
+            const currentStartUtc = new Date(item.startUtc).getTime();
+            const currentEndUtc = item.endUtc ? new Date(item.endUtc).getTime() : currentStartUtc;
+            const startChanged = Math.abs(nextStartLocal.getTime() - currentStartUtc) > 1000;
+            const endChanged = Math.abs(nextEndLocal.getTime() - currentEndUtc) > 1000;
 
             const hasSeriesChanges =
                 titleValue !== (item.seriesTitle || "") ||
                 descriptionValue !== (item.seriesDescription || "") ||
                 String(normalizedRoomId || "") !== String(item.roomId || "") ||
                 String(normalizedInstructorId || "") !== String(item.instructorId || "") ||
+                startTimeValue !== startTimeLocal ||
+                durationValue !== durationMinutes ||
                 capacityValue !== Number(item.capacity || 0) ||
                 remoteCapacityValue !== Number(item.remoteCapacity || 0) ||
                 priceValue !== toCurrencyUnits(Number(item.priceCents || 0)) ||
@@ -5020,6 +5188,8 @@ async function openCalendarEventModal(item, data) {
                     payload.priceCents = toCents(priceValue);
                     payload.currency = item.currency || "ILS";
                 }
+                if (startChanged) payload.startUtc = nextStartUtc;
+                if (endChanged) payload.endUtc = nextEndUtc;
                 if (nextIconOverride !== (item.icon || "")) payload.icon = nextIconOverride;
                 if (nextColorOverride !== (item.color || "")) payload.color = nextColorOverride;
                 if (remoteInviteUrlValue !== (item.remoteInviteUrl || "")) payload.remoteInviteUrl = remoteInviteUrlValue;
@@ -5056,6 +5226,8 @@ async function openCalendarEventModal(item, data) {
                             color: effectiveColorValue,
                             defaultCapacity: capacityValue,
                             remoteCapacity: remoteCapacityValue,
+                            startTimeLocal: `${startTimeValue}:00`,
+                            durationMinutes: durationValue,
                             priceCents: toCents(priceValue),
                             remoteInviteUrl: remoteInviteUrlValue,
                             allowedPlanIdsJson,
@@ -5249,6 +5421,14 @@ async function openCalendarEventModal(item, data) {
     if (customerLookupInput && customerIdInput) {
         customerLookupInput.addEventListener("input", syncCustomerLookup);
         customerLookupInput.addEventListener("change", syncCustomerLookup);
+    }
+
+    if (options.focusRegistration && customerLookupInput) {
+        const registrationForm = overlay.querySelector(".registration-form");
+        if (registrationForm) {
+            registrationForm.scrollIntoView({ block: "center" });
+        }
+        customerLookupInput.focus();
     }
 
     const registerBtn = overlay.querySelector("#register-customer");
@@ -5621,6 +5801,59 @@ function bindIconPicker(container) {
     });
 }
 
+async function sendInviteEmail(id, subject, body) {
+    return apiPost(`/api/admin/users/${id}/invite-email`, { subject, body });
+}
+
+function openInviteEmailModal({ email, subject, body, onSend }) {
+    const existing = document.getElementById("invite-email-modal");
+    if (existing) {
+        clearModalEscape();
+        existing.remove();
+    }
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = inviteEmailTemplate({ email, subject, body });
+    const overlay = wrapper.firstElementChild;
+    if (!overlay) return;
+    document.body.appendChild(overlay);
+
+    let cleanupEscape = () => {};
+    const closeModal = () => {
+        cleanupEscape();
+        overlay.remove();
+    };
+    cleanupEscape = bindModalEscape(closeModal);
+    bindModalBackdrop(overlay);
+
+    const closeBtn = overlay.querySelector("#close-invite-email");
+    const cancelBtn = overlay.querySelector("#cancel-invite-email");
+    const sendBtn = overlay.querySelector("#send-invite-email");
+    if (closeBtn) closeBtn.addEventListener("click", closeModal);
+    if (cancelBtn) cancelBtn.addEventListener("click", closeModal);
+
+    if (sendBtn) {
+        sendBtn.addEventListener("click", async () => {
+            const subjectValue = overlay.querySelector("[name=\"inviteSubject\"]")?.value || "";
+            const bodyValue = overlay.querySelector("[name=\"inviteBody\"]")?.value || "";
+            sendBtn.disabled = true;
+            try {
+                const result = await onSend(subjectValue, bodyValue);
+                if (result?.fallback) {
+                    closeModal();
+                    return;
+                }
+                showToast(t("invite.emailSent", "Invite email sent."), "success");
+                closeModal();
+            } catch (error) {
+                const message = error?.message || t("invite.emailError", "Unable to send invite email.");
+                showToast(message, "error");
+            } finally {
+                sendBtn.disabled = false;
+            }
+        });
+    }
+}
+
 function openSessionModal(data, options = {}) {
     const existing = document.getElementById("session-modal");
     if (existing) {
@@ -5773,29 +6006,28 @@ function openSessionModal(data, options = {}) {
                     toDate.setDate(toDate.getDate() + generateWeeks * 7);
                     const to = toDateInputValue(toDate);
 
-                    for (const dayOfWeek of selectedDays) {
-                        const series = await apiPost("/api/admin/event-series", {
-                            title: payload.title,
-                            description: payload.description || "",
-                            instructorId: payload.instructorId,
-                            roomId: payload.roomId,
-                            planCategoryId: payload.planCategoryId,
-                            dayOfWeek,
-                            startTimeLocal: payload.startTimeLocal,
-                            durationMinutes: payload.durationMinutes,
-                            recurrenceIntervalWeeks,
-                            defaultCapacity: payload.capacity,
-                            remoteCapacity: payload.remoteCapacity,
-                            priceCents: payload.priceCents,
-                            currency: payload.currency,
-                            remoteInviteUrl: payload.remoteInviteUrl,
-                            allowedPlanIdsJson: payload.allowedPlanIdsJson,
-                            cancellationWindowHours: payload.cancellationWindowHours,
-                            isActive: true
-                        });
+                    const series = await apiPost("/api/admin/event-series", {
+                        title: payload.title,
+                        description: payload.description || "",
+                        instructorId: payload.instructorId,
+                        roomId: payload.roomId,
+                        planCategoryId: payload.planCategoryId,
+                        dayOfWeek: selectedDays[0],
+                        daysOfWeekJson: JSON.stringify(selectedDays),
+                        startTimeLocal: payload.startTimeLocal,
+                        durationMinutes: payload.durationMinutes,
+                        recurrenceIntervalWeeks,
+                        defaultCapacity: payload.capacity,
+                        remoteCapacity: payload.remoteCapacity,
+                        priceCents: payload.priceCents,
+                        currency: payload.currency,
+                        remoteInviteUrl: payload.remoteInviteUrl,
+                        allowedPlanIdsJson: payload.allowedPlanIdsJson,
+                        cancellationWindowHours: payload.cancellationWindowHours,
+                        isActive: true
+                    });
 
-                        await apiPost(`/api/admin/event-series/${series.id}/generate-instances?from=${startDate}&to=${to}`, {});
-                    }
+                    await apiPost(`/api/admin/event-series/${series.id}/generate-instances?from=${startDate}&to=${to}`, {});
                 } else {
                     const date = getValue("date") || focusDate;
                     await apiPost("/api/admin/event-instances", {
@@ -7026,15 +7258,16 @@ function openSeriesModal(series, data) {
 
     const isEdit = Boolean(series?.id);
     const dayNames = getWeekdayNames(0);
-    const selectedDay = series?.dayOfWeek ?? 2;
+    const selectedDays = resolveSeriesDays(series);
+    const safeDays = selectedDays.length ? selectedDays : [2];
     const dayOptions = [
-        { value: 1, label: dayNames[1] || t("weekday.monday", "Monday"), selected: selectedDay === 1 },
-        { value: 2, label: dayNames[2] || t("weekday.tuesday", "Tuesday"), selected: selectedDay === 2 },
-        { value: 3, label: dayNames[3] || t("weekday.wednesday", "Wednesday"), selected: selectedDay === 3 },
-        { value: 4, label: dayNames[4] || t("weekday.thursday", "Thursday"), selected: selectedDay === 4 },
-        { value: 5, label: dayNames[5] || t("weekday.friday", "Friday"), selected: selectedDay === 5 },
-        { value: 6, label: dayNames[6] || t("weekday.saturday", "Saturday"), selected: selectedDay === 6 },
-        { value: 0, label: dayNames[0] || t("weekday.sunday", "Sunday"), selected: selectedDay === 0 }
+        { value: 1, label: dayNames[1] || t("weekday.monday", "Monday"), selected: safeDays.includes(1) },
+        { value: 2, label: dayNames[2] || t("weekday.tuesday", "Tuesday"), selected: safeDays.includes(2) },
+        { value: 3, label: dayNames[3] || t("weekday.wednesday", "Wednesday"), selected: safeDays.includes(3) },
+        { value: 4, label: dayNames[4] || t("weekday.thursday", "Thursday"), selected: safeDays.includes(4) },
+        { value: 5, label: dayNames[5] || t("weekday.friday", "Friday"), selected: safeDays.includes(5) },
+        { value: 6, label: dayNames[6] || t("weekday.saturday", "Saturday"), selected: safeDays.includes(6) },
+        { value: 0, label: dayNames[0] || t("weekday.sunday", "Sunday"), selected: safeDays.includes(0) }
     ];
     const rooms = [
         { id: "", name: t("common.unassigned", "Unassigned"), selected: !series?.roomId },
@@ -7107,6 +7340,9 @@ function openSeriesModal(series, data) {
     };
     cleanupEscape = bindModalEscape(closeModal);
     bindModalBackdrop(overlay);
+    overlay.querySelectorAll(".color-field").forEach(field => bindColorField(field));
+    bindIconPicker(overlay);
+    bindIconPreview(overlay);
 
     const closeBtn = overlay.querySelector("#close-series");
     if (closeBtn) {
@@ -7131,6 +7367,13 @@ function openSeriesModal(series, data) {
             const getValue = (name) => overlay.querySelector(`[name="${name}"]`)?.value ?? "";
             const startTimeValue = getValue("startTimeLocal");
             const startTimeLocal = startTimeValue.length === 5 ? `${startTimeValue}:00` : startTimeValue;
+            const selectedDays = Array.from(overlay.querySelectorAll("input[name=\"seriesDays\"]:checked"))
+                .map(input => Number(input.value))
+                .filter(value => Number.isFinite(value));
+            if (!selectedDays.length) {
+                showToast(t("series.daysRequired", "Select at least one day of week."), "error");
+                return;
+            }
             const allowedPlanIds = Array.from(overlay.querySelectorAll("input[name=\"planIds\"]:checked"))
                 .map(input => input.value)
                 .filter(Boolean);
@@ -7142,7 +7385,8 @@ function openSeriesModal(series, data) {
                 instructorId: getValue("instructorId") || null,
                 roomId: getValue("roomId") || null,
                 planCategoryId: getValue("planCategoryId") || null,
-                dayOfWeek: Number(getValue("dayOfWeek")),
+                dayOfWeek: selectedDays[0],
+                daysOfWeekJson: JSON.stringify(selectedDays),
                 startTimeLocal,
                 durationMinutes: Number(getValue("durationMinutes")),
                 recurrenceIntervalWeeks: Number(getValue("recurrenceIntervalWeeks") || 1),
@@ -7785,6 +8029,16 @@ function openEventActionsMenu(anchor, item, data) {
           </span>
           ${t("calendar.actionShare", "Share")}
         </button>
+        <button type="button" data-action="register">
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" fill="none" stroke="currentColor" stroke-width="2"/>
+              <circle cx="8.5" cy="7" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/>
+              <path d="M19 8v6M16 11h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </span>
+          ${t("calendar.actionRegister", "Register student")}
+        </button>
         <button type="button" data-action="edit">
           <span class="icon" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
@@ -7803,17 +8057,15 @@ function openEventActionsMenu(anchor, item, data) {
         </button>
         <button type="button" data-action="delete">
           <span class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M6 7h12M9 7v12m6-12v12M10 4h4l1 2H9l1-2z"/></svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M8 6V4h8v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M19 6l-1 14H6L5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
           </span>
           ${t("calendar.actionDelete", "Delete session")}
         </button>
-        ${item.eventSeriesId ? `
-        <button type="button" data-action="delete-series">
-          <span class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M6 7h12M9 7v12m6-12v12M10 4h4l1 2H9l1-2z"/></svg>
-          </span>
-          ${t("calendar.actionDeleteSeries", "Delete series")}
-        </button>` : ""}
     `;
 
     document.body.appendChild(menu);
@@ -7847,6 +8099,10 @@ function openEventActionsMenu(anchor, item, data) {
         if (!button) return;
         const action = button.getAttribute("data-action");
         closeEventActionsMenu();
+        if (action === "register") {
+            await openCalendarEventModal(item, data, { focusRegistration: true });
+            return;
+        }
         if (action === "edit") {
             openCalendarEventModal(item, data);
             return;
@@ -7873,22 +8129,6 @@ function openEventActionsMenu(anchor, item, data) {
                 actor.send({ type: "REFRESH" });
             } catch (error) {
                 showToast(error.message || t("calendar.deleteError", "Unable to delete session."), "error");
-            }
-        }
-        if (action === "delete-series") {
-            const confirmed = await confirmWithModal({
-                title: t("events.deleteConfirmTitle", "Delete series?"),
-                message: t("events.deleteConfirmMessage", "This will remove the series and its future sessions."),
-                confirmLabel: t("events.delete", "Delete"),
-                cancelLabel: t("common.cancel", "Cancel")
-            });
-            if (!confirmed) return;
-            try {
-                await apiDelete(`/api/admin/event-series/${item.eventSeriesId}`);
-                showToast(t("events.deleteSuccess", "Series deleted."), "success");
-                actor.send({ type: "REFRESH" });
-            } catch (error) {
-                showToast(error.message || t("events.deleteError", "Unable to delete series."), "error");
             }
         }
     });

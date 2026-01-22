@@ -9,6 +9,7 @@ public class EventSeries
     public Guid? InstructorId { get; set; }
     public Guid? RoomId { get; set; }
     public int DayOfWeek { get; set; }
+    public string DaysOfWeekJson { get; set; } = "[]";
     public TimeSpan StartTimeLocal { get; set; }
     public int DurationMinutes { get; set; } = 60;
     public int RecurrenceIntervalWeeks { get; set; } = 1;

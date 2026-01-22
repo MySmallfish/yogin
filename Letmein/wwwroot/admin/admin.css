@@ -159,6 +159,19 @@ html[lang^="he"] .section-title {
   padding: 0 12px;
 }
 
+.nav a.nav-group {
+  padding-inline-start: 24px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+
+.nav a.nav-group:hover {
+  transform: none;
+  color: var(--ink);
+}
+
 .nav a {
   text-decoration: none;
   color: var(--slate);
@@ -752,15 +765,22 @@ button .icon svg {
 
 .calendar-grid {
   display: grid;
-  grid-template-columns: auto minmax(280px, 1fr);
-  grid-template-areas: "nav actions";
+  grid-template-columns: minmax(280px, 1fr) auto;
+  grid-template-areas: "actions nav";
   align-items: flex-start;
   column-gap: 16px;
   row-gap: 12px;
   direction: ltr;
 }
 
-.calendar-left {
+.calendar-actions-col {
+  grid-area: actions;
+  display: flex;
+  align-items: center;
+  min-width: 280px;
+}
+
+.calendar-nav-col {
   grid-area: nav;
   display: flex;
   flex-direction: column;
@@ -768,18 +788,17 @@ button .icon svg {
   min-width: 320px;
 }
 
-.calendar-left-row {
+.calendar-nav-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
-.calendar-right {
-  grid-area: actions;
+.calendar-views-stack {
   display: flex;
-  justify-content: flex-end;
-  min-width: 280px;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .calendar-views {
@@ -838,24 +857,24 @@ button .icon svg {
   height: 40px;
 }
 
-.calendar-actions {
+.calendar-actions-row {
   display: flex;
   gap: 8px;
   align-items: center;
   flex: 1 1 auto;
   flex-wrap: nowrap;
-  justify-content: flex-end;
+  justify-content: flex-start;
   overflow: visible;
   min-width: 0;
   width: 100%;
 }
 
-.calendar-actions #add-session {
+.calendar-actions-row #add-session {
   white-space: nowrap;
   flex-shrink: 0;
 }
 
-.calendar-actions button {
+.calendar-actions-row button {
   height: 40px;
   min-width: 32px;
 }
@@ -899,14 +918,21 @@ button .icon svg {
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
 }
 
-.calendar-actions input[type="search"] {
-  min-width: 160px;
-  flex: 1 1 260px;
+.calendar-actions-row input[type="search"] {
+  min-width: 0;
+  flex: 1 1 240px;
   border-radius: 999px;
   border: 1px solid var(--line);
   padding: 8px 14px;
   background: white;
   height: 40px;
+}
+
+@media (max-width: 1100px) {
+  .calendar-actions-row,
+  .calendar-nav-row {
+    flex-wrap: wrap;
+  }
 }
 
 .calendar-range {
@@ -917,21 +943,31 @@ button .icon svg {
   gap: 10px;
 }
 
-[dir="rtl"] .calendar-left {
+[dir="rtl"] .calendar-nav-col {
   align-items: flex-end;
 }
 
-[dir="rtl"] .calendar-left,
-[dir="rtl"] .calendar-right {
+[dir="rtl"] .calendar-grid {
+  grid-template-columns: auto minmax(280px, 1fr);
+  grid-template-areas: "nav actions";
+}
+
+[dir="rtl"] .calendar-actions-col,
+[dir="rtl"] .calendar-nav-col {
   direction: rtl;
 }
 
-[dir="rtl"] .calendar-right {
-  justify-content: flex-start;
+[dir="rtl"] .calendar-actions-row,
+[dir="rtl"] .calendar-nav-row {
+  flex-direction: row-reverse;
 }
 
-[dir="rtl"] .calendar-actions {
-  justify-content: flex-start;
+[dir="rtl"] .calendar-nav {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .calendar-views-stack {
+  align-items: flex-end;
 }
 
 [dir="rtl"] .nav-arrow .icon svg {
@@ -1988,7 +2024,7 @@ button .icon svg {
   margin-inline-start: auto;
 }
 
-.calendar-actions button {
+.calendar-actions-row button {
   white-space: nowrap;
 }
 
