@@ -3231,6 +3231,40 @@ adminApi.MapPost("/users/{id:guid}/invite", async (ClaimsPrincipal user, Guid id
     });
 });
 
+adminApi.MapPost("/users/{id:guid}/invite-email", async (ClaimsPrincipal user, Guid id, InviteEmailRequest request, AppDbContext db, HttpContext httpContext, IEmailService emailService) =>
+{
+    var studioId = GetStudioId(user);
+    var userRow = await db.Users.FirstOrDefaultAsync(u => u.Id == id && u.StudioId == studioId);
+    if (userRow == null)
+    {
+        return Results.NotFound();
+    }
+
+    if (!emailService.IsConfigured)
+    {
+        return Results.BadRequest(new { error = "Email delivery is not configured." });
+    }
+
+    var subject = request.Subject?.Trim() ?? "";
+    var body = request.Body?.Trim() ?? "";
+    if (string.IsNullOrWhiteSpace(subject) || string.IsNullOrWhiteSpace(body))
+    {
+        return Results.BadRequest(new { error = "Email subject and body are required." });
+    }
+
+    try
+    {
+        await emailService.SendAsync(userRow.Email, subject, body, httpContext.RequestAborted);
+    }
+    catch
+    {
+        return Results.Problem("Unable to send invite email.");
+    }
+
+    await LogAuditAsync(db, user, "Invite", "User", userRow.Id.ToString(), $"Sent invite email to {userRow.Email}");
+    return Results.Ok(new { sent = true });
+});
+
 adminApi.MapGet("/reports/occupancy", async (ClaimsPrincipal user, DateOnly? from, DateOnly? to, AppDbContext db) =>
 {
     var studioId = GetStudioId(user);

@@ -79,6 +79,8 @@ public record EventInstanceCreateRequest(
     string? Notes,
     EventStatus Status);
 
+public record InviteEmailRequest(string Subject, string Body);
+
 public record PlanRequest(string Name, PlanType Type, int WeeklyLimit, int PunchCardUses, int PriceCents, string Currency, bool RemoteOnly, int? ValidityDays, int? DailyLimit, string? CategoryIdsJson, bool Active);
 
 public record CouponRequest(string Code, DiscountType DiscountType, int DiscountValue, int MaxUses, DateTime? ValidFromUtc, DateTime? ValidToUtc, bool Active);

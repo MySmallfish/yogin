@@ -27,6 +27,8 @@ test('create a series and generate sessions', async ({ page }) => {
     response.url().includes('/generate-instances') && response.request().method() === 'POST'
   );
   await row.locator('button[data-generate]').click();
+  await expect(page.locator('#confirm-modal')).toBeVisible();
+  await page.click('#confirm-ok');
   const response = await generateResponse;
   expect(response.ok()).toBeTruthy();
 });

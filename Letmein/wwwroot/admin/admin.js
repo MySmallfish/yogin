@@ -244,7 +244,6 @@ const calendarTemplate = compileTemplate("calendar", `
         <div class="calendar-range">
           {{#if weekNumberLabel}}<span class="calendar-week-number">{{weekNumberLabel}}</span>{{/if}}
           <span>{{rangeLabel}}</span>
-          {{#if hebrewDateLabel}}<span class="calendar-hebrew">{{hebrewDateLabel}}</span>{{/if}}
         </div>
       </div>
       <div class="calendar-right">
@@ -690,6 +689,14 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
               </select>
             </div>
             <div>
+              <label>{{t "session.startTime" "Start time"}}</label>
+              <input type="time" name="startTimeLocal" value="{{startTimeLocal}}" />
+            </div>
+            <div>
+              <label>{{t "session.duration" "Duration (min)"}}</label>
+              <input type="number" name="durationMinutes" value="{{durationMinutes}}" />
+            </div>
+            <div>
               <label>{{t "session.room" "Room"}}</label>
               <select name="roomId">
                 {{#each rooms}}
@@ -1018,6 +1025,42 @@ const iconPickerTemplate = compileTemplate("icon-picker-modal", `
       </div>
       <div class="modal-footer">
         <button class="secondary" id="clear-icon">{{t "common.clear" "Clear"}}</button>
+      </div>
+    </div>
+  </div>
+`);
+
+const inviteEmailTemplate = compileTemplate("invite-email-modal", `
+  <div class="modal-overlay" id="invite-email-modal">
+    <div class="modal modal-compact modal-scroll">
+      <div class="modal-header">
+        <div>
+          <h3>{{t "invite.emailTitle" "Send invite email"}}</h3>
+          <div class="muted">{{t "invite.emailSubtitle" "Review and send the invite message."}}</div>
+        </div>
+        <button class="modal-close" id="close-invite-email" type="button" aria-label="{{t "common.close" "Close"}}"></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="span-2">
+            <label>{{t "invite.emailTo" "To"}}</label>
+            <input name="inviteTo" value="{{email}}" disabled />
+          </div>
+          <div class="span-2">
+            <label>{{t "invite.emailSubject" "Subject"}}</label>
+            <input name="inviteSubject" value="{{subject}}" />
+          </div>
+          <div class="span-2">
+            <label>{{t "invite.emailBody" "Message"}}</label>
+            <textarea name="inviteBody" rows="8">{{body}}</textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="modal-actions">
+          <button class="secondary" id="cancel-invite-email">{{t "common.cancel" "Cancel"}}</button>
+          <button id="send-invite-email" class="primary-action">{{t "invite.emailSend" "Send email"}}</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1382,7 +1425,7 @@ const customerModalTemplate = compileTemplate("customer-modal", `
           <label>{{t "customer.city" "City"}}</label>
           <input name="city" value="{{city}}" />
         </div>
-        <div class="span-2">
+        <div>
           <label>{{t "customer.address" "Address"}}</label>
           <input name="address" value="{{address}}" />
         </div>
@@ -2944,8 +2987,10 @@ function render(state) {
         ];
         const users = (data.users || [])
             .filter(item => {
-                if (!filters.role) return true;
                 const roles = item.roles || [item.role];
+                const guestOnly = roles.length === 1 && roles[0] === "Guest";
+                if (guestOnly) return false;
+                if (!filters.role) return true;
                 return roles.includes(filters.role);
             })
             .map(item => ({
@@ -3317,9 +3362,7 @@ function bindRouteActions(route, data, state) {
 
         navButtons.forEach(btn => {
             btn.addEventListener("click", () => {
-                const baseDirection = btn.getAttribute("data-nav") === "prev" ? -1 : 1;
-                const isRtl = document.documentElement.dir === "rtl";
-                const direction = isRtl ? baseDirection * -1 : baseDirection;
+                const direction = btn.getAttribute("data-nav") === "prev" ? -1 : 1;
                 const baseDate = dateInput?.value || currentDate;
                 const nextDate = shiftCalendarDate(currentView, baseDate, direction);
                 actor.send({ type: "SET_CALENDAR", view: currentView, date: nextDate });
@@ -3455,10 +3498,18 @@ function bindRouteActions(route, data, state) {
             btn.addEventListener("click", async () => {
                 const seriesId = btn.getAttribute("data-generate");
                 if (!seriesId) return;
+                const confirmed = await confirmWithModal({
+                    title: t("events.generateConfirmTitle", "Generate sessions?"),
+                    message: t("events.generateConfirmMessage", "This will create sessions for the next 8 weeks."),
+                    confirmLabel: t("events.generateConfirm", "Generate"),
+                    cancelLabel: t("common.cancel", "Cancel")
+                });
+                if (!confirmed) return;
                 btn.disabled = true;
                 try {
-                    await apiPost(`/api/admin/event-series/${seriesId}/generate-instances`, {});
-                    showToast(t("events.generateSuccess", "Sessions generated."), "success");
+                    const result = await apiPost(`/api/admin/event-series/${seriesId}/generate-instances`, {});
+                    const count = result?.created ?? 0;
+                    showToast(t("events.generateSuccess", "Sessions generated.") + ` ${count}`, "success");
                     actor.send({ type: "REFRESH" });
                 } catch (error) {
                     showToast(error.message || t("events.generateError", "Unable to generate sessions."), "error");
@@ -3763,25 +3814,29 @@ function bindRouteActions(route, data, state) {
             btn.addEventListener("click", async () => {
                 const id = btn.getAttribute("data-user-invite");
                 if (!id) return;
-                const userItem = userMap.get(String(id));
                 btn.disabled = true;
                 try {
-                    const invite = await requestInvite(id, true);
-                    showToast(`${t("users.inviteSent", "Invite sent to")} ${invite.email}.`, "success");
-                } catch (error) {
-                    try {
-                        const invite = await requestInvite(id, false);
-                        openInviteEmail(invite);
-                        showToast(t("users.inviteMailto", "Opened email client."), "success");
-                    } catch (fallbackError) {
-                        const message = String(fallbackError?.message || error?.message || "");
-                        if (message.toLowerCase().includes("configured") && userItem?.email) {
-                            window.location.href = `mailto:${userItem.email}`;
-                            showToast(t("users.inviteMailto", "Opened email client."), "success");
-                            return;
+                    const invite = await requestInvite(id, false);
+                    openInviteEmailModal({
+                        email: invite.email || "",
+                        subject: invite.subject || "",
+                        body: invite.body || "",
+                        onSend: async (subject, body) => {
+                            try {
+                                await sendInviteEmail(id, subject, body);
+                            } catch (error) {
+                                const message = String(error?.message || "");
+                                if (message.toLowerCase().includes("configured")) {
+                                    openInviteEmail({ email: invite.email, subject, body });
+                                    showToast(t("users.inviteMailto", "Opened email client."), "success");
+                                    return { fallback: true };
+                                }
+                                throw error;
+                            }
                         }
-                        showToast(message || t("users.inviteError", "Unable to generate invite."), "error");
-                    }
+                    });
+                } catch (error) {
+                    showToast(error.message || t("users.inviteError", "Unable to generate invite."), "error");
                 } finally {
                     btn.disabled = false;
                 }
@@ -3830,25 +3885,29 @@ function bindRouteActions(route, data, state) {
             btn.addEventListener("click", async () => {
                 const id = btn.getAttribute("data-guest-invite");
                 if (!id) return;
-                const guestItem = guestMap.get(String(id));
                 btn.disabled = true;
                 try {
-                    const invite = await requestInvite(id, true);
-                    showToast(`${t("guests.inviteSent", "Invite sent to")} ${invite.email}.`, "success");
-                } catch (error) {
-                    try {
-                        const invite = await requestInvite(id, false);
-                        openInviteEmail(invite);
-                        showToast(t("guests.inviteMailto", "Opened email client."), "success");
-                    } catch (fallbackError) {
-                        const message = String(fallbackError?.message || error?.message || "");
-                        if (message.toLowerCase().includes("configured") && guestItem?.email) {
-                            window.location.href = `mailto:${guestItem.email}`;
-                            showToast(t("guests.inviteMailto", "Opened email client."), "success");
-                            return;
+                    const invite = await requestInvite(id, false);
+                    openInviteEmailModal({
+                        email: invite.email || "",
+                        subject: invite.subject || "",
+                        body: invite.body || "",
+                        onSend: async (subject, body) => {
+                            try {
+                                await sendInviteEmail(id, subject, body);
+                            } catch (error) {
+                                const message = String(error?.message || "");
+                                if (message.toLowerCase().includes("configured")) {
+                                    openInviteEmail({ email: invite.email, subject, body });
+                                    showToast(t("guests.inviteMailto", "Opened email client."), "success");
+                                    return { fallback: true };
+                                }
+                                throw error;
+                            }
                         }
-                        showToast(message || t("guests.inviteError", "Unable to send invite."), "error");
-                    }
+                    });
+                } catch (error) {
+                    showToast(error.message || t("guests.inviteError", "Unable to send invite."), "error");
                 } finally {
                     btn.disabled = false;
                 }
@@ -4667,6 +4726,10 @@ async function openCalendarEventModal(item, data, options = {}) {
     const timeRange = end ? `${formatTimeOnly(start, timeZone)} - ${formatTimeOnly(end, timeZone)}` : formatTimeOnly(start, timeZone);
     const startLabel = formatFullDate(start, timeZone);
     const sessionDateKey = getDateKeyInTimeZone(start, timeZone);
+    const startTimeLocal = formatTimeInput(start, timeZone);
+    const durationMinutes = end
+        ? Math.max(1, Math.round((end.getTime() - start.getTime()) / 60000))
+        : (item.durationMinutes || 60);
 
     let roster = [];
     try {
@@ -4829,6 +4892,8 @@ async function openCalendarEventModal(item, data, options = {}) {
         seriesColor: seriesColorValue,
         colorValue,
         price: toCurrencyUnits(item.priceCents),
+        startTimeLocal,
+        durationMinutes,
         remoteCapacity: remoteCapacityValue,
         remoteInviteUrl: item.remoteInviteUrl || "",
         hasRemoteCapacity: remoteCapacityValue > 0,
@@ -5013,7 +5078,7 @@ async function openCalendarEventModal(item, data, options = {}) {
     if (saveBtn) {
         saveBtn.addEventListener("click", async () => {
             const formValues = {};
-            ["title", "description", "status", "roomId", "instructorId", "icon", "color", "capacity", "remoteCapacity", "price", "remoteInviteUrl", "planCategoryId"].forEach(field => {
+            ["title", "description", "status", "roomId", "instructorId", "icon", "color", "capacity", "remoteCapacity", "price", "remoteInviteUrl", "planCategoryId", "startTimeLocal", "durationMinutes"].forEach(field => {
                 const element = overlay.querySelector(`[name="${field}"]`);
                 formValues[field] = element ? element.value : "";
             });
@@ -5029,6 +5094,8 @@ async function openCalendarEventModal(item, data, options = {}) {
             const descriptionValue = formValues.description?.trim() || "";
             const iconInputValue = formValues.icon?.trim() || "";
             const colorInputValue = formValues.color?.trim() || "";
+            const startTimeValue = (formValues.startTimeLocal || startTimeLocal || "").trim();
+            const durationValue = Number(formValues.durationMinutes || durationMinutes || 0);
             const normalizedColorInput = ensureHexColor(colorInputValue, "");
             const effectiveIconValue = iconInputValue || seriesIconValue;
             const effectiveColorValue = normalizedColorInput || seriesColorValue;
@@ -5043,12 +5110,31 @@ async function openCalendarEventModal(item, data, options = {}) {
             const allowedPlanIdsJson = shouldOverridePlans ? JSON.stringify(selectedPlanIds) : null;
             const seriesCategoryId = String(seriesPlanCategoryId || "");
             const instanceCategoryId = String(instancePlanCategoryId || "");
+            const toLocalDateTime = (dateKey, timeValue) => {
+                const [year, month, day] = dateKey.split("-").map(Number);
+                const [hours, minutes] = String(timeValue || "0:0").split(":").map(Number);
+                return new Date(year, (month || 1) - 1, day || 1, hours || 0, minutes || 0, 0, 0);
+            };
+            if (!startTimeValue || durationValue <= 0) {
+                showToast(t("session.requiredFields", "Title, time, and duration are required."), "error");
+                return;
+            }
+            const nextStartLocal = toLocalDateTime(sessionDateKey, startTimeValue);
+            const nextEndLocal = new Date(nextStartLocal.getTime() + durationValue * 60000);
+            const nextStartUtc = nextStartLocal.toISOString();
+            const nextEndUtc = nextEndLocal.toISOString();
+            const currentStartUtc = new Date(item.startUtc).getTime();
+            const currentEndUtc = item.endUtc ? new Date(item.endUtc).getTime() : currentStartUtc;
+            const startChanged = Math.abs(nextStartLocal.getTime() - currentStartUtc) > 1000;
+            const endChanged = Math.abs(nextEndLocal.getTime() - currentEndUtc) > 1000;
 
             const hasSeriesChanges =
                 titleValue !== (item.seriesTitle || "") ||
                 descriptionValue !== (item.seriesDescription || "") ||
                 String(normalizedRoomId || "") !== String(item.roomId || "") ||
                 String(normalizedInstructorId || "") !== String(item.instructorId || "") ||
+                startTimeValue !== startTimeLocal ||
+                durationValue !== durationMinutes ||
                 capacityValue !== Number(item.capacity || 0) ||
                 remoteCapacityValue !== Number(item.remoteCapacity || 0) ||
                 priceValue !== toCurrencyUnits(Number(item.priceCents || 0)) ||
@@ -5076,6 +5162,8 @@ async function openCalendarEventModal(item, data, options = {}) {
                     payload.priceCents = toCents(priceValue);
                     payload.currency = item.currency || "ILS";
                 }
+                if (startChanged) payload.startUtc = nextStartUtc;
+                if (endChanged) payload.endUtc = nextEndUtc;
                 if (nextIconOverride !== (item.icon || "")) payload.icon = nextIconOverride;
                 if (nextColorOverride !== (item.color || "")) payload.color = nextColorOverride;
                 if (remoteInviteUrlValue !== (item.remoteInviteUrl || "")) payload.remoteInviteUrl = remoteInviteUrlValue;
@@ -5112,6 +5200,8 @@ async function openCalendarEventModal(item, data, options = {}) {
                             color: effectiveColorValue,
                             defaultCapacity: capacityValue,
                             remoteCapacity: remoteCapacityValue,
+                            startTimeLocal: `${startTimeValue}:00`,
+                            durationMinutes: durationValue,
                             priceCents: toCents(priceValue),
                             remoteInviteUrl: remoteInviteUrlValue,
                             allowedPlanIdsJson,
@@ -5683,6 +5773,59 @@ function bindIconPicker(container) {
             }
         });
     });
+}
+
+async function sendInviteEmail(id, subject, body) {
+    return apiPost(`/api/admin/users/${id}/invite-email`, { subject, body });
+}
+
+function openInviteEmailModal({ email, subject, body, onSend }) {
+    const existing = document.getElementById("invite-email-modal");
+    if (existing) {
+        clearModalEscape();
+        existing.remove();
+    }
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = inviteEmailTemplate({ email, subject, body });
+    const overlay = wrapper.firstElementChild;
+    if (!overlay) return;
+    document.body.appendChild(overlay);
+
+    let cleanupEscape = () => {};
+    const closeModal = () => {
+        cleanupEscape();
+        overlay.remove();
+    };
+    cleanupEscape = bindModalEscape(closeModal);
+    bindModalBackdrop(overlay);
+
+    const closeBtn = overlay.querySelector("#close-invite-email");
+    const cancelBtn = overlay.querySelector("#cancel-invite-email");
+    const sendBtn = overlay.querySelector("#send-invite-email");
+    if (closeBtn) closeBtn.addEventListener("click", closeModal);
+    if (cancelBtn) cancelBtn.addEventListener("click", closeModal);
+
+    if (sendBtn) {
+        sendBtn.addEventListener("click", async () => {
+            const subjectValue = overlay.querySelector("[name=\"inviteSubject\"]")?.value || "";
+            const bodyValue = overlay.querySelector("[name=\"inviteBody\"]")?.value || "";
+            sendBtn.disabled = true;
+            try {
+                const result = await onSend(subjectValue, bodyValue);
+                if (result?.fallback) {
+                    closeModal();
+                    return;
+                }
+                showToast(t("invite.emailSent", "Invite email sent."), "success");
+                closeModal();
+            } catch (error) {
+                const message = error?.message || t("invite.emailError", "Unable to send invite email.");
+                showToast(message, "error");
+            } finally {
+                sendBtn.disabled = false;
+            }
+        });
+    }
 }
 
 function openSessionModal(data, options = {}) {
@@ -7866,13 +8009,6 @@ function openEventActionsMenu(anchor, item, data) {
           </span>
           ${t("calendar.actionEdit", "Edit session")}
         </button>
-        ${hasSeries ? `
-        <button type="button" data-action="edit-series">
-          <span class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
-          </span>
-          ${t("calendar.actionEditSeries", "Edit series")}
-        </button>` : ""}
         <button type="button" data-action="duplicate">
           <span class="icon" aria-hidden="true">
             <svg viewBox="0 0 24 24">
@@ -7945,21 +8081,6 @@ function openEventActionsMenu(anchor, item, data) {
         }
         if (action === "edit") {
             openCalendarEventModal(item, data);
-            return;
-        }
-        if (action === "edit-series") {
-            if (!hasSeries) return;
-            try {
-                const series = await apiGet(`/api/admin/event-series/${item.eventSeriesId}`);
-                openSeriesModal(series, {
-                    rooms: data.rooms || [],
-                    instructors: data.instructors || [],
-                    plans: data.plans || [],
-                    planCategories: data.planCategories || []
-                });
-            } catch (error) {
-                showToast(error.message || t("series.loadError", "Unable to load series details."), "error");
-            }
             return;
         }
         if (action === "share") {
