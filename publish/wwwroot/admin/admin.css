@@ -160,11 +160,12 @@ html[lang^="he"] .section-title {
 }
 
 .nav a.nav-group {
-  padding-inline-start: 24px;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--muted);
+  padding-inline-start: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  color: var(--slate);
 }
 
 .nav a.nav-group:hover {
@@ -182,6 +183,11 @@ html[lang^="he"] .section-title {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.nav a:not(.nav-group) {
+  font-size: 13px;
+  padding-inline-start: 28px;
 }
 
 .nav-short {
@@ -427,6 +433,22 @@ html[dir="rtl"] .table,
 .markdown-preview a {
   color: var(--accent);
   text-decoration: underline;
+}
+
+.weekday-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.weekday-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--slate);
 }
 
 .tag-input {
