@@ -22,6 +22,7 @@ public record EventSeriesRequest(
     string Description,
     Guid? InstructorId,
     Guid? RoomId,
+    Guid? PlanCategoryId,
     int DayOfWeek,
     TimeSpan StartTimeLocal,
     int DurationMinutes,
@@ -44,6 +45,7 @@ public record EventInstanceUpdateRequest(
     string? Description,
     string? Icon,
     string? Color,
+    Guid? PlanCategoryId,
     DateTime? StartUtc,
     DateTime? EndUtc,
     int? Capacity,
@@ -64,6 +66,7 @@ public record EventInstanceCreateRequest(
     int DurationMinutes,
     Guid? InstructorId,
     Guid? RoomId,
+    Guid? PlanCategoryId,
     int Capacity,
     int RemoteCapacity,
     int PriceCents,
@@ -76,7 +79,7 @@ public record EventInstanceCreateRequest(
     string? Notes,
     EventStatus Status);
 
-public record PlanRequest(string Name, PlanType Type, int WeeklyLimit, int PunchCardUses, int PriceCents, string Currency, bool RemoteOnly, int? ValidityDays, int? DailyLimit, bool Active);
+public record PlanRequest(string Name, PlanType Type, int WeeklyLimit, int PunchCardUses, int PriceCents, string Currency, bool RemoteOnly, int? ValidityDays, int? DailyLimit, string? CategoryIdsJson, bool Active);
 
 public record CouponRequest(string Code, DiscountType DiscountType, int DiscountValue, int MaxUses, DateTime? ValidFromUtc, DateTime? ValidToUtc, bool Active);
 
@@ -131,6 +134,7 @@ public record CustomerUpdateRequest(
     bool IsArchived);
 
 public record CustomerStatusRequest(string Name, bool IsDefault, bool IsActive);
+public record PlanCategoryRequest(string Name, bool IsDefault, bool IsActive);
 
 public record UserCreateRequest(
     string Email,

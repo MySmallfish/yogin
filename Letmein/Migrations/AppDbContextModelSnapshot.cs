@@ -429,6 +429,9 @@ namespace Letmein.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("PlanCategoryId")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("PriceCents")
                         .HasColumnType("INTEGER");
 
@@ -507,6 +510,9 @@ namespace Letmein.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("PlanCategoryId")
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("PriceCents")
                         .HasColumnType("INTEGER");
@@ -791,6 +797,10 @@ namespace Letmein.Migrations
                     b.Property<bool>("Active")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("CategoryIdsJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("TEXT");
 
@@ -832,6 +842,35 @@ namespace Letmein.Migrations
                         .IsUnique();
 
                     b.ToTable("Plans");
+                });
+
+            modelBuilder.Entity("Letmein.Models.PlanCategory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("StudioId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudioId", "Name");
+
+                    b.ToTable("PlanCategories");
                 });
 
             modelBuilder.Entity("Letmein.Models.Room", b =>

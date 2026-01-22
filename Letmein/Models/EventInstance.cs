@@ -11,6 +11,7 @@ public class EventInstance
     public string? Description { get; set; }
     public string? Icon { get; set; }
     public string? Color { get; set; }
+    public Guid? PlanCategoryId { get; set; }
     public DateTime StartUtc { get; set; }
     public DateTime EndUtc { get; set; }
     public int Capacity { get; set; }

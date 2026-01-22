@@ -13,6 +13,7 @@ public class Plan
     public bool RemoteOnly { get; set; }
     public int? ValidityDays { get; set; }
     public int? DailyLimit { get; set; }
+    public string CategoryIdsJson { get; set; } = "[]";
     public bool Active { get; set; } = true;
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 }

@@ -1033,13 +1033,39 @@ button .icon svg {
   box-shadow: none;
 }
 
+.event-share {
+  position: absolute;
+  top: 38px;
+  right: 8px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--muted);
+  padding: 2px;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
 .event-actions .icon svg {
   width: 16px;
   height: 16px;
   fill: currentColor;
 }
 
+.event-share .icon svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2px;
+}
+
 .event-actions:hover {
+  border-color: var(--line);
+  color: var(--slate);
+  box-shadow: 0 6px 12px rgba(15, 23, 42, 0.08);
+}
+
+.event-share:hover {
   border-color: var(--line);
   color: var(--slate);
   box-shadow: 0 6px 12px rgba(15, 23, 42, 0.08);
@@ -1118,6 +1144,11 @@ button .icon svg {
 }
 
 [dir="rtl"] .event-actions {
+  right: auto;
+  left: 8px;
+}
+
+[dir="rtl"] .event-share {
   right: auto;
   left: 8px;
 }

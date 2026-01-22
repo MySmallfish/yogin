@@ -290,6 +290,11 @@ const calendarTemplate = compileTemplate("calendar", `
                       </svg>
                     </span>
                   </button>
+                  <button class="event-share" type="button" aria-label="{{t "calendar.actionShare" "Share"}}">
+                    <span class="icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24"><path d="M18 8a3 3 0 1 0-2.83-4H15a3 3 0 0 0 .17 1l-7.1 4.13a3 3 0 0 0-2.17-1 3 3 0 1 0 2.17 5l7.1 4.13A3 3 0 1 0 15 16a3 3 0 0 0 .17 1l-7.1-4.13a3 3 0 0 0 0-2.74l7.1-4.13A3 3 0 0 0 18 8z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                    </span>
+                  </button>
                 {{/unless}}
                 <div class="event-time">{{timeRange}}</div>
                 <div class="event-title">
@@ -340,6 +345,11 @@ const calendarTemplate = compileTemplate("calendar", `
                             <circle cx="12" cy="12" r="2"></circle>
                             <circle cx="19" cy="12" r="2"></circle>
                           </svg>
+                        </span>
+                      </button>
+                      <button class="event-share" type="button" aria-label="{{t "calendar.actionShare" "Share"}}">
+                        <span class="icon" aria-hidden="true">
+                          <svg viewBox="0 0 24 24"><path d="M18 8a3 3 0 1 0-2.83-4H15a3 3 0 0 0 .17 1l-7.1 4.13a3 3 0 0 0-2.17-1 3 3 0 1 0 2.17 5l7.1 4.13A3 3 0 1 0 15 16a3 3 0 0 0 .17 1l-7.1-4.13a3 3 0 0 0 0-2.74l7.1-4.13A3 3 0 0 0 18 8z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
                         </span>
                       </button>
                     {{/unless}}
@@ -732,6 +742,14 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
               <label>{{t "session.zoomInvite" "Zoom invite link"}}</label>
               <input name="remoteInviteUrl" value="{{remoteInviteUrl}}" placeholder="https://zoom.us/j/..." />
             </div>
+            <div>
+              <label>{{t "session.category" "Category"}}</label>
+              <select name="planCategoryId">
+                {{#each planCategories}}
+                  <option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>
+                {{/each}}
+              </select>
+            </div>
             <div class="span-2">
               <label>{{t "series.allowedPlans" "Allowed plans"}}</label>
               <div class="plan-options">
@@ -1064,6 +1082,14 @@ const sessionModalTemplate = compileTemplate("session-modal", `
           <input name="remoteInviteUrl" placeholder="{{t "session.zoomInvitePlaceholder" "https://zoom.us/j/..."}}" />
         </div>
         <div>
+          <label>{{t "session.category" "Category"}}</label>
+          <select name="planCategoryId">
+            {{#each planCategories}}
+              <option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>
+            {{/each}}
+          </select>
+        </div>
+        <div>
           <label>{{t "session.cancellationWindow" "Cancellation window (hours)"}}</label>
           <input type="number" name="cancellationWindowHours" value="" />
         </div>
@@ -1221,6 +1247,14 @@ const seriesModalTemplate = compileTemplate("series-modal", `
           <label>{{t "series.room" "Room"}}</label>
           <select name="roomId">
             {{#each rooms}}
+              <option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>
+            {{/each}}
+          </select>
+        </div>
+        <div>
+          <label>{{t "series.category" "Category"}}</label>
+          <select name="planCategoryId">
+            {{#each planCategories}}
               <option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>
             {{/each}}
           </select>
@@ -1765,15 +1799,28 @@ const planModalTemplate = compileTemplate("plan-modal", `
           <label>{{t "plans.dailyLimit" "Daily limit"}}</label>
           <input type="number" name="planDailyLimit" value="{{dailyLimit}}" placeholder="{{t "plans.dailyLimitNone" "No limit"}}" />
         </div>
-        <div>
-          <label>{{t "plans.active" "Active"}}</label>
-          <select name="planActive">
-            {{#each activeOptions}}
-              <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
-            {{/each}}
-          </select>
+          <div>
+            <label>{{t "plans.active" "Active"}}</label>
+            <select name="planActive">
+              {{#each activeOptions}}
+                <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+              {{/each}}
+            </select>
+          </div>
+          {{#if categories.length}}
+          <div class="span-2">
+            <label>{{t "plans.categories" "Categories"}}</label>
+            <div class="plan-options">
+              {{#each categories}}
+                <label class="plan-pill">
+                  <input type="checkbox" name="planCategoryIds" value="{{id}}" {{#if selected}}checked{{/if}} />
+                  <span class="plan-name">{{name}}</span>
+                </label>
+              {{/each}}
+            </div>
+          </div>
+          {{/if}}
         </div>
-      </div>
       <div class="modal-actions">
         <button id="save-plan" class="primary-action">
           <span class="icon" aria-hidden="true">
@@ -1783,6 +1830,67 @@ const planModalTemplate = compileTemplate("plan-modal", `
           </span>
           {{saveLabel}}
         </button>
+      </div>
+    </div>
+  </div>
+`);
+
+const planCategoryModalTemplate = compileTemplate("plan-category-modal", `
+  <div class="modal-overlay" id="plan-category-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h3>{{t "planCategory.title" "Plan categories"}}</h3>
+          <div class="muted">{{t "planCategory.subtitle" "Group plans into categories and set defaults."}}</div>
+        </div>
+        <button class="modal-close" id="close-plan-categories" type="button" aria-label="{{t "common.close" "Close"}}"></button>
+      </div>
+      <input type="hidden" name="planCategoryId" value="{{categoryId}}" />
+      <div class="form-grid status-form">
+        <div>
+          <label>{{t "planCategory.name" "Category name"}}</label>
+          <input name="planCategoryName" value="{{categoryName}}" />
+        </div>
+        <div>
+          <label>{{t "planCategory.default" "Default"}}</label>
+          <select name="planCategoryDefault">
+            <option value="false" {{#unless categoryDefault}}selected{{/unless}}>{{t "common.no" "No"}}</option>
+            <option value="true" {{#if categoryDefault}}selected{{/if}}>{{t "common.yes" "Yes"}}</option>
+          </select>
+        </div>
+        <div>
+          <label>{{t "planCategory.active" "Active"}}</label>
+          <select name="planCategoryActive">
+            <option value="true" {{#if categoryActive}}selected{{/if}}>{{t "common.yes" "Yes"}}</option>
+            <option value="false" {{#unless categoryActive}}selected{{/unless}}>{{t "common.no" "No"}}</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions" style="margin-top:12px;">
+        <button id="save-plan-category">{{saveLabel}}</button>
+        <button class="secondary" id="reset-plan-category">{{t "planCategory.new" "New category"}}</button>
+      </div>
+      <div style="margin-top:20px;">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>{{t "planCategory.name" "Category name"}}</th>
+              <th>{{t "planCategory.default" "Default"}}</th>
+              <th>{{t "planCategory.active" "Active"}}</th>
+              <th>{{t "planCategory.actions" "Actions"}}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each categories}}
+            <tr>
+              <td>{{name}}</td>
+              <td>{{defaultLabel}}</td>
+              <td>{{activeLabel}}</td>
+              <td><button class="secondary" data-plan-category-edit="{{id}}">{{t "common.edit" "Edit"}}</button></td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -1870,6 +1978,7 @@ const plansTemplate = compileTemplate("plans", `
   <div class="notice">{{t "plans.notice" "Manage membership pricing, limits, and availability."}}</div>
   <div class="toolbar">
     <button id="add-plan">{{t "plans.add" "Add plan"}}</button>
+    <button class="secondary" id="manage-plan-categories">{{t "plans.manageCategories" "Manage categories"}}</button>
   </div>
   <div style="margin-top:24px;">
     <table class="table">
@@ -2565,31 +2674,36 @@ const adminMachine = createMachine({
                     const view = input.calendarView || "week";
                     const focusDate = input.calendarDate || toDateInputValue(new Date());
                     const range = getCalendarRange(view, focusDate, studio.weekStartsOn ?? 0);
-                    const [items, rooms, instructors, customers, plans] = await Promise.all([
+                    const [items, rooms, instructors, customers, plans, planCategories] = await Promise.all([
                         apiGet(`/api/admin/calendar?from=${range.from}&to=${range.to}`),
                         apiGet("/api/admin/rooms"),
                         apiGet("/api/admin/instructors"),
                         apiGet("/api/admin/customers"),
-                        apiGet("/api/admin/plans")
+                        apiGet("/api/admin/plans"),
+                        apiGet("/api/admin/plan-categories")
                     ]);
-                    return { studio, items, rooms, instructors, customers, plans, calendar: { view, focusDate, studio, range } };
+                    return { studio, items, rooms, instructors, customers, plans, planCategories, calendar: { view, focusDate, studio, range } };
                 }
                 case "events": {
-                    const [series, rooms, instructors, plans] = await Promise.all([
+                    const [series, rooms, instructors, plans, planCategories] = await Promise.all([
                         apiGet("/api/admin/event-series"),
                         apiGet("/api/admin/rooms"),
                         apiGet("/api/admin/instructors"),
-                        apiGet("/api/admin/plans")
+                        apiGet("/api/admin/plans"),
+                        apiGet("/api/admin/plan-categories")
                     ]);
-                    return { studio, series, rooms, instructors, plans };
+                    return { studio, series, rooms, instructors, plans, planCategories };
                 }
                 case "rooms": {
                     const rooms = await apiGet("/api/admin/rooms");
                     return { studio, rooms };
                 }
                 case "plans": {
-                    const plans = await apiGet("/api/admin/plans");
-                    return { studio, plans };
+                    const [plans, planCategories] = await Promise.all([
+                        apiGet("/api/admin/plans"),
+                        apiGet("/api/admin/plan-categories")
+                    ]);
+                    return { studio, plans, planCategories };
                 }
                 case "audit": {
                     const from = getQueryParam("from") || "";
@@ -3245,7 +3359,7 @@ function bindRouteActions(route, data, state) {
         const itemMap = new Map((data.items || []).map(item => [String(item.id), item]));
         document.querySelectorAll(".calendar-event[data-event], .calendar-list [data-event]").forEach(card => {
             card.addEventListener("click", (event) => {
-                if (event.target.closest(".event-actions")) return;
+                if (event.target.closest(".event-actions, .event-share")) return;
                 event.stopPropagation();
                 const birthdayNames = getBirthdayNamesFromElement(card);
                 if (birthdayNames) {
@@ -3268,6 +3382,17 @@ function bindRouteActions(route, data, state) {
                 const item = itemMap.get(String(id));
                 if (!item || item.isHoliday || item.isBirthday) return;
                 openEventActionsMenu(button, item, data);
+            });
+        });
+        document.querySelectorAll(".event-share").forEach(button => {
+            button.addEventListener("click", async (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                const card = button.closest(".calendar-event");
+                const id = card?.getAttribute("data-event");
+                const item = itemMap.get(String(id));
+                if (!item || item.isHoliday || item.isBirthday) return;
+                await shareSessionLink(item, data);
             });
         });
         bindCalendarInteractions(data, itemMap);
@@ -3377,11 +3502,17 @@ function bindRouteActions(route, data, state) {
 
     if (route === "plans") {
         const addBtn = document.getElementById("add-plan");
+        const manageCategoriesBtn = document.getElementById("manage-plan-categories");
         const planMap = new Map((data.plans || []).map(plan => [String(plan.id), plan]));
 
         if (addBtn) {
             addBtn.addEventListener("click", () => {
-                openPlanModal(null);
+                openPlanModal(null, data.planCategories || []);
+            });
+        }
+        if (manageCategoriesBtn) {
+            manageCategoriesBtn.addEventListener("click", () => {
+                openPlanCategoryModal(data.planCategories || []);
             });
         }
 
@@ -3390,7 +3521,7 @@ function bindRouteActions(route, data, state) {
                 const id = btn.getAttribute("data-plan-edit");
                 const plan = planMap.get(String(id));
                 if (!plan) return;
-                openPlanModal(plan);
+                openPlanModal(plan, data.planCategories || []);
             });
         });
     }
@@ -4623,7 +4754,11 @@ async function openCalendarEventModal(item, data) {
     const hasPlanOverride = item.hasPlanOverride === true;
     const effectivePlanIds = hasPlanOverride ? instancePlanIds : seriesPlanIds;
     const allowedPlanSet = new Set(effectivePlanIds);
-    const planOptions = (data.plans || []).map(plan => ({
+    const seriesPlanCategoryId = item.seriesPlanCategoryId || "";
+    const instancePlanCategoryId = item.instancePlanCategoryId || "";
+    const effectivePlanCategoryId = instancePlanCategoryId || seriesPlanCategoryId || "";
+    const planCategories = buildPlanCategoryOptions(data.planCategories || [], effectivePlanCategoryId);
+    const planOptions = filterPlansByCategory(data.plans || [], effectivePlanCategoryId).map(plan => ({
         id: plan.id,
         name: plan.name,
         price: formatPlainPrice(plan.priceCents),
@@ -4644,6 +4779,7 @@ async function openCalendarEventModal(item, data) {
         rosterHtml,
         customers,
         plans: planOptions,
+        planCategories,
         titleSuggestions,
         titleSuggestionId,
         capacitySummary,
@@ -4685,6 +4821,17 @@ async function openCalendarEventModal(item, data) {
     const closeBtn = overlay.querySelector("#close-modal");
     if (closeBtn) {
         closeBtn.addEventListener("click", closeModal);
+    }
+
+    const planCategorySelect = overlay.querySelector("[name=\"planCategoryId\"]");
+    const planOptionsContainer = overlay.querySelector(".plan-options");
+    if (planCategorySelect && planOptionsContainer) {
+        planCategorySelect.addEventListener("change", () => {
+            const selectedIds = new Set(Array.from(overlay.querySelectorAll("input[name=\"instancePlanIds\"]:checked"))
+                .map(input => input.value));
+            const categoryId = planCategorySelect.value || "";
+            renderPlanOptions(planOptionsContainer, data.plans || [], selectedIds, categoryId, "instancePlanIds");
+        });
     }
 
     const instructorBtn = overlay.querySelector("#open-instructor");
@@ -4810,7 +4957,7 @@ async function openCalendarEventModal(item, data) {
     if (saveBtn) {
         saveBtn.addEventListener("click", async () => {
             const formValues = {};
-            ["title", "description", "status", "roomId", "instructorId", "icon", "color", "capacity", "remoteCapacity", "price", "remoteInviteUrl"].forEach(field => {
+            ["title", "description", "status", "roomId", "instructorId", "icon", "color", "capacity", "remoteCapacity", "price", "remoteInviteUrl", "planCategoryId"].forEach(field => {
                 const element = overlay.querySelector(`[name="${field}"]`);
                 formValues[field] = element ? element.value : "";
             });
@@ -4821,6 +4968,7 @@ async function openCalendarEventModal(item, data) {
             const remoteCapacityValue = Number(formValues.remoteCapacity || item.remoteCapacity || 0);
             const priceValue = Number(formValues.price || toCurrencyUnits(item.priceCents));
             const remoteInviteUrlValue = formValues.remoteInviteUrl || "";
+            const selectedPlanCategoryId = formValues.planCategoryId || "";
             const titleValue = formValues.title?.trim() || "";
             const descriptionValue = formValues.description?.trim() || "";
             const iconInputValue = formValues.icon?.trim() || "";
@@ -4837,6 +4985,8 @@ async function openCalendarEventModal(item, data) {
             const seriesSignature = seriesPlanIds.map(id => String(id)).sort().join(",");
             const shouldOverridePlans = hasPlanOverride || selectedPlanSignature !== seriesSignature;
             const allowedPlanIdsJson = shouldOverridePlans ? JSON.stringify(selectedPlanIds) : null;
+            const seriesCategoryId = String(seriesPlanCategoryId || "");
+            const instanceCategoryId = String(instancePlanCategoryId || "");
 
             const hasSeriesChanges =
                 titleValue !== (item.seriesTitle || "") ||
@@ -4849,6 +4999,7 @@ async function openCalendarEventModal(item, data) {
                 remoteInviteUrlValue !== (item.remoteInviteUrl || "") ||
                 effectiveIconValue !== seriesIconValue ||
                 effectiveColorValue !== seriesColorValue ||
+                String(selectedPlanCategoryId || "") !== seriesCategoryId ||
                 selectedPlanSignature !== seriesSignature;
 
             const saveInstance = async (applyToSeries) => {
@@ -4856,6 +5007,8 @@ async function openCalendarEventModal(item, data) {
                 const statusNext = formValues.status || statusValue;
                 const roomChanged = String(normalizedRoomId || "") !== String(item.roomId || "");
                 const instructorChanged = String(normalizedInstructorId || "") !== String(item.instructorId || "");
+                const normalizedPlanCategoryId = String(selectedPlanCategoryId || "");
+                const hasCategoryOverride = instanceCategoryId !== "";
                 if (titleValue !== (item.seriesTitle || "")) payload.title = titleValue;
                 if (descriptionValue !== (item.seriesDescription || "")) payload.description = descriptionValue;
                 if (statusNext !== statusValue) payload.status = statusNext;
@@ -4871,6 +5024,11 @@ async function openCalendarEventModal(item, data) {
                 if (nextColorOverride !== (item.color || "")) payload.color = nextColorOverride;
                 if (remoteInviteUrlValue !== (item.remoteInviteUrl || "")) payload.remoteInviteUrl = remoteInviteUrlValue;
                 if (allowedPlanIdsJson !== null) payload.allowedPlanIdsJson = allowedPlanIdsJson;
+                if (hasCategoryOverride && normalizedPlanCategoryId === seriesCategoryId) {
+                    payload.planCategoryId = "00000000-0000-0000-0000-000000000000";
+                } else if (normalizedPlanCategoryId !== seriesCategoryId) {
+                    payload.planCategoryId = normalizedPlanCategoryId || "00000000-0000-0000-0000-000000000000";
+                }
 
                 await apiPut(`/api/admin/event-instances/${item.id}`, payload);
 
@@ -4900,12 +5058,14 @@ async function openCalendarEventModal(item, data) {
                             remoteCapacity: remoteCapacityValue,
                             priceCents: toCents(priceValue),
                             remoteInviteUrl: remoteInviteUrlValue,
-                            allowedPlanIdsJson
+                            allowedPlanIdsJson,
+                            planCategoryId: normalizedPlanCategoryId || null
                         };
                         openSeriesModal(updatedSeries, {
                             rooms: data.rooms || [],
                             instructors: data.instructors || [],
-                            plans: plans || []
+                            plans: plans || [],
+                            planCategories: data.planCategories || []
                         });
                     } catch (error) {
                         showToast(error.message || t("series.loadError", "Unable to load series details."), "error");
@@ -5472,7 +5632,10 @@ function openSessionModal(data, options = {}) {
     const focusDate = options.date || calendarMeta.focusDate || toDateInputValue(new Date());
     const prefill = options.prefill || {};
     const allowedPlanSet = new Set((prefill.allowedPlanIds || []).map(id => String(id)));
-    const plans = (data.plans || []).map(plan => ({
+    const defaultPlanCategoryId = (data.planCategories || []).find(category => category.isDefault && category.isActive)?.id || "";
+    const selectedPlanCategoryId = prefill.planCategoryId || defaultPlanCategoryId || "";
+    const planCategories = buildPlanCategoryOptions(data.planCategories || [], selectedPlanCategoryId);
+    const plans = filterPlansByCategory(data.plans || [], selectedPlanCategoryId).map(plan => ({
         id: plan.id,
         name: plan.name,
         price: formatPlainPrice(plan.priceCents),
@@ -5485,6 +5648,7 @@ function openSessionModal(data, options = {}) {
         rooms: data.rooms || [],
         instructors: data.instructors || [],
         plans,
+        planCategories,
         titleSuggestions,
         titleSuggestionId
     });
@@ -5542,6 +5706,7 @@ function openSessionModal(data, options = {}) {
         setValue("price", prefill.price);
         setValue("remoteInviteUrl", prefill.remoteInviteUrl);
         setValue("cancellationWindowHours", prefill.cancellationWindowHours);
+        setValue("planCategoryId", prefill.planCategoryId || selectedPlanCategoryId);
     }
 
     const setMode = (mode) => {
@@ -5567,11 +5732,13 @@ function openSessionModal(data, options = {}) {
             const selectedPlanIds = Array.from(overlay.querySelectorAll("input[name=\"sessionPlanIds\"]:checked"))
                 .map(input => input.value)
                 .filter(Boolean);
+            const planCategoryId = getValue("planCategoryId") || "";
             const payload = {
                 title: getValue("title"),
                 description: getValue("description"),
                 instructorId: getValue("instructorId") || null,
                 roomId: getValue("roomId") || null,
+                planCategoryId: planCategoryId || null,
                 startTimeLocal: `${getValue("startTimeLocal")}:00`,
                 durationMinutes: Number(getValue("durationMinutes") || 0),      
                 capacity: Number(getValue("capacity") || 0),
@@ -5612,6 +5779,7 @@ function openSessionModal(data, options = {}) {
                             description: payload.description || "",
                             instructorId: payload.instructorId,
                             roomId: payload.roomId,
+                            planCategoryId: payload.planCategoryId,
                             dayOfWeek,
                             startTimeLocal: payload.startTimeLocal,
                             durationMinutes: payload.durationMinutes,
@@ -5638,6 +5806,7 @@ function openSessionModal(data, options = {}) {
                         durationMinutes: payload.durationMinutes,
                         instructorId: payload.instructorId,
                         roomId: payload.roomId,
+                        planCategoryId: payload.planCategoryId,
                         capacity: payload.capacity,
                         remoteCapacity: payload.remoteCapacity,
                         priceCents: payload.priceCents,
@@ -6186,6 +6355,115 @@ function openCustomerStatusModal(statuses) {
     }
 }
 
+function openPlanCategoryModal(categories) {
+    const existing = document.getElementById("plan-category-modal");
+    if (existing) {
+        clearModalEscape();
+        existing.remove();
+    }
+
+    const rows = (categories || []).map(category => ({
+        ...category,
+        defaultLabel: category.isDefault ? t("common.yes", "Yes") : t("common.no", "No"),
+        activeLabel: category.isActive ? t("common.yes", "Yes") : t("common.no", "No")
+    }));
+
+    const modalMarkup = planCategoryModalTemplate({
+        categories: rows,
+        categoryId: "",
+        categoryName: "",
+        categoryDefault: false,
+        categoryActive: true,
+        saveLabel: t("planCategory.add", "Add category")
+    });
+
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = modalMarkup;
+    const overlay = wrapper.firstElementChild;
+    if (!overlay) return;
+
+    document.body.appendChild(overlay);
+
+    let cleanupEscape = () => {};
+    const closeModal = () => {
+        cleanupEscape();
+        overlay.remove();
+    };
+    cleanupEscape = bindModalEscape(closeModal);
+    bindModalBackdrop(overlay);
+
+    const closeBtn = overlay.querySelector("#close-plan-categories");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", closeModal);
+    }
+
+    const planCategorySelect = overlay.querySelector("[name=\"planCategoryId\"]");
+    const planOptionsContainer = overlay.querySelector(".plan-options");
+    if (planCategorySelect && planOptionsContainer) {
+        planCategorySelect.addEventListener("change", () => {
+            const selectedIds = new Set(Array.from(overlay.querySelectorAll("input[name=\"sessionPlanIds\"]:checked"))
+                .map(input => input.value));
+            const categoryId = planCategorySelect.value || "";
+            renderPlanOptions(planOptionsContainer, data.plans || [], selectedIds, categoryId, "sessionPlanIds");
+        });
+    }
+
+    const saveBtn = overlay.querySelector("#save-plan-category");
+    const resetBtn = overlay.querySelector("#reset-plan-category");
+    const setForm = (category) => {
+        overlay.querySelector("[name=\"planCategoryId\"]").value = category?.id || "";
+        overlay.querySelector("[name=\"planCategoryName\"]").value = category?.name || "";
+        overlay.querySelector("[name=\"planCategoryDefault\"]").value = category?.isDefault ? "true" : "false";
+        overlay.querySelector("[name=\"planCategoryActive\"]").value = category?.isActive === false ? "false" : "true";
+        if (saveBtn) {
+            saveBtn.textContent = category?.id
+                ? t("planCategory.update", "Update category")
+                : t("planCategory.add", "Add category");
+        }
+    };
+
+    if (resetBtn) {
+        resetBtn.addEventListener("click", () => setForm(null));
+    }
+
+    overlay.querySelectorAll("[data-plan-category-edit]").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const id = btn.getAttribute("data-plan-category-edit");
+            const category = rows.find(item => String(item.id) === String(id));
+            if (!category) return;
+            setForm(category);
+        });
+    });
+
+    if (saveBtn) {
+        saveBtn.addEventListener("click", async () => {
+            const getValue = (name) => overlay.querySelector(`[name="${name}"]`)?.value || "";
+            const categoryId = getValue("planCategoryId");
+            const name = getValue("planCategoryName").trim();
+            const isDefault = getValue("planCategoryDefault") === "true";
+            const isActive = getValue("planCategoryActive") === "true";
+
+            if (!name) {
+                showToast(t("planCategory.nameRequired", "Category name is required."), "error");
+                return;
+            }
+
+            const payload = { name, isDefault, isActive };
+            try {
+                if (categoryId) {
+                    await apiPut(`/api/admin/plan-categories/${categoryId}`, payload);
+                } else {
+                    await apiPost("/api/admin/plan-categories", payload);
+                }
+                closeModal();
+                actor.send({ type: "REFRESH" });
+            } catch (error) {
+                showToast(error.message || t("planCategory.saveError", "Unable to save category."), "error");
+            }
+        });
+    }
+}
+
 function openUserModal(userItem) {
     const existing = document.getElementById("user-modal");
     if (existing) {
@@ -6587,7 +6865,7 @@ function openRoomModal(room) {
     }
 }
 
-function openPlanModal(plan) {
+function openPlanModal(plan, planCategories = []) {
     const existing = document.getElementById("plan-modal");
     if (existing) {
         clearModalEscape();
@@ -6595,6 +6873,21 @@ function openPlanModal(plan) {
     }
 
     const isEdit = Boolean(plan?.id);
+    const categoryIds = parsePlanCategoryIds(plan);
+    const selectedCategoryIds = new Set(categoryIds.map(id => String(id)));
+    if (!isEdit && selectedCategoryIds.size === 0) {
+        const defaultCategory = (planCategories || []).find(category => category.isDefault && category.isActive);
+        if (defaultCategory) {
+            selectedCategoryIds.add(String(defaultCategory.id));
+        }
+    }
+    const categoryOptions = (planCategories || [])
+        .filter(category => category.isActive !== false || selectedCategoryIds.has(String(category.id)))
+        .map(category => ({
+            id: category.id,
+            name: category.name,
+            selected: selectedCategoryIds.has(String(category.id))
+        }));
     const typeOptions = [
         {
             value: "WeeklyLimit",
@@ -6629,7 +6922,8 @@ function openPlanModal(plan) {
         remoteOnly: plan?.remoteOnly ?? false,
         validityDays: plan?.validityDays ?? "",
         dailyLimit: plan?.dailyLimit ?? "",
-        activeOptions
+        activeOptions,
+        categories: categoryOptions
     });
 
     const wrapper = document.createElement("div");
@@ -6690,6 +6984,10 @@ function openPlanModal(plan) {
                 return;
             }
 
+            const selectedCategoryIds = Array.from(overlay.querySelectorAll("input[name=\"planCategoryIds\"]:checked"))
+                .map(input => input.value)
+                .filter(Boolean);
+
             const payload = {
                 name,
                 type,
@@ -6700,6 +6998,7 @@ function openPlanModal(plan) {
                 remoteOnly,
                 validityDays: Number.isFinite(validityDays) && validityDays > 0 ? validityDays : null,
                 dailyLimit: Number.isFinite(dailyLimit) && dailyLimit > 0 ? dailyLimit : null,
+                categoryIdsJson: JSON.stringify(selectedCategoryIds),
                 active
             };
 
@@ -6755,7 +7054,10 @@ function openSeriesModal(series, data) {
     ];
     const allowedPlanIds = parseGuidListJson(series?.allowedPlanIdsJson).map(id => String(id));
     const allowedSet = new Set(allowedPlanIds);
-    const plans = (data.plans || []).map(plan => ({
+    const defaultPlanCategoryId = (data.planCategories || []).find(category => category.isDefault && category.isActive)?.id || "";
+    const selectedPlanCategoryId = series?.planCategoryId || defaultPlanCategoryId || "";
+    const planCategories = buildPlanCategoryOptions(data.planCategories || [], selectedPlanCategoryId);
+    const plans = filterPlansByCategory(data.plans || [], selectedPlanCategoryId).map(plan => ({
         ...plan,
         price: formatPlainPrice(plan.priceCents),
         selected: allowedSet.has(String(plan.id))
@@ -6786,6 +7088,7 @@ function openSeriesModal(series, data) {
         isActive: series?.isActive ?? true,
         rooms,
         instructors,
+        planCategories,
         plans,
         saveLabel: isEdit ? t("common.saveChanges", "Save changes") : t("series.create", "Create series")
     });
@@ -6810,6 +7113,17 @@ function openSeriesModal(series, data) {
         closeBtn.addEventListener("click", closeModal);
     }
 
+    const planCategorySelect = overlay.querySelector("[name=\"planCategoryId\"]");
+    const planOptionsContainer = overlay.querySelector(".plan-options");
+    if (planCategorySelect && planOptionsContainer) {
+        planCategorySelect.addEventListener("change", () => {
+            const selectedIds = new Set(Array.from(overlay.querySelectorAll("input[name=\"planIds\"]:checked"))
+                .map(input => input.value));
+            const categoryId = planCategorySelect.value || "";
+            renderPlanOptions(planOptionsContainer, data.plans || [], selectedIds, categoryId, "planIds");
+        });
+    }
+
 
     const saveBtn = overlay.querySelector("#save-series");
     if (saveBtn) {
@@ -6827,6 +7141,7 @@ function openSeriesModal(series, data) {
                 description: getValue("description") || "",
                 instructorId: getValue("instructorId") || null,
                 roomId: getValue("roomId") || null,
+                planCategoryId: getValue("planCategoryId") || null,
                 dayOfWeek: Number(getValue("dayOfWeek")),
                 startTimeLocal,
                 durationMinutes: Number(getValue("durationMinutes")),
@@ -7078,6 +7393,55 @@ function formatPlanType(value) {
     if (value === "PunchCard") return t("plans.type.punch", "Punch card");
     if (value === "Unlimited") return t("plans.type.unlimited", "Unlimited");
     return value || "-";
+}
+
+function parsePlanCategoryIds(plan) {
+    return parseGuidListJson(plan?.categoryIdsJson);
+}
+
+function filterPlansByCategory(plans, categoryId) {
+    if (!categoryId) return plans;
+    return (plans || []).filter(plan => {
+        const categories = parsePlanCategoryIds(plan);
+        return categories.length === 0 || categories.includes(categoryId);
+    });
+}
+
+function buildPlanCategoryOptions(categories, selectedId) {
+    const options = [];
+    options.push({
+        id: "",
+        name: t("plans.categoryAll", "All categories"),
+        selected: !selectedId
+    });
+    (categories || [])
+        .filter(category => category.isActive !== false || String(category.id) === String(selectedId))
+        .forEach(category => {
+            options.push({
+                id: category.id,
+                name: category.name,
+                selected: String(category.id) === String(selectedId)
+            });
+        });
+    return options;
+}
+
+function renderPlanOptions(container, plans, selectedIds, categoryId, inputName) {
+    if (!container) return;
+    const filteredPlans = filterPlansByCategory(plans || [], categoryId);
+    container.innerHTML = filteredPlans.map(plan => {
+        const id = String(plan.id);
+        const selected = selectedIds.has(id) ? "checked" : "";
+        const name = escapeHtml(plan.name);
+        const price = escapeHtml(formatPlainPrice(plan.priceCents));
+        return `<label class="plan-pill">
+            <input type="checkbox" name="${inputName}" value="${escapeHtml(id)}" ${selected} />
+            <span>
+              <span class="plan-name">${name}</span>
+              <span class="plan-price">${price}</span>
+            </span>
+          </label>`;
+    }).join("");
 }
 
 function formatCustomerStatus(value) {
@@ -7390,12 +7754,28 @@ function getBirthdayNamesFromElement(element) {
     return null;
 }
 
+async function shareSessionLink(item, data) {
+    if (!item) return;
+    const shareSlug = data?.calendar?.studio?.slug || "demo";
+    const shareUrl = `${window.location.origin}/app?studio=${encodeURIComponent(shareSlug)}#/event/${item.id}`;
+    const shareTitle = item.seriesTitle || t("calendar.shareTitle", "Session");
+    if (navigator.share) {
+        try {
+            await navigator.share({ title: shareTitle, url: shareUrl });
+            return;
+        } catch {}
+    }
+    try {
+        await navigator.clipboard.writeText(shareUrl);
+        showToast(t("calendar.shareCopied", "Share link copied."), "success");
+    } catch {
+        showToast(t("calendar.shareCopyError", "Unable to copy share link."), "error");
+    }
+}
+
 function openEventActionsMenu(anchor, item, data) {
     if (!anchor || !item) return;
     closeEventActionsMenu();
-
-    const shareSlug = data?.calendar?.studio?.slug || "demo";
-    const shareUrl = `${window.location.origin}/app?studio=${encodeURIComponent(shareSlug)}#/event/${item.id}`;
     const menu = document.createElement("div");
     menu.className = "event-actions-menu";
     menu.innerHTML = `
@@ -7472,19 +7852,7 @@ function openEventActionsMenu(anchor, item, data) {
             return;
         }
         if (action === "share") {
-            const shareTitle = item.seriesTitle || t("calendar.shareTitle", "Session");
-            if (navigator.share) {
-                try {
-                    await navigator.share({ title: shareTitle, url: shareUrl });
-                } catch {}
-            } else {
-                try {
-                    await navigator.clipboard.writeText(shareUrl);
-                    showToast(t("calendar.shareCopied", "Share link copied."), "success");
-                } catch {
-                    showToast(t("calendar.shareCopyError", "Unable to copy share link."), "error");
-                }
-            }
+            await shareSessionLink(item, data);
             return;
         }
         if (action === "duplicate") {

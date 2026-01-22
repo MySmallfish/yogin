@@ -17,6 +17,7 @@ public class AppDbContext : DbContext
     public DbSet<CustomerAttachment> CustomerAttachments => Set<CustomerAttachment>();
     public DbSet<UserAttachment> UserAttachments => Set<UserAttachment>();
     public DbSet<CustomerStatus> CustomerStatuses => Set<CustomerStatus>();
+    public DbSet<PlanCategory> PlanCategories => Set<PlanCategory>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<InstructorPayrollEntry> InstructorPayrollEntries => Set<InstructorPayrollEntry>();
     public DbSet<EventSeries> EventSeries => Set<EventSeries>();
@@ -36,6 +37,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<AppUser>().HasIndex(u => new { u.StudioId, u.Email }).IsUnique();
         modelBuilder.Entity<Customer>().HasIndex(c => new { c.StudioId, c.UserId }).IsUnique();
         modelBuilder.Entity<CustomerStatus>().HasIndex(s => new { s.StudioId, s.Name });
+        modelBuilder.Entity<PlanCategory>().HasIndex(s => new { s.StudioId, s.Name });
         modelBuilder.Entity<CustomerAttachment>().HasIndex(a => new { a.StudioId, a.CustomerId });
         modelBuilder.Entity<UserAttachment>().HasIndex(a => new { a.StudioId, a.UserId });
         modelBuilder.Entity<AuditLog>().HasIndex(a => new { a.StudioId, a.CreatedAtUtc });

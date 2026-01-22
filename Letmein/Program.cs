@@ -542,6 +542,9 @@ publicApi.MapGet("/studios/{slug}/event-instances/{id:guid}", async (string slug
     var resolvedIcon = ResolveInstanceIcon(instance, series);
     var resolvedColor = ResolveInstanceColor(instance, series);
     var resolvedDescription = ResolveInstanceDescription(instance, series);
+    var seriesPlanCategoryId = series?.PlanCategoryId;
+    var instancePlanCategoryId = instance.PlanCategoryId;
+    var planCategoryId = instancePlanCategoryId ?? seriesPlanCategoryId;
 
     return Results.Ok(new
     {
@@ -571,7 +574,10 @@ publicApi.MapGet("/studios/{slug}/event-instances/{id:guid}", async (string slug
         allowedPlanIds,
         seriesAllowedPlanIds,
         instanceAllowedPlanIds,
-        hasPlanOverride
+        hasPlanOverride,
+        planCategoryId,
+        seriesPlanCategoryId,
+        instancePlanCategoryId
     });
 });
 var adminApi = app.MapGroup("/api/admin").RequireAuthorization("admin");
@@ -767,6 +773,9 @@ adminApi.MapGet("/calendar", async (ClaimsPrincipal user, DateOnly? from, DateOn
         var instanceAllowedPlanIds = ParseGuidList(instance.AllowedPlanIdsJson);
         var hasPlanOverride = !string.IsNullOrWhiteSpace(instance.AllowedPlanIdsJson);
         var allowedPlanIds = hasPlanOverride ? instanceAllowedPlanIds : seriesAllowedPlanIds;
+        var seriesPlanCategoryId = series?.PlanCategoryId;
+        var instancePlanCategoryId = instance.PlanCategoryId;
+        var planCategoryId = instancePlanCategoryId ?? seriesPlanCategoryId;
 
         return (object)new
         {
@@ -796,6 +805,9 @@ adminApi.MapGet("/calendar", async (ClaimsPrincipal user, DateOnly? from, DateOn
             seriesAllowedPlanIds,
             instanceAllowedPlanIds,
             hasPlanOverride,
+            planCategoryId,
+            seriesPlanCategoryId,
+            instancePlanCategoryId,
             instructorName = instructor?.DisplayName ?? "",
             roomName = room?.Name ?? "",
             isHoliday = false,
@@ -961,6 +973,7 @@ adminApi.MapPost("/event-instances", async (ClaimsPrincipal user, EventInstanceC
         Description = request.Description ?? "",
         Icon = request.Icon ?? "",
         Color = request.Color ?? "",
+        PlanCategoryId = await ResolvePlanCategoryIdAsync(db, studioId, request.PlanCategoryId),
         StartUtc = startUtc,
         EndUtc = endUtc,
         Capacity = request.Capacity,
@@ -1359,6 +1372,10 @@ adminApi.MapPut("/event-instances/{id:guid}", async (ClaimsPrincipal user, Guid 
     {
         instance.Color = request.Color;
     }
+    if (request.PlanCategoryId.HasValue)
+    {
+        instance.PlanCategoryId = await ResolvePlanCategoryIdAsync(db, studioId, request.PlanCategoryId);
+    }
 
     if (request.StartUtc.HasValue)
     {
@@ -1454,6 +1471,7 @@ adminApi.MapPost("/event-series", async (ClaimsPrincipal user, EventSeriesReques
         Description = request.Description,
         InstructorId = request.InstructorId,
         RoomId = request.RoomId,
+        PlanCategoryId = await ResolvePlanCategoryIdAsync(db, studioId, request.PlanCategoryId),
         DayOfWeek = request.DayOfWeek,
         StartTimeLocal = request.StartTimeLocal,
         DurationMinutes = request.DurationMinutes,
@@ -1510,6 +1528,7 @@ adminApi.MapPut("/event-series/{id:guid}", async (ClaimsPrincipal user, Guid id,
     series.Description = request.Description;
     series.InstructorId = request.InstructorId;
     series.RoomId = request.RoomId;
+    series.PlanCategoryId = await ResolvePlanCategoryIdAsync(db, studioId, request.PlanCategoryId);
     series.DayOfWeek = request.DayOfWeek;
     series.StartTimeLocal = request.StartTimeLocal;
     series.DurationMinutes = request.DurationMinutes;
@@ -1616,6 +1635,7 @@ adminApi.MapPost("/plans", async (ClaimsPrincipal user, PlanRequest request, App
         RemoteOnly = request.RemoteOnly,
         ValidityDays = request.ValidityDays,
         DailyLimit = request.DailyLimit,
+        CategoryIdsJson = NormalizeGuidListJson(request.CategoryIdsJson),
         Active = request.Active
     };
     db.Plans.Add(plan);
@@ -1642,6 +1662,7 @@ adminApi.MapPut("/plans/{id:guid}", async (ClaimsPrincipal user, Guid id, PlanRe
     plan.RemoteOnly = request.RemoteOnly;
     plan.ValidityDays = request.ValidityDays;
     plan.DailyLimit = request.DailyLimit;
+    plan.CategoryIdsJson = NormalizeGuidListJson(request.CategoryIdsJson);
     plan.Active = request.Active;
 
     await db.SaveChangesAsync();
@@ -1850,6 +1871,125 @@ adminApi.MapDelete("/customer-statuses/{id:guid}", async (ClaimsPrincipal user, 
     }
 
     await LogAuditAsync(db, user, "Delete", "CustomerStatus", status.Id.ToString(), $"Archived customer status {status.Name}");
+    return Results.NoContent();
+});
+
+adminApi.MapGet("/plan-categories", async (ClaimsPrincipal user, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var categories = await db.PlanCategories.AsNoTracking()
+        .Where(c => c.StudioId == studioId)
+        .OrderByDescending(c => c.IsDefault)
+        .ThenBy(c => c.Name)
+        .ToListAsync();
+    if (categories.Count == 0)
+    {
+        var created = await EnsureDefaultPlanCategoryAsync(db, studioId);
+        categories = new List<PlanCategory> { created };
+    }
+    return Results.Ok(categories);
+});
+
+adminApi.MapPost("/plan-categories", async (ClaimsPrincipal user, PlanCategoryRequest request, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var name = request.Name?.Trim() ?? "";
+    if (string.IsNullOrWhiteSpace(name))
+    {
+        return Results.BadRequest(new { error = "Category name required" });
+    }
+
+    if (request.IsDefault)
+    {
+        var existingDefaults = await db.PlanCategories
+            .Where(c => c.StudioId == studioId && c.IsDefault)
+            .ToListAsync();
+        foreach (var entry in existingDefaults)
+        {
+            entry.IsDefault = false;
+        }
+    }
+
+    var category = new PlanCategory
+    {
+        Id = Guid.NewGuid(),
+        StudioId = studioId,
+        Name = name,
+        IsDefault = request.IsDefault,
+        IsActive = request.IsActive
+    };
+
+    db.PlanCategories.Add(category);
+    await db.SaveChangesAsync();
+    await LogAuditAsync(db, user, "Create", "PlanCategory", category.Id.ToString(), $"Created plan category {category.Name}");
+    return Results.Created($"/api/admin/plan-categories/{category.Id}", category);
+});
+
+adminApi.MapPut("/plan-categories/{id:guid}", async (ClaimsPrincipal user, Guid id, PlanCategoryRequest request, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var category = await db.PlanCategories.FirstOrDefaultAsync(c => c.Id == id && c.StudioId == studioId);
+    if (category == null)
+    {
+        return Results.NotFound();
+    }
+
+    var name = request.Name?.Trim() ?? "";
+    if (string.IsNullOrWhiteSpace(name))
+    {
+        return Results.BadRequest(new { error = "Category name required" });
+    }
+
+    category.Name = name;
+    category.IsActive = request.IsActive;
+    category.IsDefault = request.IsDefault;
+
+    if (request.IsDefault)
+    {
+        var others = await db.PlanCategories
+            .Where(c => c.StudioId == studioId && c.Id != category.Id && c.IsDefault)
+            .ToListAsync();
+        foreach (var entry in others)
+        {
+            entry.IsDefault = false;
+        }
+    }
+
+    var hasDefault = await db.PlanCategories.AnyAsync(c => c.StudioId == studioId && c.IsDefault && c.IsActive);
+    if (!hasDefault)
+    {
+        category.IsDefault = true;
+    }
+
+    await db.SaveChangesAsync();
+    await LogAuditAsync(db, user, "Update", "PlanCategory", category.Id.ToString(), $"Updated plan category {category.Name}");
+    return Results.Ok(category);
+});
+
+adminApi.MapDelete("/plan-categories/{id:guid}", async (ClaimsPrincipal user, Guid id, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var category = await db.PlanCategories.FirstOrDefaultAsync(c => c.Id == id && c.StudioId == studioId);
+    if (category == null)
+    {
+        return Results.NotFound();
+    }
+
+    category.IsActive = false;
+    category.IsDefault = false;
+
+    var hasDefault = await db.PlanCategories.AnyAsync(c => c.StudioId == studioId && c.IsDefault && c.IsActive);
+    if (!hasDefault)
+    {
+        var fallback = await db.PlanCategories.FirstOrDefaultAsync(c => c.StudioId == studioId && c.IsActive);
+        if (fallback != null)
+        {
+            fallback.IsDefault = true;
+        }
+    }
+
+    await db.SaveChangesAsync();
+    await LogAuditAsync(db, user, "Delete", "PlanCategory", category.Id.ToString(), $"Archived plan category {category.Name}");
     return Results.NoContent();
 });
 
@@ -5032,6 +5172,37 @@ static async Task<CustomerStatus> EnsureDefaultCustomerStatusAsync(AppDbContext 
     return created;
 }
 
+static async Task<PlanCategory> EnsureDefaultPlanCategoryAsync(AppDbContext db, Guid studioId)
+{
+    var defaultCategory = await db.PlanCategories.FirstOrDefaultAsync(c =>
+        c.StudioId == studioId && c.IsDefault && c.IsActive);
+    if (defaultCategory != null)
+    {
+        return defaultCategory;
+    }
+
+    var fallback = await db.PlanCategories.FirstOrDefaultAsync(c =>
+        c.StudioId == studioId && c.IsActive);
+    if (fallback != null)
+    {
+        fallback.IsDefault = true;
+        await db.SaveChangesAsync();
+        return fallback;
+    }
+
+    var created = new PlanCategory
+    {
+        Id = Guid.NewGuid(),
+        StudioId = studioId,
+        Name = "General",
+        IsDefault = true,
+        IsActive = true
+    };
+    db.PlanCategories.Add(created);
+    await db.SaveChangesAsync();
+    return created;
+}
+
 static async Task<Guid?> ResolveCustomerStatusIdAsync(AppDbContext db, Guid studioId, Guid? statusId)
 {
     if (statusId.HasValue)
@@ -5046,6 +5217,18 @@ static async Task<Guid?> ResolveCustomerStatusIdAsync(AppDbContext db, Guid stud
 
     var fallback = await EnsureDefaultCustomerStatusAsync(db, studioId);
     return fallback.Id;
+}
+
+static async Task<Guid?> ResolvePlanCategoryIdAsync(AppDbContext db, Guid studioId, Guid? categoryId)
+{
+    if (!categoryId.HasValue || categoryId.Value == Guid.Empty)
+    {
+        return null;
+    }
+
+    var exists = await db.PlanCategories.AsNoTracking().AnyAsync(c =>
+        c.Id == categoryId.Value && c.StudioId == studioId && c.IsActive);
+    return exists ? categoryId : null;
 }
 
 static async Task<(Customer customer, bool created)> EnsureGuestCustomerAsync(

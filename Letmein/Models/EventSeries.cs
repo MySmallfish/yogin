@@ -20,6 +20,7 @@ public class EventSeries
     public string RemoteInviteUrl { get; set; } = "";
     public string Icon { get; set; } = "";
     public string Color { get; set; } = "";
+    public Guid? PlanCategoryId { get; set; }
     public string AllowedPlanIdsJson { get; set; } = "[]";
     public int CancellationWindowHours { get; set; } = 6;
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;

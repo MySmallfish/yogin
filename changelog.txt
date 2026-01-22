@@ -1,2 +1,4 @@
 ﻿# Changelog
 - 2026-01-21: Added changelog policy to AGENTS.md and started recording tasks in changelog.txt.
+- 2026-01-21: Added standalone share icon under the calendar context menu button.
+- 2026-01-22: Added plan categories management and category-based plan filtering for sessions and series.
