@@ -1401,7 +1401,7 @@ const seriesModalTemplate = compileTemplate("series-modal", `
               <input class="color-text" type="text" value="{{color}}" placeholder="#647FBC" data-color-text />
             </div>
           </div>
-        <div>
+        <div class="span-2">
           <label>{{t "series.daysOfWeek" "Days of week"}}</label>
           <div class="weekday-pills">
             {{#each dayOptions}}
