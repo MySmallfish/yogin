@@ -58,16 +58,20 @@ const layoutTemplate = compileTemplate("layout", `
       </div>
       <nav class="nav">
         <div class="nav-section">
-          <a href="#/calendar" data-route="calendar" class="nav-group">
+          <div class="nav-group">{{t "nav.section.calendar" "Calendar"}}</div>
+          <a href="#/calendar" data-route="calendar" class="nav-item">
+            <span class="nav-short" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 6H4v10h16V8z"/></svg>
+            </span>
             <span class="nav-label">{{t "nav.calendar" "Calendar"}}</span>
           </a>
-          <a href="#/events" data-route="events">
+          <a href="#/events" data-route="events" class="nav-item">
             <span class="nav-short" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M17 1l4 4-4 4V6H7a4 4 0 0 0-4 4v1H1v-1a6 6 0 0 1 6-6h10V1zm-10 22l-4-4 4-4v3h10a4 4 0 0 0 4-4v-1h2v1a6 6 0 0 1-6 6H7v3z"/></svg>
             </span>
             <span class="nav-label">{{t "nav.events" "Serieses"}}</span>
           </a>
-          <a href="#/rooms" data-route="rooms">
+          <a href="#/rooms" data-route="rooms" class="nav-item">
             <span class="nav-short" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M4 3h12a2 2 0 0 1 2 2v16h-2v-2H6v2H4V3zm2 2v12h8V5H6zm9 7h1v2h-1v-2z"/></svg>
             </span>
@@ -75,45 +79,47 @@ const layoutTemplate = compileTemplate("layout", `
           </a>
         </div>
         <div class="nav-section">
-          <a href="#/customers" data-route="customers" class="nav-group">
+          <div class="nav-group">{{t "nav.section.customers" "Customers"}}</div>
+          <a href="#/customers" data-route="customers" class="nav-item">
+            <span class="nav-short" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-3.3 0-8 1.67-8 5v3h16v-3c0-3.33-4.7-5-8-5z"/></svg>
+            </span>
             <span class="nav-label">{{t "nav.customers" "Customers"}}</span>
           </a>
         </div>
         <div class="nav-section">
-          <a href="#/reports" data-route="reports" class="nav-group">
+          <div class="nav-group">{{t "nav.section.admin" "Admin"}}</div>
+          <a href="#/reports" data-route="reports" class="nav-item">
+            <span class="nav-short" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 20h16M6 16h2V8H6v8zm5 0h2V4h-2v12zm5 0h2v-6h-2v6z"/></svg>
+            </span>
             <span class="nav-label">{{t "nav.reports" "Reports"}}</span>
           </a>
-          <a href="#/plans" data-route="plans">
+          <a href="#/plans" data-route="plans" class="nav-item">
             <span class="nav-short" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M3 5h18a2 2 0 0 1 2 2v2H1V7a2 2 0 0 1 2-2zm-2 8h22v6a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-6zm4 2v2h6v-2H5z"/></svg>
             </span>
             <span class="nav-label">{{t "nav.plans" "Plans"}}</span>
           </a>
-          <a href="#/users" data-route="users">
+          <a href="#/users" data-route="users" class="nav-item">
             <span class="nav-short" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-3.3 0-8 1.67-8 5v3h16v-3c0-3.33-4.7-5-8-5z"/></svg>
             </span>
-            <span class="nav-label">{{t "nav.users" "Users"}}</span>
+            <span class="nav-label">{{t "nav.users" "Team"}}</span>
           </a>
-          <a href="#/guests" data-route="guests">
-            <span class="nav-short" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M15 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm-7 2c-3.3 0-8 1.67-8 5v3h10v-3c0-1.37.47-2.56 1.3-3.54C10.1 14.43 9.08 14 8 14zm12-1h-2V9h-2v4h-4v2h4v4h2v-4h2z"/></svg>
-            </span>
-            <span class="nav-label">{{t "nav.guests" "Guests"}}</span>
-          </a>
-          <a href="#/payroll" data-route="payroll">
+          <a href="#/payroll" data-route="payroll" class="nav-item">
             <span class="nav-short" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M12 3c-5.52 0-10 1.79-10 4s4.48 4 10 4 10-1.79 10-4-4.48-4-10-4zm0 10c-5.52 0-10 1.79-10 4s4.48 4 10 4 10-1.79 10-4-4.48-4-10-4z"/></svg>
             </span>
             <span class="nav-label">{{t "nav.payroll" "Payroll"}}</span>
           </a>
-          <a href="#/audit" data-route="audit">
+          <a href="#/audit" data-route="audit" class="nav-item">
             <span class="nav-short" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M9 2h6a2 2 0 0 1 2 2h3v18H4V4h3a2 2 0 0 1 2-2zm0 4h6V4H9v2zm-1 9l2 2 4-4 1.5 1.5L10 19l-3.5-3.5L8 15z"/></svg>
             </span>
             <span class="nav-label">{{t "nav.audit" "Audit log"}}</span>
           </a>
-          <a href="#/settings" data-route="settings">
+          <a href="#/settings" data-route="settings" class="nav-item">
             <span class="nav-short" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M19.4 13a7.96 7.96 0 0 0 .1-1 7.96 7.96 0 0 0-.1-1l2.1-1.6-2-3.4-2.5 1a7.42 7.42 0 0 0-1.7-1L15 2h-6l-.3 2.9c-.6.2-1.2.6-1.7 1l-2.5-1-2 3.4L4.6 11a7.96 7.96 0 0 0-.1 1 7.96 7.96 0 0 0 .1 1L2.5 14.6l2 3.4 2.5-1c.5.4 1.1.8 1.7 1L9 22h6l.3-2.9c.6-.2 1.2-.6 1.7-1l2.5 1 2-3.4L19.4 13zM12 15.5A3.5 3.5 0 1 1 15.5 12 3.5 3.5 0 0 1 12 15.5z"/></svg>
             </span>
@@ -268,8 +274,8 @@ const calendarTemplate = compileTemplate("calendar", `
         {{#if day.hasEvents}}
           <div class="calendar-events">
             {{#each day.events}}
-              <div class="calendar-event {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
-                {{#unless isBirthday}}
+              <div class="calendar-event {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
+                {{#unless suppressActions}}
                   <button class="event-actions" type="button" aria-label="{{t "calendar.actions" "Actions"}}">
                     <span class="icon" aria-hidden="true">
                       <svg viewBox="0 0 24 24">
@@ -297,7 +303,6 @@ const calendarTemplate = compileTemplate("calendar", `
                 <div class="event-meta">{{roomName}} - {{instructorName}}</div>
                 <div class="event-meta event-meta-compact">
                   <span>{{registeredSummary}}</span>
-                  {{#if remoteSummary}}<span class="remote-summary">{{remoteSummary}}</span>{{/if}}
                 </div>
                 {{#if seriesIcon}}<span class="event-icon-corner" aria-hidden="true">{{seriesIcon}}</span>{{/if}}
                 {{#if isCancelled}}
@@ -325,8 +330,8 @@ const calendarTemplate = compileTemplate("calendar", `
             {{#if hasEvents}}
               <div class="calendar-day-events">
                 {{#each events}}
-                  <div class="calendar-event compact {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
-                    {{#unless isBirthday}}
+                  <div class="calendar-event compact {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
+                    {{#unless suppressActions}}
                       <button class="event-actions" type="button" aria-label="{{t "calendar.actions" "Actions"}}">
                         <span class="icon" aria-hidden="true">
                           <svg viewBox="0 0 24 24">
@@ -355,7 +360,6 @@ const calendarTemplate = compileTemplate("calendar", `
                     <div class="event-meta">{{instructorName}}</div>
                     <div class="event-meta event-meta-compact">
                       <span>{{registeredSummary}}</span>
-                      {{#if remoteSummary}}<span class="remote-summary">{{remoteSummary}}</span>{{/if}}
                     </div>
                     {{#if seriesIcon}}<span class="event-icon-corner" aria-hidden="true">{{seriesIcon}}</span>{{/if}}
                   </div>
@@ -383,7 +387,7 @@ const calendarTemplate = compileTemplate("calendar", `
                 {{#if hasEvents}}
                   <div class="calendar-month-events">
                     {{#each eventsPreview}}
-                      <div class="calendar-event mini {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
+                      <div class="calendar-event mini {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
                         <span class="event-time">{{time}}</span>
                         <span class="event-title">
                           {{title}}
@@ -419,12 +423,11 @@ const calendarTemplate = compileTemplate("calendar", `
                 <th>{{t "calendar.list.room" "Room"}}</th>
                 <th>{{t "calendar.list.instructor" "Instructor"}}</th>
                 <th>{{t "calendar.list.booked" "Booked"}}</th>
-                <th>{{t "calendar.list.remote" "Remote"}}</th>
               </tr>
             </thead>
             <tbody>
               {{#each list.items}}
-              <tr class="{{#if isHoliday}}holiday-row{{/if}} {{#if isBirthday}}birthday-row{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-label="{{birthdayDateLabel}}">
+              <tr class="{{#if isHoliday}}holiday-row{{/if}} {{#if isBirthday}}birthday-row{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}">
                 <td>{{dateLabel}}</td>
                 <td>{{timeRange}}</td>
                 <td>
@@ -438,7 +441,6 @@ const calendarTemplate = compileTemplate("calendar", `
                 <td>{{roomName}}</td>
                 <td>{{instructorName}}</td>
                 <td>{{bookedSummary}}</td>
-                <td>{{remoteSummary}}</td>
               </tr>
               {{/each}}
             </tbody>
@@ -469,15 +471,25 @@ const calendarTemplate = compileTemplate("calendar", `
   </div>
 `);
 const rosterTemplate = compileTemplate("roster", `
-  <h4>{{t "roster.title" "Registrations"}}</h4>
+  <h4>{{t "roster.participants" "Participants list"}}</h4>
   <div class="roster-actions">
     <label class="checkbox">
       <input type="checkbox" id="roster-select-all" />
       {{t "roster.selectAll" "Select all"}}
     </label>
     <div class="roster-actions-buttons">
-      <button class="secondary" id="roster-email">{{t "roster.emailSelected" "Email selected"}}</button>
-      <button class="secondary" id="roster-sms">{{t "roster.smsSelected" "SMS selected"}}</button>
+      <button class="secondary btn-icon" id="roster-email">
+        <span class="icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 7l9 6 9-6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        </span>
+        {{t "roster.emailAll" "Send mail to all"}}
+      </button>
+      <button class="secondary btn-icon" id="roster-sms">
+        <span class="icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        </span>
+        {{t "roster.smsSelected" "Send SMS"}}
+      </button>
     </div>
   </div>
   {{#if roster.length}}
@@ -774,8 +786,12 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
           <div class="share-row">
             <label>{{t "session.shareLink" "Share registration link"}}</label>
             <div class="share-field share-buttons" data-share-url="{{shareUrl}}">
-              <button class="secondary" id="copy-share-link">{{t "common.copy" "Copy"}}</button>
-              <button class="secondary" id="open-share-link">{{t "common.open" "Open"}}</button>
+              <button class="secondary btn-icon" id="share-session-link" aria-label="{{t "calendar.actionShare" "Share"}}">
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M18 8a3 3 0 1 0-2.83-4H15a3 3 0 0 0 .17 1l-7.1 4.13a3 3 0 0 0-2.17-1 3 3 0 1 0 2.17 5l7.1 4.13A3 3 0 1 0 15 16a3 3 0 0 0 .17 1l-7.1-4.13a3 3 0 0 0 0-2.74l7.1-4.13A3 3 0 0 0 18 8z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                </span>
+                {{t "calendar.actionShare" "Share"}}
+              </button>
             </div>
           </div>
           <div class="roster" data-roster-panel>
@@ -823,7 +839,7 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
       <div class="modal-footer">
         <div class="meta" data-booked-meta>{{capacitySummary}}</div>
         <div class="modal-actions">
-          <button class="secondary" id="delete-session">
+          <button class="secondary btn-danger" id="delete-session">
             <span class="icon" aria-hidden="true">
               <svg viewBox="0 0 24 24">
                 <path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -845,7 +861,7 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
             {{t "session.duplicate" "Duplicate"}}
           </button>
           {{#if eventSeriesId}}
-            <button class="secondary" id="delete-series">
+            <button class="secondary btn-danger" id="delete-series">
               <span class="icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24">
                   <path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -967,9 +983,70 @@ const birthdayModalTemplate = compileTemplate("birthday-modal", `
         </div>
         <button class="modal-close" id="close-birthday" type="button" aria-label="{{t "common.close" "Close"}}"></button>
       </div>
+      <div class="birthday-actions">
+        <button class="secondary btn-icon" id="birthday-email-all">
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 7l9 6 9-6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          </span>
+          {{t "birthday.emailAll" "Email"}}
+        </button>
+        <button class="secondary btn-icon" id="birthday-sms-all">
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          </span>
+          {{t "birthday.smsAll" "SMS"}}
+        </button>
+      </div>
       <div class="birthday-list">
-        {{#each names}}
-          <div class="birthday-item">{{this}}</div>
+        {{#each contacts}}
+          <div class="birthday-contact">
+            <div class="birthday-name">{{name}}</div>
+            <div class="contact-actions">
+              {{#if email}}
+                <button class="contact-icon email" type="button" data-birthday-email="{{email}}" data-birthday-name="{{name}}" aria-label="{{t "contact.email" "Email"}} {{name}}">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="3" y="5" width="18" height="14" rx="2"/>
+                    <path d="M3 7l9 6 9-6"/>
+                  </svg>
+                </button>
+              {{else}}
+                <span class="contact-icon disabled">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="3" y="5" width="18" height="14" rx="2"/>
+                    <path d="M3 7l9 6 9-6"/>
+                  </svg>
+                </span>
+              {{/if}}
+              {{#if phone}}
+                <button class="contact-icon sms" type="button" data-birthday-sms="{{phone}}" data-birthday-name="{{name}}" aria-label="{{t "contact.sms" "SMS"}} {{name}}">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z"/>
+                  </svg>
+                </button>
+              {{else}}
+                <span class="contact-icon disabled">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z"/>
+                  </svg>
+                </span>
+              {{/if}}
+              {{#if whatsappLink}}
+                <a class="contact-icon whatsapp" href="{{whatsappLink}}" target="_blank" rel="noreferrer" aria-label="WhatsApp {{name}}">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M21 11.5a8.5 8.5 0 1 1-4.2-7.3A8.5 8.5 0 0 1 21 11.5z"/>
+                    <path d="M7 19l1-3"/>
+                  </svg>
+                </a>
+              {{else}}
+                <span class="contact-icon disabled">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M21 11.5a8.5 8.5 0 1 1-4.2-7.3A8.5 8.5 0 0 1 21 11.5z"/>
+                    <path d="M7 19l1-3"/>
+                  </svg>
+                </span>
+              {{/if}}
+            </div>
+          </div>
         {{/each}}
       </div>
     </div>
@@ -1050,6 +1127,76 @@ const inviteEmailTemplate = compileTemplate("invite-email-modal", `
         <div class="modal-actions">
           <button class="secondary" id="cancel-invite-email">{{t "common.cancel" "Cancel"}}</button>
           <button id="send-invite-email" class="primary-action">{{t "invite.emailSend" "Send email"}}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+`);
+
+const emailComposerTemplate = compileTemplate("email-composer-modal", `
+  <div class="modal-overlay" id="email-composer-modal">
+    <div class="modal modal-scroll">
+      <div class="modal-header">
+        <div>
+          <h3>{{title}}</h3>
+          <div class="muted">{{subtitle}}</div>
+        </div>
+        <button class="modal-close" id="close-email-composer" type="button" aria-label="{{t "common.close" "Close"}}"></button>
+      </div>
+      <div class="modal-body">
+        <div class="recipient-list">
+          {{#each recipients}}
+            <span class="recipient-pill">{{name}}{{#if email}}<span class="recipient-meta">{{email}}</span>{{/if}}</span>
+          {{/each}}
+        </div>
+        <div class="form-grid">
+          <div class="span-2">
+            <label>{{t "email.subject" "Subject"}}</label>
+            <input name="emailSubject" value="{{subject}}" />
+          </div>
+          <div class="span-2">
+            <label>{{t "email.body" "Message"}}</label>
+            <textarea name="emailBody" rows="6">{{body}}</textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="modal-actions">
+          <button class="secondary" id="cancel-email-composer">{{t "common.cancel" "Cancel"}}</button>
+          <button id="send-email-composer" class="primary-action">{{t "email.send" "Send email"}}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+`);
+
+const smsComposerTemplate = compileTemplate("sms-composer-modal", `
+  <div class="modal-overlay" id="sms-composer-modal">
+    <div class="modal modal-scroll">
+      <div class="modal-header">
+        <div>
+          <h3>{{title}}</h3>
+          <div class="muted">{{subtitle}}</div>
+        </div>
+        <button class="modal-close" id="close-sms-composer" type="button" aria-label="{{t "common.close" "Close"}}"></button>
+      </div>
+      <div class="modal-body">
+        <div class="recipient-list">
+          {{#each recipients}}
+            <span class="recipient-pill">{{name}}{{#if phone}}<span class="recipient-meta">{{phone}}</span>{{/if}}</span>
+          {{/each}}
+        </div>
+        <div class="form-grid">
+          <div class="span-2">
+            <label>{{t "sms.body" "Message"}}</label>
+            <textarea name="smsBody" rows="5">{{body}}</textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="modal-actions">
+          <button class="secondary" id="cancel-sms-composer">{{t "common.cancel" "Cancel"}}</button>
+          <button id="send-sms-composer" class="primary-action">{{t "sms.send" "Send SMS"}}</button>
         </div>
       </div>
     </div>
@@ -1322,6 +1469,14 @@ const seriesModalTemplate = compileTemplate("series-modal", `
             <input type="number" name="recurrenceIntervalWeeks" value="{{recurrenceIntervalWeeks}}" />
           </div>
           <div>
+            <label>{{t "series.generateWeeks" "Generate (weeks)"}}</label>
+            <input type="number" name="generateWeeks" value="{{generateWeeks}}" min="1" />
+          </div>
+          <div>
+            <label>{{t "series.generateUntil" "Generate until"}}</label>
+            <input type="date" name="generateUntil" value="{{generateUntil}}" />
+          </div>
+          <div>
             <label>{{t "series.cancellationWindow" "Cancellation window (hours)"}}</label>
             <input type="number" name="cancellationWindowHours" value="{{cancellationWindowHours}}" />
           </div>
@@ -1414,13 +1569,15 @@ const customerModalTemplate = compileTemplate("customer-modal", `
           <label>{{t "customer.dateOfBirth" "Date of birth"}}</label>
           <input name="dateOfBirth" type="date" value="{{dateOfBirth}}" />
         </div>
-        <div>
-          <label>{{t "customer.city" "City"}}</label>
-          <input name="city" value="{{city}}" />
-        </div>
-        <div>
-          <label>{{t "customer.address" "Address"}}</label>
-          <input name="address" value="{{address}}" />
+        <div class="span-2 address-row">
+          <div>
+            <label>{{t "customer.city" "City"}}</label>
+            <input name="city" value="{{city}}" />
+          </div>
+          <div>
+            <label>{{t "customer.address" "Address"}}</label>
+            <input name="address" value="{{address}}" />
+          </div>
         </div>
         <div>
           <label>{{t "customer.occupation" "Occupation"}}</label>
@@ -1609,7 +1766,14 @@ const customerStatusModalTemplate = compileTemplate("customer-status-modal", `
               <td>{{name}}</td>
               <td>{{defaultLabel}}</td>
               <td>{{activeLabel}}</td>
-              <td><button class="secondary" data-status-edit="{{id}}">{{t "common.edit" "Edit"}}</button></td>
+              <td>
+                <button class="secondary btn-edit" data-status-edit="{{id}}">
+                  <span class="icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+                  </span>
+                  {{t "common.edit" "Edit"}}
+                </button>
+              </td>
             </tr>
             {{/each}}
           </tbody>
@@ -1644,10 +1808,6 @@ const userModalTemplate = compileTemplate("user-modal", `
           <input name="phone" type="tel" value="{{phone}}" />
         </div>
         <div>
-          <label>{{t "user.city" "City"}}</label>
-          <input name="city" value="{{city}}" />
-        </div>
-        <div>
           <label>{{t "user.sex" "Sex"}}</label>
           <select name="gender">
             {{#each genderOptions}}
@@ -1663,9 +1823,15 @@ const userModalTemplate = compileTemplate("user-modal", `
           <label>{{t "user.idNumber" "ID number"}}</label>
           <input name="idNumber" value="{{idNumber}}" />
         </div>
-        <div class="span-2">
-          <label>{{t "user.address" "Address"}}</label>
-          <input name="address" value="{{address}}" />
+        <div class="span-2 address-row">
+          <div>
+            <label>{{t "user.city" "City"}}</label>
+            <input name="city" value="{{city}}" />
+          </div>
+          <div>
+            <label>{{t "user.address" "Address"}}</label>
+            <input name="address" value="{{address}}" />
+          </div>
         </div>
         <div>
           <label>{{t "profile.roles" "Roles"}}</label>
@@ -1791,6 +1957,17 @@ const roomModalTemplate = compileTemplate("room-modal", `
         <div>
           <label>{{t "room.name" "Room name"}}</label>
           <input name="roomName" value="{{roomName}}" />
+        </div>
+        <div>
+          <label>{{t "room.supportsRemote" "Supports remote"}}</label>
+          <select name="roomSupportsRemote">
+            <option value="false" {{#unless supportsRemote}}selected{{/unless}}>{{t "common.no" "No"}}</option>
+            <option value="true" {{#if supportsRemote}}selected{{/if}}>{{t "common.yes" "Yes"}}</option>
+          </select>
+        </div>
+        <div class="room-remote-fields span-2">
+          <label>{{t "room.remoteLink" "Remote link"}}</label>
+          <input name="roomRemoteLink" value="{{roomRemoteLink}}" placeholder="https://zoom.us/j/..." />
         </div>
       </div>
       <div class="modal-footer">
@@ -1941,7 +2118,14 @@ const planCategoryModalTemplate = compileTemplate("plan-category-modal", `
               <td>{{name}}</td>
               <td>{{defaultLabel}}</td>
               <td>{{activeLabel}}</td>
-              <td><button class="secondary" data-plan-category-edit="{{id}}">{{t "common.edit" "Edit"}}</button></td>
+              <td>
+                <button class="secondary btn-edit" data-plan-category-edit="{{id}}">
+                  <span class="icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+                  </span>
+                  {{t "common.edit" "Edit"}}
+                </button>
+              </td>
             </tr>
             {{/each}}
           </tbody>
@@ -2013,9 +2197,13 @@ const eventsTemplate = compileTemplate("events", `
           <td>{{remoteCapacity}}</td>
           <td>{{activeLabel}}</td>
           <td>
-            <button class="secondary" data-edit="{{id}}">{{t "common.edit" "Edit"}}</button>
-            <button data-generate="{{id}}">{{t "events.generate" "Generate"}}</button>
-            <button class="secondary" data-delete-series="{{id}}">
+            <button class="secondary btn-edit" data-edit="{{id}}">
+              <span class="icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+              </span>
+              {{t "common.edit" "Edit"}}
+            </button>
+            <button class="secondary btn-danger" data-delete-series="{{id}}">
               <span class="icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24">
                   <path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -2060,7 +2248,14 @@ const plansTemplate = compileTemplate("plans", `
           <td>{{typeLabel}}</td>
           <td>{{price}}</td>
           <td>{{activeLabel}}</td>
-          <td><button class="secondary" data-plan-edit="{{id}}">{{t "common.edit" "Edit"}}</button></td>
+          <td>
+            <button class="secondary btn-edit" data-plan-edit="{{id}}">
+              <span class="icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+              </span>
+              {{t "common.edit" "Edit"}}
+            </button>
+          </td>
         </tr>
         {{/each}}
       </tbody>
@@ -2070,8 +2265,13 @@ const plansTemplate = compileTemplate("plans", `
 
 const customersTemplate = compileTemplate("customers", `
   <div class="notice">{{t "customers.notice" "Manage customer profiles, contacts, and status."}}</div>
-  <div class="toolbar">
-    <button id="add-customer">{{t "customers.add" "Add customer"}}</button>     
+  <div class="toolbar toolbar-customers">
+    <button id="add-customer" class="btn-icon">
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </span>
+      {{t "customers.add" "Add customer"}}
+    </button>
     <button class="secondary" id="manage-statuses">{{t "customers.manageStatuses" "Manage statuses"}}</button>
     <button class="secondary" id="export-customers">{{t "customers.export" "Export CSV"}}</button>
     <label class="import-card" id="import-customers-zone">
@@ -2126,8 +2326,23 @@ const customersTemplate = compileTemplate("customers", `
         </td>
         <td>{{statusLabel}}</td>
         <td>
-          <button class="secondary" data-edit="{{id}}">{{t "common.edit" "Edit"}}</button>
-          <button class="secondary" data-archive="{{id}}">{{archiveLabel}}</button>
+          <button class="secondary btn-edit" data-edit="{{id}}">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+            </span>
+            {{t "common.edit" "Edit"}}
+          </button>
+          <button class="secondary btn-danger" data-archive="{{id}}">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M8 6V4h8v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M19 6l-1 14H6L5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </span>
+            {{archiveLabel}}
+          </button>
         </td>
       </tr>
       {{/each}}
@@ -2137,15 +2352,25 @@ const customersTemplate = compileTemplate("customers", `
 
 const usersTemplate = compileTemplate("users", `
   <div class="notice">{{t "users.notice" "Create and manage staff, instructors, and guest access."}}</div>
-  <div class="toolbar">
-    <button id="add-user">{{t "users.add" "Add user"}}</button>
+  <div class="toolbar toolbar-users">
+    <button id="add-user" class="btn-icon">
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </span>
+      {{t "users.add" "Add user"}}
+    </button>
     <div class="user-filters">
       <select name="userRoleFilter">
         {{#each roleOptions}}
           <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
         {{/each}}
       </select>
-      <button class="secondary" id="apply-user-filter">{{t "common.apply" "Apply"}}</button>
+      <button class="secondary btn-icon" id="apply-user-filter">
+        <span class="icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M5 12l4 4 10-10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        {{t "common.apply" "Apply"}}
+      </button>
     </div>
   </div>
   <table class="table">
@@ -2168,9 +2393,18 @@ const usersTemplate = compileTemplate("users", `
         <td>{{statusLabel}}</td>
         <td>{{instructorLabel}}</td>
         <td>
-          <button class="secondary" data-user-edit="{{id}}">{{t "common.edit" "Edit"}}</button>
-          <button class="secondary" data-user-invite="{{id}}">{{t "users.invite" "Invite"}}</button>
-          <button class="secondary" data-user-copy="{{id}}">{{t "users.copyInvite" "Copy invite"}}</button>
+          <button class="secondary btn-edit" data-user-edit="{{id}}">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+            </span>
+            {{t "common.edit" "Edit"}}
+          </button>
+          <button class="secondary btn-icon" data-user-invite="{{id}}">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 7l9 6 9-6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            </span>
+            {{t "users.invite" "Invite"}}
+          </button>
         </td>
       </tr>
       {{/each}}
@@ -2180,12 +2414,22 @@ const usersTemplate = compileTemplate("users", `
 
 const guestDirectoryTemplate = compileTemplate("guest-directory", `
   <div class="notice">{{t "guests.notice" "Guests can only view schedules in read-only mode."}}</div>
-  <div class="toolbar">
-    <button id="add-guest">{{t "guests.add" "Add guest"}}</button>
+  <div class="toolbar toolbar-guests">
+    <button id="add-guest" class="btn-icon">
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </span>
+      {{t "guests.add" "Add guest"}}
+    </button>
   </div>
   <div class="customer-controls">
     <input type="search" name="guestSearch" placeholder="{{t "guests.search" "Search guests"}}" value="{{search}}" />
-    <button class="secondary" id="apply-guest-search">{{t "common.apply" "Apply"}}</button>
+    <button class="secondary btn-icon" id="apply-guest-search">
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M5 12l4 4 10-10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      {{t "common.apply" "Apply"}}
+    </button>
   </div>
   <table class="table">
     <thead>
@@ -2205,8 +2449,12 @@ const guestDirectoryTemplate = compileTemplate("guest-directory", `
         <td>{{statusLabel}}</td>
         <td>{{createdLabel}}</td>
         <td>
-          <button class="secondary" data-guest-invite="{{id}}">{{t "guests.invite" "Invite"}}</button>
-          <button class="secondary" data-guest-copy="{{id}}">{{t "guests.copyInvite" "Copy invite"}}</button>
+          <button class="secondary btn-icon" data-guest-invite="{{id}}">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 7l9 6 9-6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            </span>
+            {{t "guests.invite" "Invite"}}
+          </button>
         </td>
       </tr>
       {{/each}}
@@ -2231,8 +2479,23 @@ const roomsTemplate = compileTemplate("rooms", `
       <tr>
         <td>{{name}}</td>
         <td>
-          <button class="secondary" data-room-edit="{{id}}">{{t "common.edit" "Edit"}}</button>
-          <button class="secondary" data-room-delete="{{id}}">{{t "common.delete" "Delete"}}</button>
+          <button class="secondary btn-edit" data-room-edit="{{id}}">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+            </span>
+            {{t "common.edit" "Edit"}}
+          </button>
+          <button class="secondary btn-danger" data-room-delete="{{id}}">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M8 6V4h8v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M19 6l-1 14H6L5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </span>
+            {{t "common.delete" "Delete"}}
+          </button>
         </td>
       </tr>
       {{/each}}
@@ -2981,8 +3244,7 @@ function render(state) {
             { value: "", label: t("users.filterAll", "All roles"), selected: !filters.role },
             { value: "Admin", label: t("roles.admin", "Admin"), selected: filters.role === "Admin" },
             { value: "Staff", label: t("roles.staff", "Staff"), selected: filters.role === "Staff" },
-            { value: "Instructor", label: t("roles.instructor", "Instructor"), selected: filters.role === "Instructor" },
-            { value: "Guest", label: t("roles.guest", "Guest"), selected: filters.role === "Guest" }
+            { value: "Instructor", label: t("roles.instructor", "Instructor"), selected: filters.role === "Instructor" }
         ];
         const users = (data.users || [])
             .filter(item => {
@@ -3430,10 +3692,19 @@ function bindRouteActions(route, data, state) {
             card.addEventListener("click", (event) => {
                 if (event.target.closest(".event-actions, .event-share")) return;
                 event.stopPropagation();
+                const birthdayContacts = getBirthdayContactsFromElement(card);
+                if (birthdayContacts) {
+                    const label = card.getAttribute("data-birthday-label") || "";
+                    const studioName = data?.calendar?.studio?.name || "";
+                    openBirthdayModal(birthdayContacts, label, studioName);
+                    return;
+                }
                 const birthdayNames = getBirthdayNamesFromElement(card);
                 if (birthdayNames) {
                     const label = card.getAttribute("data-birthday-label") || "";
-                    openBirthdayModal(birthdayNames, label);
+                    const studioName = data?.calendar?.studio?.name || "";
+                    const contacts = birthdayNames.map(name => ({ name }));
+                    openBirthdayModal(contacts, label, studioName);
                     return;
                 }
                 const id = card.getAttribute("data-event");
@@ -3490,31 +3761,6 @@ function bindRouteActions(route, data, state) {
                 const selected = (data.series || []).find(item => item.id === seriesId);
                 if (!selected) return;
                 openSeriesModal(selected, data);
-            });
-        });
-
-        document.querySelectorAll("button[data-generate]").forEach(btn => {
-            btn.addEventListener("click", async () => {
-                const seriesId = btn.getAttribute("data-generate");
-                if (!seriesId) return;
-                const confirmed = await confirmWithModal({
-                    title: t("events.generateConfirmTitle", "Generate sessions?"),
-                    message: t("events.generateConfirmMessage", "This will create sessions for the next 8 weeks."),
-                    confirmLabel: t("events.generateConfirm", "Generate"),
-                    cancelLabel: t("common.cancel", "Cancel")
-                });
-                if (!confirmed) return;
-                btn.disabled = true;
-                try {
-                    const result = await apiPost(`/api/admin/event-series/${seriesId}/generate-instances`, {});
-                    const count = result?.created ?? 0;
-                    showToast(t("events.generateSuccess", "Sessions generated.") + ` ${count}`, "success");
-                    actor.send({ type: "REFRESH" });
-                } catch (error) {
-                    showToast(error.message || t("events.generateError", "Unable to generate sessions."), "error");
-                } finally {
-                    btn.disabled = false;
-                }
             });
         });
 
@@ -3746,21 +3992,50 @@ function bindRouteActions(route, data, state) {
 
         if (bulkEmail) {
             bulkEmail.addEventListener("click", () => {
-                const emails = getSelectedCustomers()
-                    .map(customer => customer.email)
-                    .filter(email => email);
-                if (emails.length === 0) return;
-                window.location.href = `mailto:${emails.join(",")}`;
+                const recipients = getSelectedCustomers()
+                    .map(customer => ({
+                        name: customer.fullName || customer.email || customer.phone || "",
+                        email: customer.email || ""
+                    }))
+                    .filter(entry => entry.email);
+                const emails = recipients.map(entry => entry.email);
+                if (emails.length === 0) {
+                    showToast(t("email.noRecipients", "No email addresses selected."), "error");
+                    return;
+                }
+                openEmailComposerModal({
+                    title: t("email.composeTitle", "Send email"),
+                    subtitle: t("email.composeSubtitle", "Write a message to the selected recipients."),
+                    recipients,
+                    subject: "",
+                    body: "",
+                    onSend: (subject, body) => sendBulkEmail(emails, subject, body)
+                });
             });
         }
 
         if (bulkSms) {
             bulkSms.addEventListener("click", () => {
-                const phones = getSelectedCustomers()
-                    .map(customer => customer.phone)
-                    .filter(phone => phone);
-                if (phones.length === 0) return;
-                window.location.href = `sms:${phones.join(",")}`;
+                const recipients = getSelectedCustomers()
+                    .map(customer => ({
+                        name: customer.fullName || customer.phone || "",
+                        phone: customer.phone || ""
+                    }))
+                    .filter(entry => entry.phone);
+                const phones = recipients.map(entry => entry.phone);
+                if (phones.length === 0) {
+                    showToast(t("sms.noRecipients", "No phone numbers selected."), "error");
+                    return;
+                }
+                openSmsComposerModal({
+                    title: t("sms.composeTitle", "Send SMS"),
+                    subtitle: t("sms.composeSubtitle", "Write a message to the selected recipients."),
+                    recipients,
+                    body: "",
+                    onSend: (body) => {
+                        openSmsLink(phones, body);
+                    }
+                });
             });
         }
 
@@ -3842,19 +4117,6 @@ function bindRouteActions(route, data, state) {
             });
         });
 
-        document.querySelectorAll("button[data-user-copy]").forEach(btn => {
-            btn.addEventListener("click", async () => {
-                const id = btn.getAttribute("data-user-copy");
-                if (!id) return;
-                try {
-                    const invite = await requestInvite(id, false);
-                    await copyInvite(invite);
-                    showToast(t("users.inviteCopied", "Invite copied to clipboard."), "success");
-                } catch (error) {
-                    showToast(error.message || t("users.inviteCopyError", "Unable to copy invite."), "error");
-                }
-            });
-        });
     }
 
     if (route === "guests") {
@@ -3913,19 +4175,6 @@ function bindRouteActions(route, data, state) {
             });
         });
 
-        document.querySelectorAll("button[data-guest-copy]").forEach(btn => {
-            btn.addEventListener("click", async () => {
-                const id = btn.getAttribute("data-guest-copy");
-                if (!id) return;
-                try {
-                    const invite = await requestInvite(id, false);
-                    await copyInvite(invite);
-                    showToast(t("guests.inviteCopied", "Invite copied to clipboard."), "success");
-                } catch (error) {
-                    showToast(error.message || t("guests.inviteCopyError", "Unable to copy invite."), "error");
-                }
-            });
-        });
     }
 
     if (route === "settings") {
@@ -4765,6 +5014,8 @@ async function openCalendarEventModal(item, data, options = {}) {
     }
 
     const messageSubject = `${t("session.emailSubject", "Class registration:")} ${item.seriesTitle || t("session.sessionFallback", "Session")}`;
+    const bulkEmailBody = `${t("session.emailGreeting", "Hi")}, ${t("session.emailBody", "you're registered for")} ${item.seriesTitle || t("session.sessionFallbackLower", "this session")} ${t("session.emailOn", "on")} ${startLabel} (${timeRange}).`;
+    const bulkSmsBody = `${t("session.smsBodyPrefix", "Reminder:")} ${item.seriesTitle || t("session.sessionFallback", "Session")} ${t("session.emailOn", "on")} ${startLabel} (${timeRange}).`;
     const isBirthdayForKey = (dateOfBirth, dateKey) => {
         if (!dateOfBirth || !dateKey) return false;
         const parts = String(dateOfBirth).split("-");
@@ -4946,13 +5197,7 @@ async function openCalendarEventModal(item, data, options = {}) {
     bindColorResets(overlay);
     bindIconPicker(overlay);
     bindIconPreview(overlay);
-    overlay.querySelectorAll(".color-field").forEach(field => bindColorField(field));
-    bindIconPicker(overlay);
-    bindIconPreview(overlay);
-    overlay.querySelectorAll(".color-field").forEach(field => bindColorField(field));
-    bindColorResets(overlay);
-    bindIconPicker(overlay);
-    bindIconPreview(overlay);
+    bindRoomRemoteDefaults(overlay, data.rooms || [], item.remoteInviteUrl || "");
 
     const closeBtn = overlay.querySelector("#close-modal");
     if (closeBtn) {
@@ -5005,35 +5250,10 @@ async function openCalendarEventModal(item, data, options = {}) {
         });
     }
 
-    const shareCopyBtn = overlay.querySelector("#copy-share-link");
-    if (shareCopyBtn) {
-        shareCopyBtn.addEventListener("click", async () => {
-            try {
-                await navigator.clipboard.writeText(shareUrl);
-                showToast(t("session.shareCopied", "Share link copied."), "success");
-            } catch {
-                try {
-                    const temp = document.createElement("textarea");
-                    temp.value = shareUrl;
-                    temp.style.position = "fixed";
-                    temp.style.opacity = "0";
-                    document.body.appendChild(temp);
-                    temp.focus();
-                    temp.select();
-                    document.execCommand("copy");
-                    temp.remove();
-                    showToast(t("session.shareCopied", "Share link copied."), "success");
-                } catch {
-                    showToast(t("session.shareCopyError", "Unable to copy share link."), "error");
-                }
-            }
-        });
-    }
-
-    const shareOpenBtn = overlay.querySelector("#open-share-link");
-    if (shareOpenBtn) {
-        shareOpenBtn.addEventListener("click", () => {
-            window.open(shareUrl, "_blank", "noopener");
+    const shareBtn = overlay.querySelector("#share-session-link");
+    if (shareBtn) {
+        shareBtn.addEventListener("click", async () => {
+            await shareSessionLink(item, data);
         });
     }
 
@@ -5357,23 +5577,68 @@ async function openCalendarEventModal(item, data, options = {}) {
             return currentRosterRows.filter(row => selectedIds.includes(row.customerId));
         };
 
+        const resolveRosterRecipients = () => {
+            const selected = getSelectedRoster();
+            return selected.length ? selected : currentRosterRows.filter(row => !row.isCancelled);
+        };
+
         if (rosterEmailBtn) {
             rosterEmailBtn.addEventListener("click", () => {
-                const emails = getSelectedRoster()
-                    .map(row => row.email)
-                    .filter(email => email);
-                if (emails.length === 0) return;
-                window.location.href = `mailto:${emails.join(",")}`;
+                const rows = resolveRosterRecipients().filter(row => row.email);
+                if (rows.length === 0) {
+                    showToast(t("email.noRecipients", "No email recipients available."), "error");
+                    return;
+                }
+                const recipients = rows.map(row => ({
+                    name: row.customerName,
+                    email: row.email
+                }));
+                openEmailComposerModal({
+                    title: t("email.composeTitle", "Send email"),
+                    subtitle: t("email.composeSubtitle", "Review and send the message."),
+                    recipients,
+                    subject: messageSubject,
+                    body: bulkEmailBody,
+                    onSend: async (subject, body) => {
+                        try {
+                            await sendBulkEmail(
+                                recipients.map(entry => entry.email).filter(Boolean),
+                                subject,
+                                body
+                            );
+                        } catch (error) {
+                            const message = String(error?.message || "");
+                            if (message.toLowerCase().includes("configured")) {
+                                openBulkMailto(recipients.map(entry => entry.email).filter(Boolean), subject, body);
+                                return;
+                            }
+                            throw error;
+                        }
+                    }
+                });
             });
         }
 
         if (rosterSmsBtn) {
             rosterSmsBtn.addEventListener("click", () => {
-                const phones = getSelectedRoster()
-                    .map(row => row.phone)
-                    .filter(phone => phone);
-                if (phones.length === 0) return;
-                window.location.href = `sms:${phones.join(",")}`;
+                const rows = resolveRosterRecipients().filter(row => row.phone);
+                if (rows.length === 0) {
+                    showToast(t("sms.noRecipients", "No phone numbers available."), "error");
+                    return;
+                }
+                const recipients = rows.map(row => ({
+                    name: row.customerName,
+                    phone: row.phone
+                }));
+                openSmsComposerModal({
+                    title: t("sms.composeTitle", "Send SMS"),
+                    subtitle: t("sms.composeSubtitle", "Prepare a text message for the group."),
+                    recipients,
+                    body: bulkSmsBody,
+                    onSend: async (body) => {
+                        openSmsLink(recipients.map(entry => entry.phone).filter(Boolean), body);
+                    }
+                });
             });
         }
     };
@@ -5643,8 +5908,8 @@ function openDescriptionModal(title, description) {
     }
 }
 
-function openBirthdayModal(names, dateLabel) {
-    if (!Array.isArray(names) || names.length === 0) return;
+function openBirthdayModal(contacts, dateLabel, studioName) {
+    if (!Array.isArray(contacts) || contacts.length === 0) return;
     const existing = document.getElementById("birthday-modal");
     if (existing) {
         clearModalEscape();
@@ -5653,10 +5918,24 @@ function openBirthdayModal(names, dateLabel) {
     const subtitle = dateLabel
         ? `${t("calendar.birthdaySubtitle", "Celebrating on")} ${dateLabel}`
         : t("calendar.birthdaySubtitle", "Celebrating on");
+    const normalizePhone = (phone) => (phone || "").replace(/[^\d]/g, "");
+    const birthdayMessage = studioName
+        ? `${t("birthday.message", "Happy birthday!")} ${t("birthday.from", "From")} ${studioName}`
+        : t("birthday.message", "Happy birthday!");
+    const emailSubject = studioName
+        ? `${t("birthday.subject", "Happy birthday from")} ${studioName}`
+        : t("birthday.subject", "Happy birthday");
+    const enrichedContacts = contacts.map(contact => {
+        const phoneDigits = normalizePhone(contact.phone);
+        return {
+            ...contact,
+            whatsappLink: phoneDigits ? `https://wa.me/${phoneDigits}?text=${encodeURIComponent(birthdayMessage)}` : ""
+        };
+    });
     const modalMarkup = birthdayModalTemplate({
         title: t("calendar.birthdayTitle", "Birthdays"),
         subtitle,
-        names
+        contacts: enrichedContacts
     });
     const wrapper = document.createElement("div");
     wrapper.innerHTML = modalMarkup;
@@ -5674,6 +5953,104 @@ function openBirthdayModal(names, dateLabel) {
     if (closeBtn) {
         closeBtn.addEventListener("click", closeModal);
     }
+
+    const emailAllBtn = overlay.querySelector("#birthday-email-all");
+    if (emailAllBtn) {
+        emailAllBtn.addEventListener("click", () => {
+            const recipients = enrichedContacts.filter(contact => contact.email);
+            if (!recipients.length) {
+                showToast(t("email.noRecipients", "No email recipients available."), "error");
+                return;
+            }
+            openEmailComposerModal({
+                title: t("birthday.emailTitle", "Birthday email"),
+                subtitle: t("birthday.emailSubtitle", "Send a birthday greeting."),
+                recipients,
+                subject: emailSubject,
+                body: birthdayMessage,
+                onSend: async (subject, body) => {
+                    try {
+                        await sendBulkEmail(
+                            recipients.map(entry => entry.email).filter(Boolean),
+                            subject,
+                            body
+                        );
+                    } catch (error) {
+                        const message = String(error?.message || "");
+                        if (message.toLowerCase().includes("configured")) {
+                            openBulkMailto(recipients.map(entry => entry.email).filter(Boolean), subject, body);
+                            return;
+                        }
+                        throw error;
+                    }
+                }
+            });
+        });
+    }
+
+    const smsAllBtn = overlay.querySelector("#birthday-sms-all");
+    if (smsAllBtn) {
+        smsAllBtn.addEventListener("click", () => {
+            const recipients = enrichedContacts.filter(contact => contact.phone);
+            if (!recipients.length) {
+                showToast(t("sms.noRecipients", "No phone numbers available."), "error");
+                return;
+            }
+            openSmsComposerModal({
+                title: t("birthday.smsTitle", "Birthday SMS"),
+                subtitle: t("birthday.smsSubtitle", "Send a birthday text."),
+                recipients,
+                body: birthdayMessage,
+                onSend: async (body) => {
+                    openSmsLink(recipients.map(entry => entry.phone).filter(Boolean), body);
+                }
+            });
+        });
+    }
+
+    overlay.querySelectorAll("[data-birthday-email]").forEach(button => {
+        button.addEventListener("click", () => {
+            const email = button.getAttribute("data-birthday-email") || "";
+            const name = button.getAttribute("data-birthday-name") || "";
+            if (!email) return;
+            openEmailComposerModal({
+                title: t("birthday.emailTitle", "Birthday email"),
+                subtitle: t("birthday.emailSubtitle", "Send a birthday greeting."),
+                recipients: [{ name, email }],
+                subject: emailSubject,
+                body: birthdayMessage,
+                onSend: async (subject, body) => {
+                    try {
+                        await sendBulkEmail([email], subject, body);
+                    } catch (error) {
+                        const message = String(error?.message || "");
+                        if (message.toLowerCase().includes("configured")) {
+                            openBulkMailto([email], subject, body);
+                            return;
+                        }
+                        throw error;
+                    }
+                }
+            });
+        });
+    });
+
+    overlay.querySelectorAll("[data-birthday-sms]").forEach(button => {
+        button.addEventListener("click", () => {
+            const phone = button.getAttribute("data-birthday-sms") || "";
+            const name = button.getAttribute("data-birthday-name") || "";
+            if (!phone) return;
+            openSmsComposerModal({
+                title: t("birthday.smsTitle", "Birthday SMS"),
+                subtitle: t("birthday.smsSubtitle", "Send a birthday text."),
+                recipients: [{ name, phone }],
+                body: birthdayMessage,
+                onSend: async (body) => {
+                    openSmsLink([phone], body);
+                }
+            });
+        });
+    });
 }
 
 function openConfirmModal({ title, message, confirmLabel, cancelLabel, onConfirm, onCancel }) {
@@ -5746,6 +6123,34 @@ function bindIconPreview(container) {
     });
 }
 
+function bindRoomRemoteDefaults(container, rooms, initialValue = "") {
+    if (!container) return;
+    const roomSelect = container.querySelector("select[name=\"roomId\"]");
+    const inviteInput = container.querySelector("input[name=\"remoteInviteUrl\"]");
+    if (!roomSelect || !inviteInput) return;
+    const roomMap = new Map((rooms || []).map(room => [String(room.id), room]));
+    let lastAutoValue = initialValue || inviteInput.value || "";
+
+    const applyRoomDefault = () => {
+        const room = roomMap.get(String(roomSelect.value || ""));
+        const nextDefault = room?.supportsRemote ? (room.remoteLink || "") : "";
+        if (!nextDefault) {
+            if (inviteInput.value === lastAutoValue) {
+                inviteInput.value = "";
+            }
+            lastAutoValue = "";
+            return;
+        }
+        if (!inviteInput.value || inviteInput.value === lastAutoValue) {
+            inviteInput.value = nextDefault;
+            lastAutoValue = nextDefault;
+        }
+    };
+
+    roomSelect.addEventListener("change", applyRoomDefault);
+    applyRoomDefault();
+}
+
 function openIconPicker(targetInput) {
     if (!targetInput) return;
     const existing = document.getElementById("icon-picker-modal");
@@ -5791,7 +6196,9 @@ function openIconPicker(targetInput) {
 function bindIconPicker(container) {
     if (!container) return;
     container.querySelectorAll("[data-icon-picker]").forEach(button => {
-        button.addEventListener("click", () => {
+        button.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
             const selector = button.getAttribute("data-icon-target") || "input[name=\"icon\"]";
             const target = container.querySelector(selector) || document.querySelector(selector);
             if (target) {
@@ -5846,6 +6253,155 @@ function openInviteEmailModal({ email, subject, body, onSend }) {
                 closeModal();
             } catch (error) {
                 const message = error?.message || t("invite.emailError", "Unable to send invite email.");
+                if (isEmailConfigError(message)) {
+                    openInviteEmail({ email, subject: subjectValue, body: bodyValue });
+                    showToast(t("email.fallback", "Opened email client."), "success");
+                    closeModal();
+                    sendBtn.disabled = false;
+                    return;
+                }
+                showToast(message, "error");
+            } finally {
+                sendBtn.disabled = false;
+            }
+        });
+    }
+}
+
+async function sendBulkEmail(recipients, subject, body) {
+    return apiPost("/api/admin/communications/email", {
+        recipients,
+        subject,
+        body
+    });
+}
+
+function isEmailConfigError(message) {
+    return (message || "").toLowerCase().includes("email delivery is not configured");
+}
+
+function openBulkMailto(recipients, subject, body) {
+    if (!recipients || recipients.length === 0) return;
+    const emails = recipients
+        .map(entry => (typeof entry === "string" ? entry : entry?.email))
+        .filter(Boolean);
+    if (!emails.length) return;
+    const to = encodeURIComponent(emails.join(","));
+    const encodedSubject = encodeURIComponent(subject || "");
+    const encodedBody = encodeURIComponent(body || "");
+    window.location.href = `mailto:${to}?subject=${encodedSubject}&body=${encodedBody}`;
+}
+
+function openEmailComposerModal({ title, subtitle, recipients, subject, body, onSend }) {
+    if (!recipients || recipients.length === 0) return;
+    const existing = document.getElementById("email-composer-modal");
+    if (existing) {
+        clearModalEscape();
+        existing.remove();
+    }
+    const modalMarkup = emailComposerTemplate({
+        title,
+        subtitle,
+        recipients,
+        subject,
+        body
+    });
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = modalMarkup;
+    const overlay = wrapper.firstElementChild;
+    if (!overlay) return;
+    document.body.appendChild(overlay);
+
+    let cleanupEscape = () => {};
+    const closeModal = () => {
+        cleanupEscape();
+        overlay.remove();
+    };
+    cleanupEscape = bindModalEscape(closeModal);
+    bindModalBackdrop(overlay);
+
+    const closeBtn = overlay.querySelector("#close-email-composer");
+    const cancelBtn = overlay.querySelector("#cancel-email-composer");
+    const sendBtn = overlay.querySelector("#send-email-composer");
+    if (closeBtn) closeBtn.addEventListener("click", closeModal);
+    if (cancelBtn) cancelBtn.addEventListener("click", closeModal);
+
+    if (sendBtn) {
+        sendBtn.addEventListener("click", async () => {
+            const subjectValue = overlay.querySelector("[name=\"emailSubject\"]")?.value || "";
+            const bodyValue = overlay.querySelector("[name=\"emailBody\"]")?.value || "";
+            sendBtn.disabled = true;
+            try {
+                await onSend(subjectValue, bodyValue);
+                showToast(t("email.sent", "Email sent."), "success");
+                closeModal();
+            } catch (error) {
+                const message = error?.message || t("email.error", "Unable to send email.");
+                if (isEmailConfigError(message)) {
+                    openBulkMailto(recipients, subjectValue, bodyValue);
+                    showToast(t("email.fallback", "Opened email client."), "success");
+                    closeModal();
+                    sendBtn.disabled = false;
+                    return;
+                }
+                showToast(message, "error");
+            } finally {
+                sendBtn.disabled = false;
+            }
+        });
+    }
+}
+
+function openSmsLink(recipients, body) {
+    if (!recipients || recipients.length === 0) return;
+    const encodedBody = encodeURIComponent(body || "");
+    const numbers = recipients.join(",");
+    window.location.href = `sms:${numbers}?&body=${encodedBody}`;
+}
+
+function openSmsComposerModal({ title, subtitle, recipients, body, onSend }) {
+    if (!recipients || recipients.length === 0) return;
+    const existing = document.getElementById("sms-composer-modal");
+    if (existing) {
+        clearModalEscape();
+        existing.remove();
+    }
+    const modalMarkup = smsComposerTemplate({
+        title,
+        subtitle,
+        recipients,
+        body
+    });
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = modalMarkup;
+    const overlay = wrapper.firstElementChild;
+    if (!overlay) return;
+    document.body.appendChild(overlay);
+
+    let cleanupEscape = () => {};
+    const closeModal = () => {
+        cleanupEscape();
+        overlay.remove();
+    };
+    cleanupEscape = bindModalEscape(closeModal);
+    bindModalBackdrop(overlay);
+
+    const closeBtn = overlay.querySelector("#close-sms-composer");
+    const cancelBtn = overlay.querySelector("#cancel-sms-composer");
+    const sendBtn = overlay.querySelector("#send-sms-composer");
+    if (closeBtn) closeBtn.addEventListener("click", closeModal);
+    if (cancelBtn) cancelBtn.addEventListener("click", closeModal);
+
+    if (sendBtn) {
+        sendBtn.addEventListener("click", async () => {
+            const bodyValue = overlay.querySelector("[name=\"smsBody\"]")?.value || "";
+            sendBtn.disabled = true;
+            try {
+                await onSend(bodyValue);
+                showToast(t("sms.sent", "SMS prepared."), "success");
+                closeModal();
+            } catch (error) {
+                const message = error?.message || t("sms.error", "Unable to send SMS.");
                 showToast(message, "error");
             } finally {
                 sendBtn.disabled = false;
@@ -5900,6 +6456,7 @@ function openSessionModal(data, options = {}) {
     };
     cleanupEscape = bindModalEscape(closeModal);
     bindModalBackdrop(overlay);
+    bindRoomRemoteDefaults(overlay, data.rooms || [], prefill.remoteInviteUrl || "");
 
     const closeBtn = overlay.querySelector("#close-session");
     if (closeBtn) {
@@ -6002,11 +6559,7 @@ function openSessionModal(data, options = {}) {
                         return;
                     }
 
-                    const toDate = new Date(startDate);
-                    toDate.setDate(toDate.getDate() + generateWeeks * 7);
-                    const to = toDateInputValue(toDate);
-
-                    const series = await apiPost("/api/admin/event-series", {
+                    await apiPost("/api/admin/event-series", {
                         title: payload.title,
                         description: payload.description || "",
                         instructorId: payload.instructorId,
@@ -6017,6 +6570,8 @@ function openSessionModal(data, options = {}) {
                         startTimeLocal: payload.startTimeLocal,
                         durationMinutes: payload.durationMinutes,
                         recurrenceIntervalWeeks,
+                        generateWeeks,
+                        generateFrom: startDate,
                         defaultCapacity: payload.capacity,
                         remoteCapacity: payload.remoteCapacity,
                         priceCents: payload.priceCents,
@@ -6026,8 +6581,6 @@ function openSessionModal(data, options = {}) {
                         cancellationWindowHours: payload.cancellationWindowHours,
                         isActive: true
                     });
-
-                    await apiPost(`/api/admin/event-series/${series.id}/generate-instances?from=${startDate}&to=${to}`, {});
                 } else {
                     const date = getValue("date") || focusDate;
                     await apiPost("/api/admin/event-instances", {
@@ -7051,7 +7604,9 @@ function openRoomModal(room) {
         subtitle: isEdit ? t("room.editSubtitle", "Update room details.") : t("room.addSubtitle", "Create a new room."),
         saveLabel: isEdit ? t("common.saveChanges", "Save changes") : t("room.create", "Create room"),
         roomId: room?.id || "",
-        roomName: room?.name || ""
+        roomName: room?.name || "",
+        supportsRemote: room?.supportsRemote ?? false,
+        roomRemoteLink: room?.remoteLink || ""
     });
 
     const wrapper = document.createElement("div");
@@ -7074,19 +7629,34 @@ function openRoomModal(room) {
         closeBtn.addEventListener("click", closeModal);
     }
 
+    const supportsSelect = overlay.querySelector("[name=\"roomSupportsRemote\"]");
+    const remoteFields = overlay.querySelector(".room-remote-fields");
+    const updateRemoteFields = () => {
+        const enabled = supportsSelect?.value === "true";
+        if (remoteFields) {
+            remoteFields.style.display = enabled ? "" : "none";
+        }
+    };
+    if (supportsSelect) {
+        supportsSelect.addEventListener("change", updateRemoteFields);
+    }
+    updateRemoteFields();
+
     const saveBtn = overlay.querySelector("#save-room");
     if (saveBtn) {
         saveBtn.addEventListener("click", async () => {
             const name = overlay.querySelector("[name=\"roomName\"]")?.value.trim() || "";
+            const supportsRemote = overlay.querySelector("[name=\"roomSupportsRemote\"]")?.value === "true";
+            const remoteLink = overlay.querySelector("[name=\"roomRemoteLink\"]")?.value.trim() || "";
             if (!name) {
                 showToast(t("room.nameRequired", "Room name is required."), "error");
                 return;
             }
             try {
                 if (isEdit && room?.id) {
-                    await apiPut(`/api/admin/rooms/${room.id}`, { name });
+                    await apiPut(`/api/admin/rooms/${room.id}`, { name, supportsRemote, remoteLink });
                 } else {
-                    await apiPost("/api/admin/rooms", { name });
+                    await apiPost("/api/admin/rooms", { name, supportsRemote, remoteLink });
                 }
                 closeModal();
                 actor.send({ type: "REFRESH" });
@@ -7317,6 +7887,8 @@ function openSeriesModal(series, data) {
         remoteInviteUrl: series?.remoteInviteUrl || "",
         description: series?.description || "",
         recurrenceIntervalWeeks: series?.recurrenceIntervalWeeks ?? 1,
+        generateWeeks: series?.generateWeeks ?? 8,
+        generateUntil: series?.generateUntil || "",
         cancellationWindowHours: series?.cancellationWindowHours ?? 6,
         isActive: series?.isActive ?? true,
         rooms,
@@ -7343,6 +7915,7 @@ function openSeriesModal(series, data) {
     overlay.querySelectorAll(".color-field").forEach(field => bindColorField(field));
     bindIconPicker(overlay);
     bindIconPreview(overlay);
+    bindRoomRemoteDefaults(overlay, data.rooms || [], series?.remoteInviteUrl || "");
 
     const closeBtn = overlay.querySelector("#close-series");
     if (closeBtn) {
@@ -7390,6 +7963,8 @@ function openSeriesModal(series, data) {
                 startTimeLocal,
                 durationMinutes: Number(getValue("durationMinutes")),
                 recurrenceIntervalWeeks: Number(getValue("recurrenceIntervalWeeks") || 1),
+                generateWeeks: Number(getValue("generateWeeks") || 8),
+                generateUntil: getValue("generateUntil") || null,
                 defaultCapacity: Number(getValue("capacity") || 0),
                 remoteCapacity: Number(getValue("remoteCapacity") || 0),
                 priceCents: toCents(Number(getValue("price") || 0)),
@@ -7848,12 +8423,23 @@ function buildEventMap(items, timeZone) {
             const existing = list.find(entry => entry.isBirthdayGroup);
             if (existing) {
                 existing.birthdayNames.push(resolvedName);
+                existing.birthdayContacts.push({
+                    name: resolvedName,
+                    email: item.birthdayEmail || "",
+                    phone: item.birthdayPhone || ""
+                });
                 existing.birthdayCount = existing.birthdayNames.length;
                 existing.hasBirthdayList = existing.birthdayCount > 1;
                 existing.birthdayNamesJson = encodeURIComponent(JSON.stringify(existing.birthdayNames));
+                existing.birthdayContactsJson = encodeURIComponent(JSON.stringify(existing.birthdayContacts));
                 existing.seriesTitle = `${birthdayIcon} ${existing.birthdayNames[0]}`;
             } else {
                 const birthdayNames = [resolvedName];
+                const birthdayContacts = [{
+                    name: resolvedName,
+                    email: item.birthdayEmail || "",
+                    phone: item.birthdayPhone || ""
+                }];
                 const event = {
                     ...item,
                     dateKey,
@@ -7866,6 +8452,7 @@ function buildEventMap(items, timeZone) {
                     isBirthday,
                     isBirthdayGroup: true,
                     isLocked: true,
+                    suppressActions: true,
                     seriesTitle,
                     seriesIcon: "",
                     registeredSummary: "",
@@ -7876,6 +8463,8 @@ function buildEventMap(items, timeZone) {
                     birthdayCount: birthdayNames.length,
                     hasBirthdayList: false,
                     birthdayNamesJson: encodeURIComponent(JSON.stringify(birthdayNames)),
+                    birthdayContacts,
+                    birthdayContactsJson: encodeURIComponent(JSON.stringify(birthdayContacts)),
                     birthdayDateLabel: formatFullDate(start, timeZone)
                 };
                 list.push(event);
@@ -7895,6 +8484,7 @@ function buildEventMap(items, timeZone) {
             isHoliday,
             isBirthday,
             isLocked: isAllDay,
+            suppressActions: isHoliday || isBirthday || isAllDay,
             seriesTitle,
             seriesIcon,
             registeredSummary: isHoliday ? "" : `${booked}/${capacity}`,
@@ -7905,13 +8495,20 @@ function buildEventMap(items, timeZone) {
             birthdayCount: 0,
             hasBirthdayList: false,
             birthdayNamesJson: "",
+            birthdayContacts: [],
+            birthdayContactsJson: "",
             birthdayDateLabel: ""
         };
         list.push(event);
         map.set(dateKey, list);
     });
 
-    map.forEach(list => list.sort((a, b) => new Date(a.startUtc) - new Date(b.startUtc)));
+    map.forEach(list => list.sort((a, b) => {
+        const aPriority = (a.isHoliday || a.isBirthday) ? 0 : 1;
+        const bPriority = (b.isHoliday || b.isBirthday) ? 0 : 1;
+        if (aPriority !== bPriority) return aPriority - bPriority;
+        return new Date(a.startUtc) - new Date(b.startUtc);
+    }));
     return map;
 }
 
@@ -7986,6 +8583,21 @@ function closeEventActionsMenu() {
 function getBirthdayNamesFromElement(element) {
     if (!element) return null;
     const raw = element.getAttribute("data-birthday-names");
+    if (!raw) return null;
+    try {
+        const parsed = JSON.parse(decodeURIComponent(raw));
+        if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+        }
+    } catch {
+        return null;
+    }
+    return null;
+}
+
+function getBirthdayContactsFromElement(element) {
+    if (!element) return null;
+    const raw = element.getAttribute("data-birthday-contacts");
     if (!raw) return null;
     try {
         const parsed = JSON.parse(decodeURIComponent(raw));

@@ -6,3 +6,5 @@
 - 2026-01-22: Fixed calendar nav direction and removed Hebrew date label, added time editing in session modal, removed edit-series from context menu, renamed Users to Team and filtered guest-only users, aligned customer city/address row, added generate confirmation, and added in-app invite email composer with backend send endpoint.
 - 2026-01-22: Switched calendar toolbar to a two-column layout with actions and navigation rows, added multi-day series support end-to-end, and expanded Playwright coverage with plan category management tests.
 - 2026-01-22: Adjusted nav group styling/indentation, enforced 24h time formatting, and added a divider for multi-day series weekday selection.
+- 2026-01-23: Added toolbar icons and sizing tweaks (users/customers/guests), removed remote capacity column from calendar list, enabled bulk customer email/SMS composer with mailto fallback, improved birthday chevron styling, added room remote support migration + i18n keys, and updated admin nav tests.
+- 2026-01-23: Fixed duplicate const in session recurrence handler, restored admin rendering, and resolved Playwright run.

@@ -7,7 +7,7 @@ public record RegisterRequest(string Email, string Password, string StudioSlug, 
 
 public record StudioUpdateRequest(string Name, string Timezone, int WeekStartsOn, string ThemeJson, string? DefaultLocale, string? HolidayCalendarsJson);
 
-public record RoomRequest(string Name);
+public record RoomRequest(string Name, bool SupportsRemote, string? RemoteLink);
 
 public record InstructorRequest(
     string DisplayName,
@@ -28,6 +28,9 @@ public record EventSeriesRequest(
     TimeSpan StartTimeLocal,
     int DurationMinutes,
     int RecurrenceIntervalWeeks,
+    int? GenerateWeeks,
+    DateOnly? GenerateFrom,
+    DateOnly? GenerateUntil,
     int DefaultCapacity,
     int RemoteCapacity,
     int PriceCents,
@@ -81,6 +84,7 @@ public record EventInstanceCreateRequest(
     EventStatus Status);
 
 public record InviteEmailRequest(string Subject, string Body);
+public record BulkEmailRequest(string Subject, string Body, string[] Recipients);
 
 public record PlanRequest(string Name, PlanType Type, int WeeklyLimit, int PunchCardUses, int PriceCents, string Currency, bool RemoteOnly, int? ValidityDays, int? DailyLimit, string? CategoryIdsJson, bool Active);
 

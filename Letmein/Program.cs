@@ -626,7 +626,14 @@ adminApi.MapGet("/rooms", async (ClaimsPrincipal user, AppDbContext db) =>
 adminApi.MapPost("/rooms", async (ClaimsPrincipal user, RoomRequest request, AppDbContext db) =>
 {
     var studioId = GetStudioId(user);
-    var room = new Room { Id = Guid.NewGuid(), StudioId = studioId, Name = request.Name };
+    var room = new Room
+    {
+        Id = Guid.NewGuid(),
+        StudioId = studioId,
+        Name = request.Name,
+        SupportsRemote = request.SupportsRemote,
+        RemoteLink = request.RemoteLink?.Trim() ?? ""
+    };
     db.Rooms.Add(room);
     await db.SaveChangesAsync();
     await LogAuditAsync(db, user, "Create", "Room", room.Id.ToString(), $"Created room {room.Name}");
@@ -643,6 +650,8 @@ adminApi.MapPut("/rooms/{id:guid}", async (ClaimsPrincipal user, Guid id, RoomRe
     }
 
     room.Name = request.Name;
+    room.SupportsRemote = request.SupportsRemote;
+    room.RemoteLink = request.RemoteLink?.Trim() ?? "";
     await db.SaveChangesAsync();
     await LogAuditAsync(db, user, "Update", "Room", room.Id.ToString(), $"Updated room {room.Name}");
     return Results.Ok(room);
@@ -863,14 +872,18 @@ adminApi.MapGet("/calendar", async (ClaimsPrincipal user, DateOnly? from, DateOn
     var birthdayCustomers = await db.Customers.AsNoTracking()
         .Where(c => c.StudioId == studioId && c.DateOfBirth != null && !c.IsArchived)
         .ToListAsync();
-    var birthdayEntries = new List<(string Name, DateOnly? DateOfBirth)>();
+    var birthdayEntries = new List<(string Name, DateOnly? DateOfBirth, string Email, string Phone)>();
     if (birthdayUsers.Count > 0)
     {
         birthdayEntries.AddRange(MapUserBirthdays(birthdayUsers));
     }
     if (birthdayCustomers.Count > 0)
     {
-        birthdayEntries.AddRange(MapCustomerBirthdays(birthdayCustomers));
+        var customerUserIds = birthdayCustomers.Select(c => c.UserId).Distinct().ToList();
+        var customerUsers = customerUserIds.Count > 0
+            ? await db.Users.AsNoTracking().Where(u => customerUserIds.Contains(u.Id)).ToDictionaryAsync(u => u.Id, u => u)
+            : new Dictionary<Guid, AppUser>();
+        birthdayEntries.AddRange(MapCustomerBirthdays(birthdayCustomers, customerUsers));
     }
     if (birthdayEntries.Count > 0)
     {
@@ -938,6 +951,7 @@ adminApi.MapPost("/event-instances", async (ClaimsPrincipal user, EventInstanceC
     }
 
     var normalizedPlanIds = NormalizeGuidListJson(request.AllowedPlanIdsJson);
+    var remoteInviteUrl = await ResolveRoomRemoteLinkAsync(db, studioId, normalizedRoomId, request.RemoteInviteUrl);
     var series = new EventSeries
     {
         Id = Guid.NewGuid(),
@@ -954,7 +968,7 @@ adminApi.MapPost("/event-instances", async (ClaimsPrincipal user, EventInstanceC
         RemoteCapacity = request.RemoteCapacity,
         PriceCents = request.PriceCents,
         Currency = string.IsNullOrWhiteSpace(request.Currency) ? "ILS" : request.Currency,
-        RemoteInviteUrl = string.IsNullOrWhiteSpace(request.RemoteInviteUrl) ? "" : request.RemoteInviteUrl,
+        RemoteInviteUrl = remoteInviteUrl,
         Icon = request.Icon ?? "",
         Color = request.Color ?? "",
         AllowedPlanIdsJson = normalizedPlanIds,
@@ -980,7 +994,7 @@ adminApi.MapPost("/event-instances", async (ClaimsPrincipal user, EventInstanceC
         RemoteCapacity = request.RemoteCapacity,
         PriceCents = request.PriceCents,
         Currency = string.IsNullOrWhiteSpace(request.Currency) ? "ILS" : request.Currency,
-        RemoteInviteUrl = string.IsNullOrWhiteSpace(request.RemoteInviteUrl) ? "" : request.RemoteInviteUrl,
+        RemoteInviteUrl = remoteInviteUrl,
         CancellationWindowHours = request.CancellationWindowHours,
         Notes = request.Notes ?? "",
         AllowedPlanIdsJson = normalizedPlanIds,
@@ -1405,9 +1419,14 @@ adminApi.MapPut("/event-instances/{id:guid}", async (ClaimsPrincipal user, Guid 
     {
         instance.Currency = request.Currency;
     }
-    if (request.RemoteInviteUrl != null)
+    var nextRemoteInviteUrl = request.RemoteInviteUrl ?? instance.RemoteInviteUrl;
+    if (string.IsNullOrWhiteSpace(nextRemoteInviteUrl))
     {
-        instance.RemoteInviteUrl = request.RemoteInviteUrl;
+        nextRemoteInviteUrl = await ResolveRoomRemoteLinkAsync(db, studioId, nextRoomId, "");
+    }
+    if (nextRemoteInviteUrl != null)
+    {
+        instance.RemoteInviteUrl = nextRemoteInviteUrl;
     }
 
     if (request.CancellationWindowHours.HasValue)
@@ -1464,6 +1483,7 @@ adminApi.MapPost("/event-series", async (ClaimsPrincipal user, EventSeriesReques
 {
     var studioId = GetStudioId(user);
     var seriesDays = ResolveDaysOfWeek(request.DaysOfWeekJson, request.DayOfWeek);
+    var remoteInviteUrl = await ResolveRoomRemoteLinkAsync(db, studioId, request.RoomId, request.RemoteInviteUrl);
     var series = new EventSeries
     {
         Id = Guid.NewGuid(),
@@ -1482,7 +1502,7 @@ adminApi.MapPost("/event-series", async (ClaimsPrincipal user, EventSeriesReques
         RemoteCapacity = request.RemoteCapacity,
         PriceCents = request.PriceCents,
         Currency = string.IsNullOrWhiteSpace(request.Currency) ? "ILS" : request.Currency,
-        RemoteInviteUrl = string.IsNullOrWhiteSpace(request.RemoteInviteUrl) ? "" : request.RemoteInviteUrl,
+        RemoteInviteUrl = remoteInviteUrl,
         Icon = request.Icon ?? "",
         Color = request.Color ?? "",
         AllowedPlanIdsJson = NormalizeGuidListJson(request.AllowedPlanIdsJson),
@@ -1495,7 +1515,8 @@ adminApi.MapPost("/event-series", async (ClaimsPrincipal user, EventSeriesReques
     await LogAuditAsync(db, user, "Create", "EventSeries", series.Id.ToString(), $"Created event series {series.Title}");
 
     var studio = await db.Studios.AsNoTracking().FirstAsync(s => s.Id == studioId);
-    await scheduleService.GenerateInstancesForSeriesAsync(studio, series, DateOnly.FromDateTime(DateTime.UtcNow), DateOnly.FromDateTime(DateTime.UtcNow.AddDays(56)), CancellationToken.None);
+    var (fromDate, toDate) = ResolveGenerationWindow(request.GenerateFrom, request.GenerateUntil, request.GenerateWeeks);
+    await scheduleService.GenerateInstancesForSeriesAsync(studio, series, fromDate, toDate, CancellationToken.None);
 
     return Results.Created($"/api/admin/event-series/{series.Id}", series);
 });
@@ -1517,7 +1538,7 @@ adminApi.MapGet("/event-series/{id:guid}", async (ClaimsPrincipal user, Guid id,
     return series == null ? Results.NotFound() : Results.Ok(series);
 });
 
-adminApi.MapPut("/event-series/{id:guid}", async (ClaimsPrincipal user, Guid id, EventSeriesRequest request, AppDbContext db) =>
+adminApi.MapPut("/event-series/{id:guid}", async (ClaimsPrincipal user, Guid id, EventSeriesRequest request, AppDbContext db, ScheduleService scheduleService) =>
 {
     var studioId = GetStudioId(user);
     var series = await db.EventSeries.FirstOrDefaultAsync(s => s.Id == id && s.StudioId == studioId);
@@ -1526,7 +1547,10 @@ adminApi.MapPut("/event-series/{id:guid}", async (ClaimsPrincipal user, Guid id,
         return Results.NotFound();
     }
 
+    var priorStartTime = series.StartTimeLocal;
+    var priorDuration = series.DurationMinutes;
     var seriesDays = ResolveDaysOfWeek(request.DaysOfWeekJson, request.DayOfWeek);
+    var remoteInviteUrl = await ResolveRoomRemoteLinkAsync(db, studioId, request.RoomId ?? series.RoomId, request.RemoteInviteUrl);
     series.Title = request.Title;
     series.Description = request.Description;
     series.InstructorId = request.InstructorId;
@@ -1541,7 +1565,7 @@ adminApi.MapPut("/event-series/{id:guid}", async (ClaimsPrincipal user, Guid id,
     series.RemoteCapacity = request.RemoteCapacity;
     series.PriceCents = request.PriceCents;
     series.Currency = string.IsNullOrWhiteSpace(request.Currency) ? "ILS" : request.Currency;
-    series.RemoteInviteUrl = string.IsNullOrWhiteSpace(request.RemoteInviteUrl) ? "" : request.RemoteInviteUrl;
+    series.RemoteInviteUrl = remoteInviteUrl;
     series.Icon = request.Icon ?? "";
     series.Color = request.Color ?? "";
     series.AllowedPlanIdsJson = NormalizeGuidListJson(request.AllowedPlanIdsJson);
@@ -1550,6 +1574,13 @@ adminApi.MapPut("/event-series/{id:guid}", async (ClaimsPrincipal user, Guid id,
 
     await db.SaveChangesAsync();
     await LogAuditAsync(db, user, "Update", "EventSeries", series.Id.ToString(), $"Updated event series {series.Title}");
+    var studio = await db.Studios.AsNoTracking().FirstAsync(s => s.Id == studioId);
+    if (priorStartTime != series.StartTimeLocal || priorDuration != series.DurationMinutes)
+    {
+        await UpdateFutureSeriesInstancesAsync(db, studio, series);
+    }
+    var (fromDate, toDate) = ResolveGenerationWindow(request.GenerateFrom, request.GenerateUntil, request.GenerateWeeks);
+    await scheduleService.GenerateInstancesForSeriesAsync(studio, series, fromDate, toDate, CancellationToken.None);
     return Results.Ok(series);
 });
 
@@ -3269,6 +3300,48 @@ adminApi.MapPost("/users/{id:guid}/invite-email", async (ClaimsPrincipal user, G
     return Results.Ok(new { sent = true });
 });
 
+adminApi.MapPost("/communications/email", async (ClaimsPrincipal user, BulkEmailRequest request, AppDbContext db, HttpContext httpContext, IEmailService emailService) =>
+{
+    if (!emailService.IsConfigured)
+    {
+        return Results.BadRequest(new { error = "Email delivery is not configured." });
+    }
+
+    var subject = request.Subject?.Trim() ?? "";
+    var body = request.Body?.Trim() ?? "";
+    if (string.IsNullOrWhiteSpace(subject) || string.IsNullOrWhiteSpace(body))
+    {
+        return Results.BadRequest(new { error = "Email subject and body are required." });
+    }
+
+    var recipients = (request.Recipients ?? Array.Empty<string>())
+        .Select(email => email?.Trim()?.ToLowerInvariant())
+        .Where(email => !string.IsNullOrWhiteSpace(email))
+        .Distinct()
+        .ToList();
+
+    if (recipients.Count == 0)
+    {
+        return Results.BadRequest(new { error = "Recipients are required." });
+    }
+
+    foreach (var email in recipients)
+    {
+        await emailService.SendAsync(email, subject, body, httpContext.RequestAborted);
+    }
+
+    await LogAuditAsync(
+        db,
+        user,
+        "Email",
+        "Communication",
+        "",
+        $"Sent email to {recipients.Count} recipients",
+        new { recipients = recipients.Count });
+
+    return Results.Ok(new { sent = recipients.Count });
+});
+
 adminApi.MapGet("/reports/occupancy", async (ClaimsPrincipal user, DateOnly? from, DateOnly? to, AppDbContext db) =>
 {
     var studioId = GetStudioId(user);
@@ -4256,14 +4329,18 @@ instructorApi.MapGet("/calendar", async (ClaimsPrincipal user, DateOnly? from, D
     var birthdayCustomers = await db.Customers.AsNoTracking()
         .Where(c => c.StudioId == studioId && c.DateOfBirth != null && !c.IsArchived)
         .ToListAsync();
-    var birthdayEntries = new List<(string Name, DateOnly? DateOfBirth)>();
+    var birthdayEntries = new List<(string Name, DateOnly? DateOfBirth, string Email, string Phone)>();
     if (birthdayUsers.Count > 0)
     {
         birthdayEntries.AddRange(MapUserBirthdays(birthdayUsers));
     }
     if (birthdayCustomers.Count > 0)
     {
-        birthdayEntries.AddRange(MapCustomerBirthdays(birthdayCustomers));
+        var customerUserIds = birthdayCustomers.Select(c => c.UserId).Distinct().ToList();
+        var customerUsers = customerUserIds.Count > 0
+            ? await db.Users.AsNoTracking().Where(u => customerUserIds.Contains(u.Id)).ToDictionaryAsync(u => u.Id, u => u)
+            : new Dictionary<Guid, AppUser>();
+        birthdayEntries.AddRange(MapCustomerBirthdays(birthdayCustomers, customerUsers));
     }
     if (birthdayEntries.Count > 0)
     {
@@ -4731,14 +4808,18 @@ guestApi.MapGet("/calendar", async (ClaimsPrincipal user, DateOnly? from, DateOn
     var birthdayCustomers = await db.Customers.AsNoTracking()
         .Where(c => c.StudioId == studioId && c.DateOfBirth != null && !c.IsArchived)
         .ToListAsync();
-    var birthdayEntries = new List<(string Name, DateOnly? DateOfBirth)>();
+    var birthdayEntries = new List<(string Name, DateOnly? DateOfBirth, string Email, string Phone)>();
     if (birthdayUsers.Count > 0)
     {
         birthdayEntries.AddRange(MapUserBirthdays(birthdayUsers));
     }
     if (birthdayCustomers.Count > 0)
     {
-        birthdayEntries.AddRange(MapCustomerBirthdays(birthdayCustomers));
+        var customerUserIds = birthdayCustomers.Select(c => c.UserId).Distinct().ToList();
+        var customerUsers = customerUserIds.Count > 0
+            ? await db.Users.AsNoTracking().Where(u => customerUserIds.Contains(u.Id)).ToDictionaryAsync(u => u.Id, u => u)
+            : new Dictionary<Guid, AppUser>();
+        birthdayEntries.AddRange(MapCustomerBirthdays(birthdayCustomers, customerUsers));
     }
     if (birthdayEntries.Count > 0)
     {
@@ -5721,6 +5802,71 @@ static List<int> ResolveDaysOfWeek(string? json, int fallbackDay)
     return parsed;
 }
 
+static (DateOnly From, DateOnly To) ResolveGenerationWindow(DateOnly? from, DateOnly? until, int? weeks)
+{
+    var start = from ?? DateOnly.FromDateTime(DateTime.UtcNow);
+    if (until.HasValue)
+    {
+        var to = until.Value < start ? start : until.Value;
+        return (start, to);
+    }
+
+    var count = weeks.GetValueOrDefault(8);
+    if (count < 1)
+    {
+        count = 1;
+    }
+
+    return (start, start.AddDays(count * 7));
+}
+
+static async Task<string> ResolveRoomRemoteLinkAsync(AppDbContext db, Guid studioId, Guid? roomId, string? requested)
+{
+    if (!string.IsNullOrWhiteSpace(requested))
+    {
+        return requested.Trim();
+    }
+
+    if (!roomId.HasValue)
+    {
+        return "";
+    }
+
+    var room = await db.Rooms.AsNoTracking()
+        .FirstOrDefaultAsync(r => r.Id == roomId.Value && r.StudioId == studioId);
+    if (room == null || !room.SupportsRemote)
+    {
+        return "";
+    }
+
+    return room.RemoteLink?.Trim() ?? "";
+}
+
+static async Task<int> UpdateFutureSeriesInstancesAsync(AppDbContext db, Studio studio, EventSeries series)
+{
+    var tz = ResolveTimeZone(studio.Timezone);
+    var nowUtc = DateTime.UtcNow;
+    var instances = await db.EventInstances
+        .Where(i => i.StudioId == studio.Id && i.EventSeriesId == series.Id && i.StartUtc >= nowUtc)
+        .ToListAsync();
+
+    foreach (var instance in instances)
+    {
+        var localDate = TimeZoneInfo.ConvertTimeFromUtc(instance.StartUtc, tz).Date;
+        var newStartLocal = localDate.Add(series.StartTimeLocal);
+        var newStartUtc = TimeZoneInfo.ConvertTimeToUtc(newStartLocal, tz);
+        instance.StartUtc = newStartUtc;
+        instance.EndUtc = newStartUtc.AddMinutes(series.DurationMinutes);
+    }
+
+    if (instances.Count > 0)
+    {
+        await db.SaveChangesAsync();
+    }
+
+    return instances.Count;
+}
+
 static List<string> ParseStringListJson(string? json)
 {
     return ParseStringList(json);
@@ -5761,24 +5907,27 @@ static List<string> ParseStringList(string? json)
         .ToList();
 }
 
-static IEnumerable<(string Name, DateOnly? DateOfBirth)> MapUserBirthdays(IEnumerable<AppUser> users)
+static IEnumerable<(string Name, DateOnly? DateOfBirth, string Email, string Phone)> MapUserBirthdays(IEnumerable<AppUser> users)
 {
-    return users.Select(user => (user.DisplayName, user.DateOfBirth));
+    return users.Select(user => (user.DisplayName, user.DateOfBirth, user.Email, user.Phone));
 }
 
-static IEnumerable<(string Name, DateOnly? DateOfBirth)> MapCustomerBirthdays(IEnumerable<Customer> customers)
+static IEnumerable<(string Name, DateOnly? DateOfBirth, string Email, string Phone)> MapCustomerBirthdays(
+    IEnumerable<Customer> customers,
+    IReadOnlyDictionary<Guid, AppUser> users)
 {
     return customers.Select(customer =>
     {
         var name = !string.IsNullOrWhiteSpace(customer.FullName)
             ? customer.FullName
             : $"{customer.FirstName} {customer.LastName}".Trim();
-        return (name, customer.DateOfBirth);
+        var email = users.TryGetValue(customer.UserId, out var user) ? user.Email : "";
+        return (name, customer.DateOfBirth, email, customer.Phone);
     });
 }
 
 static IEnumerable<object> BuildBirthdayEvents(
-    IEnumerable<(string Name, DateOnly? DateOfBirth)> entries,
+    IEnumerable<(string Name, DateOnly? DateOfBirth, string Email, string Phone)> entries,
     DateOnly fromDate,
     DateOnly toDate,
     TimeZoneInfo timeZone,
@@ -5833,7 +5982,9 @@ static IEnumerable<object> BuildBirthdayEvents(
                 isMine = false,
                 isHoliday = false,
                 isBirthday = true,
-                birthdayName = entry.Name
+                birthdayName = entry.Name,
+                birthdayEmail = entry.Email,
+                birthdayPhone = entry.Phone
             });
         }
     }

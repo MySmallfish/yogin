@@ -159,18 +159,13 @@ html[lang^="he"] .section-title {
   padding: 0 12px;
 }
 
-.nav a.nav-group {
+.nav-group {
   padding-inline-start: 12px;
   font-size: 14px;
   font-weight: 700;
   text-transform: none;
   letter-spacing: 0.02em;
   color: var(--slate);
-}
-
-.nav a.nav-group:hover {
-  transform: none;
-  color: var(--ink);
 }
 
 .nav a {
@@ -185,7 +180,7 @@ html[lang^="he"] .section-title {
   gap: 10px;
 }
 
-.nav a:not(.nav-group) {
+.nav a.nav-item {
   font-size: 13px;
   padding-inline-start: 28px;
 }
@@ -389,6 +384,13 @@ html[dir="rtl"] .table,
 
 .form-grid .span-2 {
   grid-column: span 2;
+}
+
+.address-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
 }
 
 .session-header-fields {
@@ -695,8 +697,95 @@ button .icon svg {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+  align-items: center;
 }
 
+.toolbar button {
+  height: 44px;
+  min-width: 120px;
+}
+
+.toolbar .import-card {
+  height: 44px;
+  min-width: 200px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+}
+
+.toolbar-users button,
+.toolbar-users select,
+.toolbar-guests button,
+.toolbar-customers button {
+  height: 44px;
+  min-width: 140px;
+  justify-content: center;
+}
+
+.toolbar-users .user-filters select {
+  min-width: 160px;
+  flex: 0 0 160px;
+}
+
+.toolbar-users button,
+.toolbar-guests button {
+  flex: 0 0 160px;
+}
+
+.toolbar-customers button {
+  flex: 0 0 160px;
+}
+
+.toolbar-customers .import-card {
+  flex: 0 0 200px;
+}
+
+.toolbar .import-subtitle {
+  display: none;
+}
+
+.user-filters {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.user-filters select {
+  height: 44px;
+}
+
+.user-filters button {
+  height: 44px;
+  min-width: 120px;
+}
+
+.btn-icon .icon svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2px;
+}
+
+.btn-edit {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+}
+
+.btn-danger {
+  background: rgba(239, 68, 68, 0.08);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.btn-danger:hover {
+  box-shadow: 0 8px 18px rgba(239, 68, 68, 0.18);
+}
+
+.btn-danger .icon svg {
+  stroke: currentColor;
+  fill: none;
+}
 .customer-controls {
   margin: 20px 0;
   display: flex;
@@ -800,6 +889,7 @@ button .icon svg {
   display: flex;
   align-items: center;
   min-width: 280px;
+  padding-inline: 2px;
 }
 
 .calendar-nav-col {
@@ -982,6 +1072,7 @@ button .icon svg {
 [dir="rtl"] .calendar-actions-row,
 [dir="rtl"] .calendar-nav-row {
   flex-direction: row-reverse;
+  justify-content: flex-end;
 }
 
 [dir="rtl"] .calendar-nav {
@@ -992,9 +1083,6 @@ button .icon svg {
   align-items: flex-end;
 }
 
-[dir="rtl"] .nav-arrow .icon svg {
-  transform: scaleX(-1);
-}
 [dir="rtl"] .calendar-range {
   justify-content: flex-end;
 }
@@ -1266,17 +1354,20 @@ button .icon svg {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(var(--accent-rgb), 0.16);
+  background: #fff;
+  border: 1px solid var(--line);
   color: var(--slate);
   flex: 0 0 18px;
   line-height: 1;
 }
 
 .birthday-chevron svg {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   stroke: currentColor;
   fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
   stroke-width: 2px;
   display: block;
 }
@@ -1435,6 +1526,10 @@ button .icon svg {
   z-index: 50;
   padding: 20px;
   overflow-y: auto;
+}
+
+#icon-picker-modal {
+  z-index: 70;
 }
 
 .modal {
@@ -1705,18 +1800,57 @@ button .icon svg {
 }
 
 
-.birthday-list {
-  display: grid;
+.recipient-list {
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
-  padding: 8px 0 4px;
+  margin-bottom: 16px;
 }
 
-.birthday-item {
-  padding: 8px 12px;
-  border-radius: 12px;
-  background: rgba(248, 250, 252, 0.9);
-  border: 1px solid rgba(15, 23, 42, 0.08);
+.recipient-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(15, 23, 42, 0.04);
+  font-size: 12px;
+  color: var(--slate);
+}
+
+.recipient-pill .recipient-meta {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.birthday-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.birthday-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.birthday-contact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.birthday-name {
   font-weight: 600;
+  color: var(--ink);
 }
 
 .contact-icon.phone {
@@ -2033,7 +2167,8 @@ button .icon svg {
 .attendance-btn.active {
   color: var(--accent-dark);
   border-color: rgba(var(--accent-rgb), 0.5);
-  background: rgba(var(--accent-rgb), 0.16);
+  background: #fff;
+  border: 1px solid var(--line);
 }
 
 .modal-actions {
@@ -2240,6 +2375,7 @@ button .icon svg {
   font-size: 12px;
   font-weight: 600;
   color: var(--muted);
+  margin-inline-start: 6px;
 }
 
 .icon-field {
@@ -2330,6 +2466,10 @@ button .icon svg {
   border-color: rgba(var(--accent-rgb), 0.55);
   background: rgba(var(--accent-rgb), 0.14);
   color: var(--ink);
+}
+
+.room-remote-fields {
+  display: block;
 }
 
 .color-dot {
@@ -2456,6 +2596,7 @@ button .icon svg {
 
 .app-shell.collapsed .brand-text,
 .app-shell.collapsed .nav-label,
+.app-shell.collapsed .nav-group,
 .app-shell.collapsed .user-meta,
 .app-shell.collapsed .sidebar-footer .tag {
   display: none;
@@ -2516,6 +2657,17 @@ html[dir="rtl"] .nav a,
   justify-content: flex-end;
 }
 
+[dir="rtl"] .nav-group {
+  text-align: right;
+  padding-inline-start: 0;
+  padding-inline-end: 12px;
+}
+
+[dir="rtl"] .nav a.nav-item {
+  padding-inline-start: 12px;
+  padding-inline-end: 28px;
+}
+
 [dir="rtl"] .nav-title {
   text-align: right;
 }
@@ -2555,4 +2707,6 @@ html[dir="rtl"] .event-icon,
     border-bottom: 1px solid var(--line);
   }
 }
+
+
 

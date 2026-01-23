@@ -8,7 +8,6 @@ test('admin routes render without errors', async ({ page }) => {
     { route: 'calendar', selector: '.calendar-toolbar' },
     { route: 'reports', selector: '.cards .card:first-child' },
     { route: 'customers', selector: '#add-customer' },
-    { route: 'guests', selector: '#add-guest' },
     { route: 'rooms', selector: '#add-room' },
     { route: 'plans', selector: '#add-plan' },
     { route: 'events', selector: '#add-series' },

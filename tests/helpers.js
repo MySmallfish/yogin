@@ -10,6 +10,10 @@ async function loginAsAdmin(page) {
     await page.selectOption('select[name="role"]', { value: 'admin' });
     await page.click('button[type="submit"]');
   }
+  await page.waitForSelector('.app-shell', { timeout: 30000 });
+  await page.evaluate(() => {
+    window.location.hash = '#/calendar';
+  });
   await page.waitForSelector('.calendar-toolbar', { timeout: 30000 });
   await expect(page.locator('.calendar-toolbar')).toBeVisible();
 }

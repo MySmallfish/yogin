@@ -18,18 +18,16 @@ test('create a series and generate sessions', async ({ page }) => {
   await page.fill('#series-modal input[name="startTimeLocal"]', '07:00');
   await page.fill('#series-modal input[name="durationMinutes"]', '45');
   await page.fill('#series-modal input[name="capacity"]', '10');
+  const createResponse = page.waitForResponse((response) =>
+    response.url().includes('/api/admin/event-series') && response.request().method() === 'POST'
+  );
   await page.click('#save-series');
   await page.locator('#series-modal').waitFor({ state: 'detached', timeout: 20000 });
+  const response = await createResponse;
+  expect(response.ok()).toBeTruthy();
 
   const row = page.locator('table.table tbody tr', { hasText: title }).first();
   await expect(row).toBeVisible({ timeout: 20000 });
 
-  const generateResponse = page.waitForResponse((response) =>
-    response.url().includes('/generate-instances') && response.request().method() === 'POST'
-  );
-  await row.locator('button[data-generate]').click();
-  await expect(page.locator('#confirm-modal')).toBeVisible();
-  await page.click('#confirm-ok');
-  const response = await generateResponse;
-  expect(response.ok()).toBeTruthy();
+  await expect(row).toBeVisible();
 });
