@@ -3623,7 +3623,12 @@ function bindRouteActions(route, data, state) {
 
         navButtons.forEach(btn => {
             btn.addEventListener("click", () => {
-                const direction = btn.getAttribute("data-nav") === "prev" ? -1 : 1;
+                const navType = btn.getAttribute("data-nav");
+                const isRtl = document.documentElement.dir === "rtl";
+                let direction = navType === "prev" ? -1 : 1;
+                if (isRtl) {
+                    direction *= -1;
+                }
                 const baseDate = dateInput?.value || currentDate;
                 const nextDate = shiftCalendarDate(currentView, baseDate, direction);
                 actor.send({ type: "SET_CALENDAR", view: currentView, date: nextDate });
@@ -7999,8 +8004,9 @@ function getCalendarRange(view, focusDate, weekStartsOn) {
     }
 
     if (view === "list") {
-        const nextRange = addDays(focus, 14);
-        return { from: formatDateKeyLocal(focus), to: formatDateKeyLocal(nextRange) };
+        const monthStart = startOfMonth(focus);
+        const nextYear = addYears(monthStart, 1);
+        return { from: formatDateKeyLocal(monthStart), to: formatDateKeyLocal(nextYear) };
     }
 
     if (view === "month") {
@@ -8520,8 +8526,9 @@ function getRangeLabel(view, focusDate, weekStartsOn, timeZone) {
     }
 
     if (view === "list") {
-        const end = addDays(focus, 13);
-        return `${formatMonthDay(focus, timeZone)} - ${formatMonthDay(end, timeZone)}`;
+        const monthStart = startOfMonth(focus);
+        const end = addDays(addYears(monthStart, 1), -1);
+        return `${formatMonthYear(monthStart, timeZone)} - ${formatMonthYear(end, timeZone)}`;
     }
 
     if (view === "month") {
@@ -8541,7 +8548,8 @@ function shiftCalendarDate(view, focusDate, direction) {
     }
 
     if (view === "list") {
-        return formatDateKeyLocal(addDays(focus, direction * 14));
+        const monthStart = startOfMonth(focus);
+        return formatDateKeyLocal(addYears(monthStart, direction));
     }
 
     if (view === "month") {
@@ -8550,6 +8558,14 @@ function shiftCalendarDate(view, focusDate, direction) {
     }
 
     return formatDateKeyLocal(addDays(focus, direction * 7));
+}
+
+function startOfMonth(date) {
+    return new Date(date.getFullYear(), date.getMonth(), 1, 12);
+}
+
+function addYears(date, amount) {
+    return new Date(date.getFullYear() + amount, date.getMonth(), date.getDate(), 12);
 }
 
 function parseDateInput(value) {

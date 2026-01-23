@@ -9,3 +9,4 @@
 - 2026-01-23: Added toolbar icons and sizing tweaks (users/customers/guests), removed remote capacity column from calendar list, enabled bulk customer email/SMS composer with mailto fallback, improved birthday chevron styling, added room remote support migration + i18n keys, and updated admin nav tests.
 - 2026-01-23: Fixed duplicate const in session recurrence handler, restored admin rendering, and resolved Playwright run.
 - 2026-01-23: Preserve event route through login for shared session links and moved series days-of-week field under title/icon/color.
+- 2026-01-23: Updated calendar list view to page by year from month start and adjusted RTL nav direction handling.
