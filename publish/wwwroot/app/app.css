@@ -3,11 +3,11 @@
 :root {
   --ink: #111827;
   --muted: #6b7280;
-  --mint: #f8fad2;
-  --wave: #b9e0d9;
-  --accent: #647fbc;
-  --accent-dark: #4b6398;
-  --rose: #647fbc;
+  --mint: #fff7de;
+  --wave: #f9e7b7;
+  --accent: #f1c232;
+  --accent-dark: #d19e18;
+  --rose: #f1c232;
   --surface: rgba(255, 255, 255, 0.92);
   --line: rgba(15, 23, 42, 0.12);
   --radius: 20px;
@@ -21,9 +21,9 @@ body {
   margin: 0;
   font-family: "Manrope", sans-serif;
   color: var(--ink);
-  background: radial-gradient(circle at 15% 20%, #b9e0d9, transparent 50%),
-              radial-gradient(circle at 85% 10%, #9cb4ce, transparent 40%),
-              linear-gradient(160deg, #f8fafc, #f8fad2 90%);
+  background: radial-gradient(circle at 15% 20%, #f9e7b7, transparent 50%),
+              radial-gradient(circle at 85% 10%, #f6d88a, transparent 40%),
+              linear-gradient(160deg, #f8fafc, #fff7de 90%);
   min-height: 100vh;
 }
 

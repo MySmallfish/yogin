@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const { loginAsAdmin, tomorrowISO } = require('./helpers');
+const { loginAsAdmin, tomorrowDisplay } = require('./helpers');
 
 const uniqueTitle = () => `E2E Session ${Date.now()}`;
 
@@ -20,7 +20,7 @@ test.describe('Admin calendar', () => {
     await page.click('#add-session');
     await expect(page.locator('#session-modal')).toBeVisible();
     await page.fill('#session-modal input[name="title"]', title);
-    await page.fill('#session-modal input[name="date"]', tomorrowISO());
+    await page.fill('#session-modal input[name="date"]', tomorrowDisplay());
     await page.fill('#session-modal input[name="startTimeLocal"]', '06:00');
     await page.fill('#session-modal input[name="durationMinutes"]', '30');
 

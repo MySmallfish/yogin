@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const { loginAsAdmin, tomorrowISO } = require('./helpers');
+const { loginAsAdmin, tomorrowDisplay } = require('./helpers');
 
 const uniqueStamp = () => Date.now();
 
@@ -24,7 +24,7 @@ test('register a customer to a session from the calendar', async ({ page }) => {
   await page.click('#add-session');
   await expect(page.locator('#session-modal')).toBeVisible();
   await page.fill('#session-modal input[name="title"]', sessionTitle);
-  await page.fill('#session-modal input[name="date"]', tomorrowISO());
+  await page.fill('#session-modal input[name="date"]', tomorrowDisplay());
   await page.fill('#session-modal input[name="startTimeLocal"]', '08:00');
   await page.fill('#session-modal input[name="durationMinutes"]', '45');
   await page.fill('#session-modal input[name="capacity"]', '10');

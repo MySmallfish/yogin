@@ -1,18 +1,16 @@
 export function formatDateTime(iso, timeZone) {
     if (!iso) return "";
     const date = new Date(iso);
-    const options = {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        hourCycle: "h23"
-    };
+    const locale = getLocaleFromSettings();
+    const dateOptions = { day: "2-digit", month: "2-digit", year: "numeric" };
+    const timeOptions = { hour: "2-digit", minute: "2-digit", hourCycle: "h23" };
     if (timeZone) {
-        options.timeZone = timeZone;
+        dateOptions.timeZone = timeZone;
+        timeOptions.timeZone = timeZone;
     }
-    return new Intl.DateTimeFormat(getLocaleFromSettings(), options).format(date);
+    const dateLabel = new Intl.DateTimeFormat(locale, dateOptions).format(date);
+    const timeLabel = new Intl.DateTimeFormat(locale, timeOptions).format(date);
+    return `${dateLabel} ${timeLabel}`;
 }
 
 export function formatMoney(cents, currency) {

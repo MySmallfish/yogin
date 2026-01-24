@@ -4,12 +4,12 @@
   --ink: #0f172a;
   --slate: #1f2937;
   --muted: #475569;
-  --cream: #f8fad2;
-  --sand: #b9e0d9;
-  --accent: #647fbc;
-  --accent-2: #9cb4ce;
-  --accent-rgb: 100, 127, 188;
-  --accent-dark: #4b6398;
+  --cream: #fff7de;
+  --sand: #f9e7b7;
+  --accent: #f1c232;
+  --accent-2: #f6d88a;
+  --accent-rgb: 241, 194, 50;
+  --accent-dark: #d19e18;
   --line: rgba(15, 23, 42, 0.12);
   --surface: rgba(255, 255, 255, 0.86);
   --shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
@@ -964,7 +964,7 @@ button .icon svg {
   stroke-width: 2px;
 }
 
-.calendar-nav input[type="date"] {
+.calendar-nav .date-input {
   max-width: 170px;
   height: 40px;
 }

@@ -258,7 +258,7 @@ const calendarTemplate = compileTemplate("calendar", `
                 <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
               </span>
             </button>
-            <input type="date" id="calendar-date" value="{{focusDate}}" />
+            <input type="text" class="date-input" id="calendar-date" value="{{focusDateDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
             <button class="icon-button nav-arrow" data-nav="next" aria-label="{{t "calendar.next" "Next"}}">
               <span class="icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
@@ -692,7 +692,7 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
             </div>
             <div>
               <label>{{t "session.startTime" "Start time"}}</label>
-              <input type="time" name="startTimeLocal" value="{{startTimeLocal}}" />
+              <input type="text" class="time-input" name="startTimeLocal" value="{{startTimeLocal}}" inputmode="numeric" placeholder="HH:MM" />
             </div>
             <div>
               <label>{{t "session.duration" "Duration (min)"}}</label>
@@ -781,7 +781,6 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
               <div class="meta">{{t "series.allowedPlansHint" "Leave empty to allow all plans + drop-ins."}}</div>
             </div>
           </div>
-        </div>
       </div>
       <div class="modal-footer">
         <div class="meta" data-booked-meta>{{capacitySummary}}</div>
@@ -1291,7 +1290,7 @@ const sessionModalTemplate = compileTemplate("session-modal", `
         </div>
         <div>
           <label>{{t "session.startTime" "Start time"}}</label>
-          <input type="time" name="startTimeLocal" value="18:00" />
+            <input type="text" class="time-input" name="startTimeLocal" value="18:00" inputmode="numeric" placeholder="HH:MM" />
         </div>
         <div>
           <label>{{t "session.duration" "Duration (min)"}}</label>
@@ -1346,13 +1345,13 @@ const sessionModalTemplate = compileTemplate("session-modal", `
       <div class="form-grid session-one-time">
         <div>
           <label>{{t "session.date" "Date"}}</label>
-          <input type="date" name="date" value="{{focusDate}}" />
+          <input type="text" class="date-input" name="date" value="{{focusDateDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
         </div>
       </div>
       <div class="form-grid session-recurring hidden">
         <div>
           <label>{{t "session.startDate" "Start date"}}</label>
-          <input type="date" name="startDate" value="{{focusDate}}" />
+          <input type="text" class="date-input" name="startDate" value="{{focusDateDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
         </div>
         <div class="span-2">
           <label>{{t "session.daysOfWeek" "Days of week"}}</label>
@@ -1449,7 +1448,7 @@ const seriesModalTemplate = compileTemplate("series-modal", `
         </div>
           <div>
             <label>{{t "series.startTime" "Start time"}}</label>
-            <input type="time" name="startTimeLocal" value="{{startTimeLocal}}" />
+          <input type="text" class="time-input" name="startTimeLocal" value="{{startTimeLocal}}" inputmode="numeric" placeholder="HH:MM" />
           </div>
           <div>
             <label>{{t "series.duration" "Duration (min)"}}</label>
@@ -1509,7 +1508,7 @@ const seriesModalTemplate = compileTemplate("series-modal", `
           </div>
           <div>
             <label>{{t "series.generateUntil" "Generate until"}}</label>
-            <input type="date" name="generateUntil" value="{{generateUntil}}" />
+          <input type="text" class="date-input" name="generateUntil" value="{{generateUntilDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
           </div>
           <div>
             <label>{{t "series.cancellationWindow" "Cancellation window (hours)"}}</label>
@@ -1602,7 +1601,7 @@ const customerModalTemplate = compileTemplate("customer-modal", `
         </div>
         <div>
           <label>{{t "customer.dateOfBirth" "Date of birth"}}</label>
-          <input name="dateOfBirth" type="date" value="{{dateOfBirth}}" />
+          <input name="dateOfBirth" type="text" class="date-input" value="{{dateOfBirthDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
         </div>
         <div class="span-2 address-row">
           <div>
@@ -1852,7 +1851,7 @@ const userModalTemplate = compileTemplate("user-modal", `
         </div>
         <div>
           <label>{{t "user.dateOfBirth" "Date of birth"}}</label>
-          <input name="dateOfBirth" type="date" value="{{dateOfBirth}}" />
+          <input name="dateOfBirth" type="text" class="date-input" value="{{dateOfBirthDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
         </div>
         <div>
           <label>{{t "user.idNumber" "ID number"}}</label>
@@ -2569,11 +2568,11 @@ const payrollTemplate = compileTemplate("payroll", `
     </select>
     <div>
       <label>{{t "payroll.from" "From"}}</label>
-      <input type="date" name="payrollFrom" value="{{from}}" />
+      <input type="text" class="date-input" name="payrollFrom" value="{{fromDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
     </div>
     <div>
       <label>{{t "payroll.to" "To"}}</label>
-      <input type="date" name="payrollTo" value="{{to}}" />
+      <input type="text" class="date-input" name="payrollTo" value="{{toDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
     </div>
     <button class="secondary" id="apply-payroll">{{t "common.apply" "Apply"}}</button>
   </div>
@@ -2633,11 +2632,11 @@ const auditTemplate = compileTemplate("audit", `
   <div class="audit-controls">
     <div>
       <label>{{t "audit.from" "From"}}</label>
-      <input type="date" name="auditFrom" value="{{from}}" />
+      <input type="text" class="date-input" name="auditFrom" value="{{fromDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
     </div>
     <div>
       <label>{{t "audit.to" "To"}}</label>
-      <input type="date" name="auditTo" value="{{to}}" />
+      <input type="text" class="date-input" name="auditTo" value="{{toDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
     </div>
     <div>
       <label>{{t "audit.search" "Search"}}</label>
@@ -2656,7 +2655,7 @@ const auditTemplate = compileTemplate("audit", `
   <div class="audit-controls audit-clear">
     <div>
       <label>{{t "audit.clearBefore" "Clear before"}}</label>
-      <input type="date" name="auditClearBefore" value="{{clearBefore}}" />
+      <input type="text" class="date-input" name="auditClearBefore" value="{{clearBeforeDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
     </div>
     <div class="audit-actions">
       <button class="secondary" id="clear-audit">{{t "audit.clear" "Clear logs"}}</button>
@@ -3204,6 +3203,7 @@ function render(state) {
             search,
             customers: data.customers || []
         });
+        viewState.focusDateDisplay = formatDateDisplay(focusDate);
         const subtitleMapView = {
             day: t("calendar.subtitle.day", "Daily schedule focus."),
             week: t("calendar.subtitle.week", "Weekly schedule overview."),
@@ -3363,6 +3363,8 @@ function render(state) {
             selected: String(instructor.id) === String(data.payrollFilters?.instructorId || "")
         }));
         const filters = data.payrollFilters || {};
+        const fromDisplay = filters.from ? formatDateDisplay(filters.from) : "";
+        const toDisplay = filters.to ? formatDateDisplay(filters.to) : "";
         content = payrollTemplate({
             logs,
             hasLogs: logs.length > 0,
@@ -3371,6 +3373,8 @@ function render(state) {
             instructorOptions,
             from: filters.from || "",
             to: filters.to || "",
+            fromDisplay,
+            toDisplay,
             errorMessage: data.payrollError || ""
         });
     }
@@ -3389,13 +3393,20 @@ function render(state) {
             };
         });
         const filters = data.audit?.filters || {};
+        const fromDisplay = filters.from ? formatDateDisplay(filters.from) : "";
+        const toDisplay = filters.to ? formatDateDisplay(filters.to) : "";
+        const clearBeforeValue = filters.to || "";
+        const clearBeforeDisplay = clearBeforeValue ? formatDateDisplay(clearBeforeValue) : "";
         content = auditTemplate({
             logs,
             hasLogs: logs.length > 0,
             from: filters.from || "",
             to: filters.to || "",
+            fromDisplay,
+            toDisplay,
             search: filters.search || "",
-            clearBefore: filters.to || "",
+            clearBefore: clearBeforeValue,
+            clearBeforeDisplay,
             errorMessage: data.auditError || ""
         });
     }
@@ -3407,8 +3418,10 @@ function render(state) {
 
         if (applyBtn) {
             applyBtn.addEventListener("click", () => {
-                const from = document.querySelector("[name=\"auditFrom\"]")?.value || "";
-                const to = document.querySelector("[name=\"auditTo\"]")?.value || "";
+                const fromRaw = document.querySelector("[name=\"auditFrom\"]")?.value || "";
+                const toRaw = document.querySelector("[name=\"auditTo\"]")?.value || "";
+                const from = normalizeDateInputValue(fromRaw);
+                const to = normalizeDateInputValue(toRaw);
                 const search = document.querySelector("[name=\"auditSearch\"]")?.value || "";
                 const params = new URLSearchParams();
                 if (from) params.set("from", from);
@@ -3422,8 +3435,10 @@ function render(state) {
 
         if (exportBtn) {
             exportBtn.addEventListener("click", () => {
-                const from = document.querySelector("[name=\"auditFrom\"]")?.value || "";
-                const to = document.querySelector("[name=\"auditTo\"]")?.value || "";
+                const fromRaw = document.querySelector("[name=\"auditFrom\"]")?.value || "";
+                const toRaw = document.querySelector("[name=\"auditTo\"]")?.value || "";
+                const from = normalizeDateInputValue(fromRaw);
+                const to = normalizeDateInputValue(toRaw);
                 const search = document.querySelector("[name=\"auditSearch\"]")?.value || "";
                 const params = new URLSearchParams();
                 if (from) params.set("from", from);
@@ -3436,7 +3451,8 @@ function render(state) {
 
         if (clearBtn) {
             clearBtn.addEventListener("click", async () => {
-                const before = document.querySelector("[name=\"auditClearBefore\"]")?.value || "";
+                const beforeRaw = document.querySelector("[name=\"auditClearBefore\"]")?.value || "";
+                const before = normalizeDateInputValue(beforeRaw);
                 if (!before) {
                     showToast(t("audit.clearBeforeRequired", "Choose a date to clear before."), "error");
                     return;
@@ -3458,8 +3474,10 @@ function render(state) {
         const applyBtn = document.getElementById("apply-payroll");
         if (applyBtn) {
             applyBtn.addEventListener("click", () => {
-                const from = document.querySelector("[name=\"payrollFrom\"]")?.value || "";
-                const to = document.querySelector("[name=\"payrollTo\"]")?.value || "";
+                const fromRaw = document.querySelector("[name=\"payrollFrom\"]")?.value || "";
+                const toRaw = document.querySelector("[name=\"payrollTo\"]")?.value || "";
+                const from = normalizeDateInputValue(fromRaw);
+                const to = normalizeDateInputValue(toRaw);
                 const instructorId = document.querySelector("[name=\"payrollInstructor\"]")?.value || "";
                 const params = new URLSearchParams();
                 if (from) params.set("from", from);
@@ -3660,7 +3678,7 @@ function bindRouteActions(route, data, state) {
             btn.addEventListener("click", () => {
                 const navType = btn.getAttribute("data-nav");
                 const direction = navType === "prev" ? -1 : 1;
-                const baseDate = dateInput?.value || currentDate;
+                const baseDate = normalizeDateInputValue(dateInput?.value) || currentDate;
                 const nextDate = shiftCalendarDate(currentView, baseDate, direction);
                 actor.send({ type: "SET_CALENDAR", view: currentView, date: nextDate });
             });
@@ -3668,8 +3686,15 @@ function bindRouteActions(route, data, state) {
 
         if (dateInput) {
             dateInput.addEventListener("change", () => {
-                const nextDate = dateInput.value || currentDate;
-                actor.send({ type: "SET_CALENDAR", view: currentView, date: nextDate });
+                const normalized = normalizeDateInputValue(dateInput.value) || currentDate;
+                dateInput.value = formatDateDisplay(normalized);
+                actor.send({ type: "SET_CALENDAR", view: currentView, date: normalized });
+            });
+            dateInput.addEventListener("blur", () => {
+                const normalized = normalizeDateInputValue(dateInput.value);
+                if (normalized) {
+                    dateInput.value = formatDateDisplay(normalized);
+                }
             });
         }
 
@@ -4631,17 +4656,14 @@ function formatShortDate(value) {
     if (!value) return "";
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "";
-    return date.toLocaleDateString("he-IL", { month: "short", day: "numeric", year: "numeric" });
+    return formatDateDisplay(date);
 }
 
 function formatShortDateTime(value) {
     if (!value) return "";
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "";
-    return new Intl.DateTimeFormat("he-IL", {
-        dateStyle: "medium",
-        timeStyle: "short"
-    }).format(date);
+    return `${formatDateDisplay(date)} ${formatTimeOnly(date)}`;
 }
 
 function formatPayrollUnit(unit) {
@@ -4937,7 +4959,7 @@ function fillCustomerForm(customer) {
     setFieldValue("phone", customer.phone);
     setFieldValue("idNumber", customer.idNumber);
     setFieldValue("gender", customer.gender);
-    setFieldValue("dateOfBirth", customer.dateOfBirth);
+    setFieldValue("dateOfBirth", customer.dateOfBirth ? formatDateDisplay(customer.dateOfBirth) : "");
     setFieldValue("city", customer.city);
     setFieldValue("address", customer.address);
     setFieldValue("occupation", customer.occupation);
@@ -4982,7 +5004,7 @@ function fillUserForm(userItem) {
     setFieldValue("address", userItem.address);
     setFieldValue("gender", userItem.gender);
     setFieldValue("idNumber", userItem.idNumber);
-    setFieldValue("dateOfBirth", userItem.dateOfBirth);
+    setFieldValue("dateOfBirth", userItem.dateOfBirth ? formatDateDisplay(userItem.dateOfBirth) : "");
     setFieldValue("role", userItem.role || "Admin");
     setFieldValue("isActive", userItem.isActive ? "true" : "false");
     setFieldValue("instructorDisplayName", userItem.instructorName || "");
@@ -5040,6 +5062,20 @@ function formatCapacitySummaryCounts(bookedCount, remoteCount, capacityValue, re
         return `${bookedLabel}: ${bookedCount} / ${capacityValue} | ${remoteLabel}: ${remoteCount} / ${remoteCapacityValue}`;
     }
     return `${bookedLabel}: ${bookedCount} / ${capacityValue}`;
+}
+
+function updateCalendarEventSummary(eventId, bookedCount, capacityValue) {
+    if (!eventId) return;
+    const summary = `${bookedCount}/${capacityValue}`;
+    document.querySelectorAll(`.calendar-event[data-event="${eventId}"] .event-meta-compact span`).forEach(span => {
+        span.textContent = summary;
+    });
+    document.querySelectorAll(`.calendar-list tr[data-event="${eventId}"]`).forEach(row => {
+        const cells = row.querySelectorAll("td");
+        if (cells.length > 0) {
+            cells[cells.length - 1].textContent = summary;
+        }
+    });
 }
 
 async function openCalendarEventModal(item, data, options = {}) {
@@ -5330,7 +5366,7 @@ async function openCalendarEventModal(item, data, options = {}) {
             const descriptionValue = formValues.description?.trim() || "";
             const iconInputValue = formValues.icon?.trim() || "";
             const colorInputValue = formValues.color?.trim() || "";
-            const startTimeValue = (formValues.startTimeLocal || startTimeLocal || "").trim();
+            const startTimeValue = normalizeTimeInputValue(formValues.startTimeLocal || startTimeLocal || "");
             const durationValue = Number(formValues.durationMinutes || durationMinutes || 0);
             const normalizedColorInput = ensureHexColor(colorInputValue, "");
             const effectiveIconValue = iconInputValue || seriesIconValue;
@@ -5606,10 +5642,13 @@ async function openSessionRegistrationsModal(item, data, options = {}) {
         const activeRows = rows.filter(row => !row.isCancelled);
         const bookedCount = activeRows.filter(row => !row.isRemote).length;
         const remoteCount = activeRows.filter(row => row.isRemote).length;
+        item.booked = bookedCount;
+        item.remoteBooked = remoteCount;
         const summary = formatCapacitySummaryCounts(bookedCount, remoteCount, capacityValue, remoteCapacityValue);
         if (capacitySummaryEl) {
             capacitySummaryEl.textContent = summary;
         }
+        updateCalendarEventSummary(item.id, bookedCount, capacityValue);
     };
 
     const bindRosterActions = () => {
@@ -6526,6 +6565,7 @@ function openSessionModal(data, options = {}) {
 
     const calendarMeta = data.calendar || {};
     const focusDate = options.date || calendarMeta.focusDate || toDateInputValue(new Date());
+    const focusDateDisplay = formatDateDisplay(focusDate);
     const prefill = options.prefill || {};
     const allowedPlanSet = new Set((prefill.allowedPlanIds || []).map(id => String(id)));
     const defaultPlanCategoryId = (data.planCategories || []).find(category => category.isDefault && category.isActive)?.id || "";
@@ -6540,7 +6580,7 @@ function openSessionModal(data, options = {}) {
     const titleSuggestions = buildTitleSuggestions(data);
     const titleSuggestionId = createTitleSuggestionId("session-title");
     const modalMarkup = sessionModalTemplate({
-        focusDate,
+        focusDateDisplay,
         rooms: data.rooms || [],
         instructors: data.instructors || [],
         plans,
@@ -6576,8 +6616,8 @@ function openSessionModal(data, options = {}) {
     if (options.date) {
         const dateInput = overlay.querySelector("[name=\"date\"]");
         const startDateInput = overlay.querySelector("[name=\"startDate\"]");
-        if (dateInput) dateInput.value = options.date;
-        if (startDateInput) startDateInput.value = options.date;
+        if (dateInput) dateInput.value = formatDateDisplay(options.date);
+        if (startDateInput) startDateInput.value = formatDateDisplay(options.date);
         const dateValue = parseDateInput(options.date);
         overlay.querySelectorAll("input[name=\"recurringDays\"]").forEach(input => {
             input.checked = Number(input.value) === dateValue.getDay();
@@ -6630,13 +6670,14 @@ function openSessionModal(data, options = {}) {
                 .map(input => input.value)
                 .filter(Boolean);
             const planCategoryId = getValue("planCategoryId") || "";
+            const normalizedStartTime = normalizeTimeInputValue(getValue("startTimeLocal"));
             const payload = {
                 title: getValue("title"),
                 description: getValue("description"),
                 instructorId: getValue("instructorId") || null,
                 roomId: getValue("roomId") || null,
                 planCategoryId: planCategoryId || null,
-                startTimeLocal: `${getValue("startTimeLocal")}:00`,
+                startTimeLocal: normalizedStartTime ? `${normalizedStartTime}:00` : "",
                 durationMinutes: Number(getValue("durationMinutes") || 0),      
                 capacity: Number(getValue("capacity") || 0),
                 remoteCapacity: Number(getValue("remoteCapacity") || 0),
@@ -6654,7 +6695,7 @@ function openSessionModal(data, options = {}) {
 
             try {
                 if (type === "recurring") {
-                    const startDate = getValue("startDate") || focusDate;
+                    const startDate = normalizeDateInputValue(getValue("startDate")) || focusDate;
                     const selectedDays = Array.from(overlay.querySelectorAll("input[name=\"recurringDays\"]:checked"))
                         .map(input => Number(input.value))
                         .filter(value => Number.isFinite(value));
@@ -6689,7 +6730,7 @@ function openSessionModal(data, options = {}) {
                         isActive: true
                     });
                 } else {
-                    const date = getValue("date") || focusDate;
+                    const date = normalizeDateInputValue(getValue("date")) || focusDate;
                     await apiPost("/api/admin/event-instances", {
                         title: payload.title,
                         description: payload.description || "",
@@ -6927,7 +6968,7 @@ function openCustomerModal(customer, data, options = {}) {
         phone: customer?.phone || "",
         idNumber: customer?.idNumber || "",
         genderOptions,
-        dateOfBirth: customer?.dateOfBirth || "",
+        dateOfBirthDisplay: customer?.dateOfBirth ? formatDateDisplay(customer.dateOfBirth) : "",
         city: customer?.city || "",
         address: customer?.address || "",
         occupation: customer?.occupation || "",
@@ -7085,7 +7126,7 @@ function openCustomerModal(customer, data, options = {}) {
             const phone = getValue("phone").trim();
             const idNumber = getValue("idNumber").trim();
             const gender = getValue("gender");
-            const dateOfBirth = getValue("dateOfBirth");
+            const dateOfBirth = normalizeDateInputValue(getValue("dateOfBirth")) || null;
             const city = getValue("city").trim();
             const address = getValue("address").trim();
             const occupation = getValue("occupation").trim();
@@ -7110,7 +7151,7 @@ function openCustomerModal(customer, data, options = {}) {
                         phone,
                         idNumber,
                         gender,
-                        dateOfBirth: dateOfBirth || null,
+                        dateOfBirth,
                         city,
                         address,
                         occupation,
@@ -7128,7 +7169,7 @@ function openCustomerModal(customer, data, options = {}) {
                         phone,
                         idNumber,
                         gender,
-                        dateOfBirth: dateOfBirth || null,
+                        dateOfBirth,
                         city,
                         address,
                         occupation,
@@ -7408,7 +7449,7 @@ function openUserModal(userItem) {
         city: userItem?.city || "",
         address: userItem?.address || "",
         idNumber: userItem?.idNumber || "",
-        dateOfBirth: userItem?.dateOfBirth || "",
+        dateOfBirthDisplay: userItem?.dateOfBirth ? formatDateDisplay(userItem.dateOfBirth) : "",
         genderOptions,
         roleOptions,
         isActive: userItem?.isActive !== false,
@@ -7580,7 +7621,7 @@ function openUserModal(userItem) {
             const address = getValue("address").trim();
             const gender = getValue("gender");
             const idNumber = getValue("idNumber").trim();
-            const dateOfBirth = getValue("dateOfBirth") || null;
+            const dateOfBirth = normalizeDateInputValue(getValue("dateOfBirth")) || null;
             const roles = readRoles();
             const isActive = getValue("isActive") !== "false";
             const instructorDisplayName = getValue("instructorDisplayName");    
@@ -7995,7 +8036,7 @@ function openSeriesModal(series, data) {
         description: series?.description || "",
         recurrenceIntervalWeeks: series?.recurrenceIntervalWeeks ?? 1,
         generateWeeks: series?.generateWeeks ?? 8,
-        generateUntil: series?.generateUntil || "",
+        generateUntilDisplay: series?.generateUntil ? formatDateDisplay(series.generateUntil) : "",
         cancellationWindowHours: series?.cancellationWindowHours ?? 6,
         isActive: series?.isActive ?? true,
         rooms,
@@ -8045,13 +8086,17 @@ function openSeriesModal(series, data) {
     if (saveBtn) {
         saveBtn.addEventListener("click", async () => {
             const getValue = (name) => overlay.querySelector(`[name="${name}"]`)?.value ?? "";
-            const startTimeValue = getValue("startTimeLocal");
-            const startTimeLocal = startTimeValue.length === 5 ? `${startTimeValue}:00` : startTimeValue;
+            const startTimeValue = normalizeTimeInputValue(getValue("startTimeLocal"));
+            const startTimeLocal = startTimeValue ? `${startTimeValue}:00` : "";
             const selectedDays = Array.from(overlay.querySelectorAll("input[name=\"seriesDays\"]:checked"))
                 .map(input => Number(input.value))
                 .filter(value => Number.isFinite(value));
             if (!selectedDays.length) {
                 showToast(t("series.daysRequired", "Select at least one day of week."), "error");
+                return;
+            }
+            if (!startTimeLocal) {
+                showToast(t("session.requiredFields", "Title, time, and duration are required."), "error");
                 return;
             }
             const allowedPlanIds = Array.from(overlay.querySelectorAll("input[name=\"planIds\"]:checked"))
@@ -8071,7 +8116,7 @@ function openSeriesModal(series, data) {
                 durationMinutes: Number(getValue("durationMinutes")),
                 recurrenceIntervalWeeks: Number(getValue("recurrenceIntervalWeeks") || 1),
                 generateWeeks: Number(getValue("generateWeeks") || 8),
-                generateUntil: getValue("generateUntil") || null,
+                generateUntil: normalizeDateInputValue(getValue("generateUntil")) || null,
                 defaultCapacity: Number(getValue("capacity") || 0),
                 remoteCapacity: Number(getValue("remoteCapacity") || 0),
                 priceCents: toCents(Number(getValue("price") || 0)),
@@ -8676,8 +8721,13 @@ function parseDateInput(value) {
         now.setHours(12, 0, 0, 0);
         return now;
     }
-    const [year, month, day] = value.split("-").map(Number);
-    return new Date(year, (month || 1) - 1, day || 1, 12);
+    const trimmed = String(value).trim();
+    if (trimmed.includes("/")) {
+        const [day, month, year] = trimmed.split("/").map(part => Number(part));
+        return new Date(year || 0, (month || 1) - 1, day || 1, 12);
+    }
+    const [year, month, day] = trimmed.split("-").map(part => Number(part));
+    return new Date(year || 0, (month || 1) - 1, day || 1, 12);
 }
 
 function formatDateKeyLocal(date) {
@@ -8685,6 +8735,37 @@ function formatDateKeyLocal(date) {
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
+}
+
+function formatDateDisplay(value) {
+    const date = value instanceof Date ? value : parseDateInput(value);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+}
+
+function normalizeDateInputValue(value) {
+    if (!value) return "";
+    const parsed = parseDateInput(value);
+    if (!parsed || Number.isNaN(parsed.getTime())) return "";
+    return formatDateKeyLocal(parsed);
+}
+
+function normalizeTimeInputValue(value) {
+    const trimmed = String(value || "").trim().toLowerCase();
+    if (!trimmed) return "";
+    const match = trimmed.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
+    if (!match) return "";
+    let hours = Number(match[1] || 0);
+    const minutes = Number(match[2] || 0);
+    const meridiem = match[3];
+    if (meridiem) {
+        if (meridiem === "pm" && hours < 12) hours += 12;
+        if (meridiem === "am" && hours === 12) hours = 0;
+    }
+    if (hours > 23 || minutes > 59) return "";
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
 
 function closeEventActionsMenu() {
@@ -8979,26 +9060,18 @@ function formatTimeInput(date, timeZone) {
 }
 
 function formatMonthDay(date, timeZone) {
-    return new Intl.DateTimeFormat(getLocaleFromSettings(), {
-        month: "short",
-        day: "numeric"
-    }).format(date);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    return `${day}/${month}`;
 }
 
 function formatFullDate(date, timeZone) {
-    return new Intl.DateTimeFormat(getLocaleFromSettings(), {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-        year: "numeric"
-    }).format(date);
+    return formatDateDisplay(date);
 }
 
 function formatMonthYear(date, timeZone) {
-    return new Intl.DateTimeFormat(getLocaleFromSettings(), {
-        month: "long",
-        year: "numeric"
-    }).format(date);
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    return `${month}/${date.getFullYear()}`;
 }
 
 function formatHebrewDate(date) {
