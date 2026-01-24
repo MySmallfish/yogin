@@ -681,6 +681,9 @@ const appMachine = createMachine({
                 LOGIN_SUCCESS: {
                     target: "loading",
                     actions: "setSession"
+                },
+                NAVIGATE: {
+                    actions: "setRoute"
                 }
             }
         },

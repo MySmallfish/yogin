@@ -33,7 +33,7 @@ public class SeedService
             Name = "Yogin Demo Studio",
             Timezone = "UTC",
             WeekStartsOn = 1,
-            ThemeJson = "{\"primary\":\"#647FBC\",\"secondary\":\"#9CB4CE\",\"accent\":\"#B9E0D9\",\"background\":\"#F8FAD2\"}",
+            ThemeJson = "{\"primary\":\"#f1c232\",\"secondary\":\"#f6d88a\",\"accent\":\"#f9e7b7\",\"background\":\"#fff7de\"}",
             DefaultLocale = "en"
         };
 
@@ -155,7 +155,7 @@ public class SeedService
             PriceCents = 2500,
             Currency = "ILS",
             Icon = "flow",
-            Color = "#647FBC",
+            Color = "#f1c232",
             CancellationWindowHours = 6,
             IsActive = true
         };

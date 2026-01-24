@@ -199,6 +199,7 @@
     "session.attendance.inPerson":  "In-studio",
     "session.attendance.remote":  "Remote (Zoom)",
     "session.addCustomerHint":  "Select an existing customer or create a new one.",
+    "session.participantsTitle":  "Participants list",
     "session.registerCustomer":  "Register customer",
     "session.duplicate":  "Duplicate",
     "session.addTitle":  "Add session",

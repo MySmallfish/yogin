@@ -1,13 +1,18 @@
 export function formatDateTime(iso, timeZone) {
     if (!iso) return "";
     const date = new Date(iso);
-    return new Intl.DateTimeFormat(getLocaleFromSettings(), {
+    const options = {
         weekday: "short",
         month: "short",
         day: "numeric",
-        hour: "numeric",
-        minute: "2-digit"
-    }).format(date);
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23"
+    };
+    if (timeZone) {
+        options.timeZone = timeZone;
+    }
+    return new Intl.DateTimeFormat(getLocaleFromSettings(), options).format(date);
 }
 
 export function formatMoney(cents, currency) {

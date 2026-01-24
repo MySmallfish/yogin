@@ -971,14 +971,23 @@ button .icon svg {
 
 .calendar-actions-row {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   align-items: center;
   flex: 1 1 auto;
   flex-wrap: nowrap;
-  justify-content: flex-start;
+  justify-content: space-between;
   overflow: visible;
   min-width: 0;
   width: 100%;
+}
+
+.calendar-actions-main {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-wrap: nowrap;
 }
 
 .calendar-actions-row #add-session {
@@ -1030,7 +1039,7 @@ button .icon svg {
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
 }
 
-.calendar-actions-row input[type="search"] {
+.calendar-actions-main input[type="search"] {
   min-width: 0;
   flex: 1 1 240px;
   border-radius: 999px;
@@ -1069,7 +1078,6 @@ button .icon svg {
   direction: rtl;
 }
 
-[dir="rtl"] .calendar-actions-row,
 [dir="rtl"] .calendar-nav-row {
   flex-direction: row-reverse;
   justify-content: flex-end;
@@ -1890,6 +1898,18 @@ button .icon svg {
 
 .modal-column-details .form-grid {
   grid-template-columns: 1fr;
+}
+
+.registrations-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.registrations-header h4 {
+  margin: 0 0 4px;
+  font-size: 16px;
 }
 
 .registration-title {

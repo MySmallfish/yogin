@@ -10,3 +10,4 @@
 - 2026-01-23: Fixed duplicate const in session recurrence handler, restored admin rendering, and resolved Playwright run.
 - 2026-01-23: Preserve event route through login for shared session links and moved series days-of-week field under title/icon/color.
 - 2026-01-23: Updated calendar list view to page by year from month start and adjusted RTL nav direction handling.
+- 2026-01-24: Updated default theme palette to #f1c232-based colors, enforced 24h formatting in shared utils, moved Today into the calendar actions header, and split session details vs. registrations into separate modals with a participants list.

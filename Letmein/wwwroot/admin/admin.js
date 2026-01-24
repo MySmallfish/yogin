@@ -1,4 +1,4 @@
-﻿import { createMachine, createActor, fromPromise, assign } from "xstate";
+import { createMachine, createActor, fromPromise, assign } from "xstate";
 import Handlebars from "handlebars";
 import { apiGet, apiPost, apiPut, apiDelete } from "../shared/api.js";
 import { login, logout, getSession, loadSessionHint, consumeForceLogout } from "../shared/auth.js";
@@ -194,8 +194,9 @@ const calendarTemplate = compileTemplate("calendar", `
     <div class="calendar-grid">
       <div class="calendar-actions-col">
         <div class="calendar-actions-row">
-          <input type="search" id="calendar-search" placeholder="{{t "calendar.search" "Search sessions"}}" value="{{search}}" />
-          <div class="calendar-export" aria-label="{{t "calendar.export" "Export"}}">
+          <div class="calendar-actions-main">
+            <input type="search" id="calendar-search" placeholder="{{t "calendar.search" "Search sessions"}}" value="{{search}}" />
+            <div class="calendar-export" aria-label="{{t "calendar.export" "Export"}}">
             <button class="icon-button export-btn" data-export="outlook" title="{{t "calendar.exportOutlook" "Outlook (.ics)"}}" aria-label="{{t "calendar.exportOutlook" "Outlook (.ics)"}}">
               <span class="icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 8H4v10h16V10z"/></svg>
@@ -208,11 +209,13 @@ const calendarTemplate = compileTemplate("calendar", `
               </span>
               <span class="sr-only">{{t "calendar.exportExcel" "Excel (.csv)"}}</span>
             </button>
+            </div>
+            <button id="add-session">
+              <span class="icon" aria-hidden="true">+</span>
+              {{t "calendar.addSession" "Add session"}}
+            </button>
           </div>
-          <button id="add-session">
-            <span class="icon" aria-hidden="true">+</span>
-            {{t "calendar.addSession" "Add session"}}
-          </button>
+          <button class="secondary" id="calendar-today">{{t "calendar.today" "Today"}}</button>
         </div>
       </div>
       <div class="calendar-nav-col">
@@ -255,7 +258,6 @@ const calendarTemplate = compileTemplate("calendar", `
                 <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
               </span>
             </button>
-            <button class="secondary" id="calendar-today">{{t "calendar.today" "Today"}}</button>
             <input type="date" id="calendar-date" value="{{focusDate}}" />
             <button class="icon-button nav-arrow" data-nav="next" aria-label="{{t "calendar.next" "Next"}}">
               <span class="icon" aria-hidden="true">
@@ -679,9 +681,7 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
             </div>
           </div>
         </div>
-        <div class="modal-columns">
-        <div class="modal-column modal-column-details">
-          <div class="form-grid">
+        <div class="form-grid">
             <div>
               <label>{{t "session.status" "Status"}}</label>
               <select name="status">
@@ -782,63 +782,20 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
             </div>
           </div>
         </div>
-        <div class="modal-column modal-column-registration">
-          <div class="share-row">
-            <label>{{t "session.shareLink" "Share registration link"}}</label>
-            <div class="share-field share-buttons" data-share-url="{{shareUrl}}">
-              <button class="secondary btn-icon" id="share-session-link" aria-label="{{t "calendar.actionShare" "Share"}}">
-                <span class="icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M18 8a3 3 0 1 0-2.83-4H15a3 3 0 0 0 .17 1l-7.1 4.13a3 3 0 0 0-2.17-1 3 3 0 1 0 2.17 5l7.1 4.13A3 3 0 1 0 15 16a3 3 0 0 0 .17 1l-7.1-4.13a3 3 0 0 0 0-2.74l7.1-4.13A3 3 0 0 0 18 8z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-                </span>
-                {{t "calendar.actionShare" "Share"}}
-              </button>
-            </div>
-          </div>
-          <div class="roster" data-roster-panel>
-            {{{rosterHtml}}}
-          </div>
-          <div class="registration-form">
-            <h4 class="registration-title">{{t "session.registrationTitle" "Registration"}}</h4>
-            <div class="meta registration-hint">{{t "session.addCustomerHint" "Select an existing customer or add a new one."}}</div>
-            <div class="form-grid">
-              <div class="span-2">
-                <label>{{t "session.findCustomer" "Find existing customer"}}</label>
-                <div class="registration-lookup-row">
-                  <input name="customerLookup" list="customer-list" placeholder="{{t "session.findCustomerPlaceholder" "Start typing a name or email"}}" autocomplete="off" />
-                  <button class="icon-button add-inline" type="button" id="add-customer-modal" aria-label="{{t "customer.addTitle" "Add customer"}}">
-                    <span class="icon" aria-hidden="true">+</span>
-                    <span class="add-label">{{t "common.add" "Add"}}</span>
-                  </button>
-                </div>
-                <input type="hidden" name="customerId" />
-                <datalist id="customer-list">
-                  {{#each customers}}
-                    <option value="{{lookupLabel}}" data-customer-id="{{id}}"></option>
-                  {{/each}}
-                </datalist>
-              </div>
-              <div>
-                <label>{{t "session.attendance" "Attendance"}}</label>
-                <select name="attendanceType">
-                  <option value="in-person">{{t "session.attendance.inPerson" "In-studio"}}</option>
-                  {{#if hasRemoteCapacity}}
-                    <option value="remote">{{t "session.attendance.remote" "Remote (Zoom)"}}</option>
-                  {{/if}}
-                </select>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <div class="modal-actions">
-                <button id="register-customer">{{t "session.registerCustomer" "Register customer"}}</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        </div>
       </div>
       <div class="modal-footer">
         <div class="meta" data-booked-meta>{{capacitySummary}}</div>
         <div class="modal-actions">
+          <button class="secondary" id="open-registrations">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" fill="none" stroke="currentColor" stroke-width="2"/>
+                <circle cx="8.5" cy="7" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/>
+                <path d="M19 8v6M16 11h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </span>
+            {{t "session.participantsTitle" "Participants list"}}
+          </button>
           <button class="secondary btn-danger" id="delete-session">
             <span class="icon" aria-hidden="true">
               <svg viewBox="0 0 24 24">
@@ -889,6 +846,84 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
             </span>
             {{t "common.saveChanges" "Save changes"}}
           </button>
+        </div>
+      </div>
+    </div>
+  </div>
+`);
+
+const sessionRegistrationsModalTemplate = compileTemplate("session-registrations-modal", `
+  <div class="modal-overlay" id="session-registrations-modal">
+    <div class="modal modal-scroll">
+      <div class="modal-header">
+        <div>
+          <h3>{{seriesTitle}}</h3>
+          <div class="muted">{{startLabel}} ({{timeRange}})</div>
+          <div class="meta">
+            <span>{{roomName}}</span>
+            {{#if instructorName}}
+              <span class="meta-sep"> - </span>
+              {{#if hasInstructorDetails}}
+                <button class="link-button" type="button" id="open-instructor">{{instructorName}}</button>
+              {{else}}
+                <span>{{instructorName}}</span>
+              {{/if}}
+            {{/if}}
+          </div>
+        </div>
+        <button class="modal-close" id="close-registrations" type="button" aria-label="{{t "common.close" "Close"}}"></button>
+      </div>
+      <div class="modal-body">
+        <div class="registrations-header">
+          <div>
+            <h4>{{t "session.participantsTitle" "Participants list"}}</h4>
+            <div class="meta" data-capacity-summary>{{capacitySummary}}</div>
+          </div>
+          <button class="secondary btn-icon" id="share-session-link" aria-label="{{t "calendar.actionShare" "Share"}}">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M18 8a3 3 0 1 0-2.83-4H15a3 3 0 0 0 .17 1l-7.1 4.13a3 3 0 0 0-2.17-1 3 3 0 1 0 2.17 5l7.1 4.13A3 3 0 1 0 15 16a3 3 0 0 0 .17 1l-7.1-4.13a3 3 0 0 0 0-2.74l7.1-4.13A3 3 0 0 0 18 8z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            </span>
+            {{t "calendar.actionShare" "Share"}}
+          </button>
+        </div>
+        <div class="roster" data-roster-panel>
+          {{{rosterHtml}}}
+        </div>
+        <div class="registration-form">
+          <h4 class="registration-title">{{t "session.registrationTitle" "Registration"}}</h4>
+          <div class="meta registration-hint">{{t "session.addCustomerHint" "Select an existing customer or add a new one."}}</div>
+          <div class="form-grid">
+            <div class="span-2">
+              <label>{{t "session.findCustomer" "Find existing customer"}}</label>
+              <div class="registration-lookup-row">
+                <input name="customerLookup" list="customer-list" placeholder="{{t "session.findCustomerPlaceholder" "Start typing a name or email"}}" autocomplete="off" />
+                <button class="icon-button add-inline" type="button" id="add-customer-modal" aria-label="{{t "customer.addTitle" "Add customer"}}">
+                  <span class="icon" aria-hidden="true">+</span>
+                  <span class="add-label">{{t "common.add" "Add"}}</span>
+                </button>
+              </div>
+              <input type="hidden" name="customerId" />
+              <datalist id="customer-list">
+                {{#each customers}}
+                  <option value="{{lookupLabel}}" data-customer-id="{{id}}"></option>
+                {{/each}}
+              </datalist>
+            </div>
+            <div>
+              <label>{{t "session.attendance" "Attendance"}}</label>
+              <select name="attendanceType">
+                <option value="in-person">{{t "session.attendance.inPerson" "In-studio"}}</option>
+                {{#if hasRemoteCapacity}}
+                  <option value="remote">{{t "session.attendance.remote" "Remote (Zoom)"}}</option>
+                {{/if}}
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <div class="modal-actions">
+              <button id="register-customer">{{t "session.registerCustomer" "Register customer"}}</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1398,7 +1433,7 @@ const seriesModalTemplate = compileTemplate("series-modal", `
             <div class="color-field">
               <input class="color-input" name="color" type="color" value="{{color}}" />
               <div class="color-chip" style="background: {{color}}"></div>
-              <input class="color-text" type="text" value="{{color}}" placeholder="#647FBC" data-color-text />
+              <input class="color-text" type="text" value="{{color}}" placeholder="#f1c232" data-color-text />
             </div>
           </div>
         <div class="span-2">
@@ -2722,7 +2757,7 @@ const settingsTemplate = compileTemplate("settings", `
           <div class="color-field">
             <input class="color-input" name="themePrimary" type="color" value="{{themePrimary}}" />
             <div class="color-chip" style="background: {{themePrimary}}"></div>
-            <input class="color-text" type="text" value="{{themePrimary}}" placeholder="#647FBC" data-color-text />
+            <input class="color-text" type="text" value="{{themePrimary}}" placeholder="#f1c232" data-color-text />
           </div>
         </div>
         <div>
@@ -2730,7 +2765,7 @@ const settingsTemplate = compileTemplate("settings", `
           <div class="color-field">
             <input class="color-input" name="themeSecondary" type="color" value="{{themeSecondary}}" />
             <div class="color-chip" style="background: {{themeSecondary}}"></div>
-            <input class="color-text" type="text" value="{{themeSecondary}}" placeholder="#9CB4CE" data-color-text />
+            <input class="color-text" type="text" value="{{themeSecondary}}" placeholder="#f6d88a" data-color-text />
           </div>
         </div>
         <div>
@@ -2738,7 +2773,7 @@ const settingsTemplate = compileTemplate("settings", `
           <div class="color-field">
             <input class="color-input" name="themeAccent" type="color" value="{{themeAccent}}" />
             <div class="color-chip" style="background: {{themeAccent}}"></div>
-            <input class="color-text" type="text" value="{{themeAccent}}" placeholder="#B9E0D9" data-color-text />
+            <input class="color-text" type="text" value="{{themeAccent}}" placeholder="#f9e7b7" data-color-text />
           </div>
         </div>
         <div>
@@ -2746,7 +2781,7 @@ const settingsTemplate = compileTemplate("settings", `
           <div class="color-field">
             <input class="color-input" name="themeBackground" type="color" value="{{themeBackground}}" />
             <div class="color-chip" style="background: {{themeBackground}}"></div>
-            <input class="color-text" type="text" value="{{themeBackground}}" placeholder="#F8FAD2" data-color-text />
+            <input class="color-text" type="text" value="{{themeBackground}}" placeholder="#fff7de" data-color-text />
           </div>
         </div>
       </div>
@@ -3193,7 +3228,7 @@ function render(state) {
             startTimeLocal: (item.startTimeLocal || "").slice(0, 5),
             activeLabel: item.isActive ? t("common.yes", "Yes") : t("common.no", "No"),
             icon: item.icon || "",
-            color: item.color || "#647FBC",
+            color: item.color || "#f1c232",
             remoteCapacity: item.remoteCapacity ?? 0
         }));
         content = eventsTemplate({
@@ -3481,10 +3516,10 @@ function render(state) {
             faviconUrl,
             weekStartsOn: studio.weekStartsOn || 0,
             themeJson,
-            themePrimary: ensureHexColor(theme.primary, "#647FBC"),
-            themeSecondary: ensureHexColor(theme.secondary, "#9CB4CE"),
-            themeAccent: ensureHexColor(theme.accent, "#B9E0D9"),
-            themeBackground: ensureHexColor(theme.background, "#F8FAD2"),
+            themePrimary: ensureHexColor(theme.primary, "#f1c232"),
+            themeSecondary: ensureHexColor(theme.secondary, "#f6d88a"),
+            themeAccent: ensureHexColor(theme.accent, "#f9e7b7"),
+            themeBackground: ensureHexColor(theme.background, "#fff7de"),
             defaultLanguageOptions,
             userLanguageOptions,
             holidayCalendarOptions
@@ -3624,11 +3659,7 @@ function bindRouteActions(route, data, state) {
         navButtons.forEach(btn => {
             btn.addEventListener("click", () => {
                 const navType = btn.getAttribute("data-nav");
-                const isRtl = document.documentElement.dir === "rtl";
-                let direction = navType === "prev" ? -1 : 1;
-                if (isRtl) {
-                    direction *= -1;
-                }
+                const direction = navType === "prev" ? -1 : 1;
                 const baseDate = dateInput?.value || currentDate;
                 const nextDate = shiftCalendarDate(currentView, baseDate, direction);
                 actor.send({ type: "SET_CALENDAR", view: currentView, date: nextDate });
@@ -4207,19 +4238,19 @@ function bindRouteActions(route, data, state) {
 
         const syncThemeInputs = (themeValue) => {
             if (themeInputs.primary) {
-                themeInputs.primary.value = ensureHexColor(themeValue.primary, themeInputs.primary.value || "#647FBC");
+                themeInputs.primary.value = ensureHexColor(themeValue.primary, themeInputs.primary.value || "#f1c232");
                 updateColorField(themeInputs.primary);
             }
             if (themeInputs.secondary) {
-                themeInputs.secondary.value = ensureHexColor(themeValue.secondary, themeInputs.secondary.value || "#9CB4CE");
+                themeInputs.secondary.value = ensureHexColor(themeValue.secondary, themeInputs.secondary.value || "#f6d88a");
                 updateColorField(themeInputs.secondary);
             }
             if (themeInputs.accent) {
-                themeInputs.accent.value = ensureHexColor(themeValue.accent, themeInputs.accent.value || "#B9E0D9");
+                themeInputs.accent.value = ensureHexColor(themeValue.accent, themeInputs.accent.value || "#f9e7b7");
                 updateColorField(themeInputs.accent);
             }
             if (themeInputs.background) {
-                themeInputs.background.value = ensureHexColor(themeValue.background, themeInputs.background.value || "#F8FAD2");
+                themeInputs.background.value = ensureHexColor(themeValue.background, themeInputs.background.value || "#fff7de");
                 updateColorField(themeInputs.background);
             }
         };
@@ -4332,10 +4363,10 @@ function bindRouteActions(route, data, state) {
                 } else if (theme.faviconUrl) {
                     delete theme.faviconUrl;
                 }
-                theme.primary = formValues.themePrimary || theme.primary || "#647FBC";
-                theme.secondary = formValues.themeSecondary || theme.secondary || "#9CB4CE";
-                theme.accent = formValues.themeAccent || theme.accent || "#B9E0D9";
-                theme.background = formValues.themeBackground || theme.background || "#F8FAD2";
+                theme.primary = formValues.themePrimary || theme.primary || "#f1c232";
+                theme.secondary = formValues.themeSecondary || theme.secondary || "#f6d88a";
+                theme.accent = formValues.themeAccent || theme.accent || "#f9e7b7";
+                theme.background = formValues.themeBackground || theme.background || "#fff7de";
                 const defaultLocale = formValues.defaultLocale || (state.context.studio?.defaultLocale || "en");
                 const preferredLocale = formValues.userLocale || "";
                 await apiPut("/api/admin/studio", {
@@ -4989,18 +5020,7 @@ function resetUserForm() {
     toggleInstructorFields("Admin");
 }
 
-async function openCalendarEventModal(item, data, options = {}) {
-    const existing = document.getElementById("calendar-modal");
-    if (existing) {
-        clearModalEscape();
-        existing.remove();
-    }
-
-    const calendarMeta = data.calendar || {};
-    const studio = calendarMeta.studio || {};
-    const timeZone = getLocalTimeZone();
-    const shareSlug = studio.slug || "demo";
-    const shareUrl = `${window.location.origin}/app?studio=${encodeURIComponent(shareSlug)}#/event/${item.id}`;
+function getSessionTiming(item, timeZone) {
     const start = new Date(item.startUtc);
     const end = item.endUtc ? new Date(item.endUtc) : null;
     const timeRange = end ? `${formatTimeOnly(start, timeZone)} - ${formatTimeOnly(end, timeZone)}` : formatTimeOnly(start, timeZone);
@@ -5010,65 +5030,27 @@ async function openCalendarEventModal(item, data, options = {}) {
     const durationMinutes = end
         ? Math.max(1, Math.round((end.getTime() - start.getTime()) / 60000))
         : (item.durationMinutes || 60);
+    return { start, end, timeRange, startLabel, sessionDateKey, startTimeLocal, durationMinutes };
+}
 
-    let roster = [];
-    try {
-        roster = await apiGet(`/api/admin/event-instances/${item.id}/roster`);
-    } catch {
-        roster = [];
+function formatCapacitySummaryCounts(bookedCount, remoteCount, capacityValue, remoteCapacityValue) {
+    const bookedLabel = t("capacity.registered", "Registered");
+    const remoteLabel = t("capacity.registeredRemote", "Registered remotely");
+    if (remoteCapacityValue > 0) {
+        return `${bookedLabel}: ${bookedCount} / ${capacityValue} | ${remoteLabel}: ${remoteCount} / ${remoteCapacityValue}`;
+    }
+    return `${bookedLabel}: ${bookedCount} / ${capacityValue}`;
+}
+
+async function openCalendarEventModal(item, data, options = {}) {
+    const existing = document.getElementById("calendar-modal");
+    if (existing) {
+        clearModalEscape();
+        existing.remove();
     }
 
-    const messageSubject = `${t("session.emailSubject", "Class registration:")} ${item.seriesTitle || t("session.sessionFallback", "Session")}`;
-    const bulkEmailBody = `${t("session.emailGreeting", "Hi")}, ${t("session.emailBody", "you're registered for")} ${item.seriesTitle || t("session.sessionFallbackLower", "this session")} ${t("session.emailOn", "on")} ${startLabel} (${timeRange}).`;
-    const bulkSmsBody = `${t("session.smsBodyPrefix", "Reminder:")} ${item.seriesTitle || t("session.sessionFallback", "Session")} ${t("session.emailOn", "on")} ${startLabel} (${timeRange}).`;
-    const isBirthdayForKey = (dateOfBirth, dateKey) => {
-        if (!dateOfBirth || !dateKey) return false;
-        const parts = String(dateOfBirth).split("-");
-        if (parts.length < 3) return false;
-        const month = parts[1];
-        const day = parts[2];
-        if (!month || !day) return false;
-        return `${month}-${day}` === dateKey.slice(5);
-    };
-    const normalizeRosterRows = (rows) => rows.map(row => {
-        const bookingStatusLabel = normalizeBookingStatus(row.bookingStatus);
-        const attendanceLabel = normalizeAttendanceStatus(row.attendanceStatus);
-        const customerName = row.customerName || t("session.greetingFallback", "there");
-        const messageBody = `${t("session.emailGreeting", "Hi")} ${customerName}, ${t("session.emailBody", "you're registered for")} ${item.seriesTitle || t("session.sessionFallbackLower", "this session")} ${t("session.emailOn", "on")} ${startLabel} (${timeRange}).`;
-        const encodedSubject = encodeURIComponent(messageSubject);
-        const encodedBody = encodeURIComponent(messageBody);
-        const email = (row.email || "").trim();
-        const phone = (row.phone || "").trim();
-        const phoneDigits = phone.replace(/[^\d]/g, "");
-        const isRemote = Boolean(row.isRemote);
-        const bookingStatusRaw = row.bookingStatus;
-        const attendanceRaw = row.attendanceStatus;
-        const isCancelled = bookingStatusRaw === "Cancelled" || bookingStatusRaw === 2;
-        const isPresent = attendanceRaw === "Present" || attendanceRaw === 0;
-        const isNoShow = attendanceRaw === "NoShow" || attendanceRaw === 1;
-        const isRegistered = attendanceRaw === "Registered" || attendanceRaw === null || attendanceRaw === undefined;
-        const isBirthday = isBirthdayForKey(row.dateOfBirth, sessionDateKey);
-        const canRemove = Boolean(row.bookingId) && !isCancelled;
-        return {
-            ...row,
-            bookingStatusLabel,
-            attendanceLabel,
-            isRemote,
-            isCancelled,
-            isRegistered,
-            isPresent,
-            isNoShow,
-            isBirthday,
-            canRemove,
-            hasEmail: Boolean(email),
-            hasPhone: Boolean(phone),
-            hasWhatsapp: Boolean(phoneDigits),
-            emailLink: email ? `mailto:${email}?subject=${encodedSubject}&body=${encodedBody}` : "",
-            phoneLink: phone ? `tel:${phone}` : "",
-            smsLink: phone ? `sms:${phone}?&body=${encodedBody}` : "",
-            whatsappLink: phoneDigits ? `https://wa.me/${phoneDigits}?text=${encodedBody}` : ""
-        };
-    });
+    const timeZone = getLocalTimeZone();
+    const { start, end, timeRange, startLabel, sessionDateKey, startTimeLocal, durationMinutes } = getSessionTiming(item, timeZone);
 
     const statusValue = typeof item.status === "string"
         ? item.status
@@ -5096,7 +5078,7 @@ async function openCalendarEventModal(item, data, options = {}) {
     const hasDescription = descriptionValue.length > 0;
     const descriptionIsUrl = /^https?:\/\//i.test(descriptionValue);
     const seriesIconValue = item.seriesIcon || "";
-    const seriesColorValue = ensureHexColor(item.seriesColor || "#647FBC", "#647FBC");
+    const seriesColorValue = ensureHexColor(item.seriesColor || "#f1c232", "#f1c232");
     const instanceIconValue = item.icon || "";
     const instanceColorValue = ensureHexColor(item.color || "", "");
     const colorValue = instanceColorValue || seriesColorValue;
@@ -5114,27 +5096,11 @@ async function openCalendarEventModal(item, data, options = {}) {
         }
     ];
 
-    const rosterRows = normalizeRosterRows(roster);
-    const formatCapacitySummary = (rows, capacityValue, remoteCapacityValue) => {
-        const activeRows = rows.filter(row => !row.isCancelled);
-        const bookedCount = activeRows.filter(row => !row.isRemote).length;
-        const remoteCount = activeRows.filter(row => row.isRemote).length;
-        const bookedLabel = t("capacity.registered", "Registered");
-        const remoteLabel = t("capacity.registeredRemote", "Registered remotely");
-        if (remoteCapacityValue > 0) {
-            return `${bookedLabel}: ${bookedCount} / ${capacityValue} | ${remoteLabel}: ${remoteCount} / ${remoteCapacityValue}`;
-        }
-        return `${bookedLabel}: ${bookedCount} / ${capacityValue}`;
-    };
     const capacityValue = Number(item.capacity || 0);
     const remoteCapacityValue = Number(item.remoteCapacity || 0);
-    const capacitySummary = formatCapacitySummary(rosterRows, capacityValue, remoteCapacityValue);
-    const rosterHtml = rosterTemplate({ roster: rosterRows });
-    const customers = (data.customers || []).map(customer => ({
-        ...customer,
-        email: customer.email || "",
-        lookupLabel: `${customer.fullName}${customer.email ? ` (${customer.email})` : ""}`
-    }));
+    const bookedCount = Number(item.booked || 0);
+    const remoteCount = Number(item.remoteBooked || 0);
+    const capacitySummary = formatCapacitySummaryCounts(bookedCount, remoteCount, capacityValue, remoteCapacityValue);
     const seriesPlanIds = Array.isArray(item.seriesAllowedPlanIds) ? item.seriesAllowedPlanIds.map(id => String(id)) : [];
     const instancePlanIds = Array.isArray(item.instanceAllowedPlanIds) ? item.instanceAllowedPlanIds.map(id => String(id)) : [];
     const hasPlanOverride = item.hasPlanOverride === true;
@@ -5156,14 +5122,11 @@ async function openCalendarEventModal(item, data, options = {}) {
     const modalMarkup = calendarModalTemplate({
         ...item,
         timeRange,
-        startLabel: formatFullDate(start, timeZone),
+        startLabel,
         statusLabel: statusValue,
         statuses,
         rooms,
         instructors,
-        shareUrl,
-        rosterHtml,
-        customers,
         plans: planOptions,
         planCategories,
         titleSuggestions,
@@ -5255,10 +5218,11 @@ async function openCalendarEventModal(item, data, options = {}) {
         });
     }
 
-    const shareBtn = overlay.querySelector("#share-session-link");
-    if (shareBtn) {
-        shareBtn.addEventListener("click", async () => {
-            await shareSessionLink(item, data);
+    const registrationsBtn = overlay.querySelector("#open-registrations");
+    if (registrationsBtn) {
+        registrationsBtn.addEventListener("click", async () => {
+            closeModal();
+            await openSessionRegistrationsModal(item, data);
         });
     }
 
@@ -5324,6 +5288,27 @@ async function openCalendarEventModal(item, data, options = {}) {
             }
         });
     }
+
+    const bookedMeta = overlay.querySelector("[data-booked-meta]");
+    const capacitySummaryEl = overlay.querySelector("[data-capacity-summary]");
+    const updateBookedMeta = () => {
+        const capacityInput = overlay.querySelector("[name=\"capacity\"]");
+        const remoteCapacityInput = overlay.querySelector("[name=\"remoteCapacity\"]");
+        const capacityValue = Number(capacityInput?.value || item.capacity || 0);
+        const remoteCapacityValue = Number(remoteCapacityInput?.value || item.remoteCapacity || 0);
+        const summary = formatCapacitySummaryCounts(bookedCount, remoteCount, capacityValue, remoteCapacityValue);
+        if (bookedMeta) bookedMeta.textContent = summary;
+        if (capacitySummaryEl) capacitySummaryEl.textContent = summary;
+    };
+
+    ["capacity", "remoteCapacity"].forEach(name => {
+        const input = overlay.querySelector(`[name="${name}"]`);
+        if (input) {
+            input.addEventListener("input", updateBookedMeta);
+        }
+    });
+
+    updateBookedMeta();
 
     const saveBtn = overlay.querySelector("#save-instance");
     if (saveBtn) {
@@ -5486,29 +5471,146 @@ async function openCalendarEventModal(item, data, options = {}) {
         });
     }
 
+}
+
+async function openSessionRegistrationsModal(item, data, options = {}) {
+    const existing = document.getElementById("session-registrations-modal");
+    if (existing) {
+        clearModalEscape();
+        existing.remove();
+    }
+
+    const timeZone = getLocalTimeZone();
+    const { timeRange, startLabel, sessionDateKey } = getSessionTiming(item, timeZone);
+    let roster = [];
+    try {
+        roster = await apiGet(`/api/admin/event-instances/${item.id}/roster`);
+    } catch {
+        roster = [];
+    }
+
+    const messageSubject = `${t("session.emailSubject", "Class registration:")} ${item.seriesTitle || t("session.sessionFallback", "Session")}`;
+    const bulkEmailBody = `${t("session.emailGreeting", "Hi")}, ${t("session.emailBody", "you're registered for")} ${item.seriesTitle || t("session.sessionFallbackLower", "this session")} ${t("session.emailOn", "on")} ${startLabel} (${timeRange}).`;
+    const bulkSmsBody = `${t("session.smsBodyPrefix", "Reminder:")} ${item.seriesTitle || t("session.sessionFallback", "Session")} ${t("session.emailOn", "on")} ${startLabel} (${timeRange}).`;
+    const isBirthdayForKey = (dateOfBirth, dateKey) => {
+        if (!dateOfBirth || !dateKey) return false;
+        const parts = String(dateOfBirth).split("-");
+        if (parts.length < 3) return false;
+        const month = parts[1];
+        const day = parts[2];
+        if (!month || !day) return false;
+        return `${month}-${day}` === dateKey.slice(5);
+    };
+    const normalizeRosterRows = (rows) => rows.map(row => {
+        const bookingStatusLabel = normalizeBookingStatus(row.bookingStatus);
+        const attendanceLabel = normalizeAttendanceStatus(row.attendanceStatus);
+        const customerName = row.customerName || t("session.greetingFallback", "there");
+        const messageBody = `${t("session.emailGreeting", "Hi")} ${customerName}, ${t("session.emailBody", "you're registered for")} ${item.seriesTitle || t("session.sessionFallbackLower", "this session")} ${t("session.emailOn", "on")} ${startLabel} (${timeRange}).`;
+        const encodedSubject = encodeURIComponent(messageSubject);
+        const encodedBody = encodeURIComponent(messageBody);
+        const email = (row.email || "").trim();
+        const phone = (row.phone || "").trim();
+        const phoneDigits = phone.replace(/[^\d]/g, "");
+        const isRemote = Boolean(row.isRemote);
+        const bookingStatusRaw = row.bookingStatus;
+        const attendanceRaw = row.attendanceStatus;
+        const isCancelled = bookingStatusRaw === "Cancelled" || bookingStatusRaw === 2;
+        const isPresent = attendanceRaw === "Present" || attendanceRaw === 0;
+        const isNoShow = attendanceRaw === "NoShow" || attendanceRaw === 1;
+        const isRegistered = attendanceRaw === "Registered" || attendanceRaw === null || attendanceRaw === undefined;
+        const isBirthday = isBirthdayForKey(row.dateOfBirth, sessionDateKey);
+        const canRemove = Boolean(row.bookingId) && !isCancelled;
+        return {
+            ...row,
+            bookingStatusLabel,
+            attendanceLabel,
+            isRemote,
+            isCancelled,
+            isRegistered,
+            isPresent,
+            isNoShow,
+            isBirthday,
+            canRemove,
+            hasEmail: Boolean(email),
+            hasPhone: Boolean(phone),
+            hasWhatsapp: Boolean(phoneDigits),
+            emailLink: email ? `mailto:${email}?subject=${encodedSubject}&body=${encodedBody}` : "",
+            phoneLink: phone ? `tel:${phone}` : "",
+            smsLink: phone ? `sms:${phone}?&body=${encodedBody}` : "",
+            whatsappLink: phoneDigits ? `https://wa.me/${phoneDigits}?text=${encodedBody}` : ""
+        };
+    });
+
+    const rosterRows = normalizeRosterRows(roster);
+    const activeRows = rosterRows.filter(row => !row.isCancelled);
+    const bookedCount = activeRows.filter(row => !row.isRemote).length;
+    const remoteCount = activeRows.filter(row => row.isRemote).length;
+    const capacityValue = Number(item.capacity || 0);
+    const remoteCapacityValue = Number(item.remoteCapacity || 0);
+    const capacitySummary = formatCapacitySummaryCounts(bookedCount, remoteCount, capacityValue, remoteCapacityValue);
+    const rosterHtml = rosterTemplate({ roster: rosterRows });
+    const customers = (data.customers || []).map(customer => ({
+        ...customer,
+        email: customer.email || "",
+        lookupLabel: `${customer.fullName}${customer.email ? ` (${customer.email})` : ""}`
+    }));
+    const instructorDetails = (data.instructors || []).find(instructor => String(instructor.id) === String(item.instructorId));
+
+    const modalMarkup = sessionRegistrationsModalTemplate({
+        ...item,
+        timeRange,
+        startLabel,
+        rosterHtml,
+        customers,
+        capacitySummary,
+        hasRemoteCapacity: remoteCapacityValue > 0,
+        hasInstructorDetails: Boolean(instructorDetails)
+    });
+
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = modalMarkup;
+    const overlay = wrapper.firstElementChild;
+    if (!overlay) return;
+    document.body.appendChild(overlay);
+
+    let cleanupEscape = () => {};
+    const closeModal = () => {
+        cleanupEscape();
+        overlay.remove();
+    };
+    cleanupEscape = bindModalEscape(closeModal);
+    bindModalBackdrop(overlay);
+
+    const closeBtn = overlay.querySelector("#close-registrations");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", closeModal);
+    }
+
+    const instructorBtn = overlay.querySelector("#open-instructor");
+    if (instructorBtn && instructorDetails) {
+        instructorBtn.addEventListener("click", () => openInstructorModal(instructorDetails));
+    }
+
+    const shareBtn = overlay.querySelector("#share-session-link");
+    if (shareBtn) {
+        shareBtn.addEventListener("click", async () => {
+            await shareSessionLink(item, data);
+        });
+    }
+
     const rosterPanel = overlay.querySelector("[data-roster-panel]");
-    const bookedMeta = overlay.querySelector("[data-booked-meta]");
     const capacitySummaryEl = overlay.querySelector("[data-capacity-summary]");
     let currentRosterRows = rosterRows;
 
     const updateBookedMeta = (rows) => {
-        const capacityValue = Number(overlay.querySelector("[name=\"capacity\"]")?.value || item.capacity || 0);
-        const remoteCapacityValue = Number(overlay.querySelector("[name=\"remoteCapacity\"]")?.value || item.remoteCapacity || 0);
-        const summary = formatCapacitySummary(rows, capacityValue, remoteCapacityValue);
-        if (bookedMeta) {
-            bookedMeta.textContent = summary;
-        }
+        const activeRows = rows.filter(row => !row.isCancelled);
+        const bookedCount = activeRows.filter(row => !row.isRemote).length;
+        const remoteCount = activeRows.filter(row => row.isRemote).length;
+        const summary = formatCapacitySummaryCounts(bookedCount, remoteCount, capacityValue, remoteCapacityValue);
         if (capacitySummaryEl) {
             capacitySummaryEl.textContent = summary;
         }
     };
-
-    ["capacity", "remoteCapacity"].forEach(name => {
-        const input = overlay.querySelector(`[name="${name}"]`);
-        if (input) {
-            input.addEventListener("input", () => updateBookedMeta(currentRosterRows));
-        }
-    });
 
     const bindRosterActions = () => {
         overlay.querySelectorAll(".attendance-toggle").forEach(wrapper => {
@@ -7880,7 +7982,7 @@ function openSeriesModal(series, data) {
         seriesId: series?.id || "",
         titleValue: series?.title || "Studio Flow",
         icon: series?.icon || "",
-        color: ensureHexColor(series?.color || "#647FBC", "#647FBC"),
+        color: ensureHexColor(series?.color || "#f1c232", "#f1c232"),
         titleSuggestions,
         titleSuggestionId,
         dayOptions,
@@ -7958,7 +8060,7 @@ function openSeriesModal(series, data) {
             const payload = {
                 title: getValue("title"),
                 icon: getValue("icon"),
-                color: getValue("color") || "#647FBC",
+                color: getValue("color") || "#f1c232",
                 description: getValue("description") || "",
                 instructorId: getValue("instructorId") || null,
                 roomId: getValue("roomId") || null,
@@ -8728,7 +8830,7 @@ function openEventActionsMenu(anchor, item, data) {
         const action = button.getAttribute("data-action");
         closeEventActionsMenu();
         if (action === "register") {
-            await openCalendarEventModal(item, data, { focusRegistration: true });
+            await openSessionRegistrationsModal(item, data, { focusRegistration: true });
             return;
         }
         if (action === "edit") {
@@ -8951,4 +9053,5 @@ function handleRouteChange() {
 
 window.addEventListener("hashchange", handleRouteChange);
 handleRouteChange();
+
 
