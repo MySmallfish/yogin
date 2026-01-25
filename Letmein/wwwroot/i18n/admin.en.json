@@ -76,6 +76,7 @@
     "settings.logoPlaceholder":  "No logo selected",
     "settings.logoPreview":  "Studio logo preview",
     "settings.weekStartsOn":  "Week starts on",
+    "settings.weekStartsOnSunday":  "Sunday",
     "settings.themeEditor":  "Theme editor",
     "settings.themeJson":  "Theme JSON",
     "settings.primary":  "Primary",
@@ -676,6 +677,7 @@
     "series.generateWeeks":  "Generate (weeks)",
     "series.generateUntil":  "Generate until",
     "session.generateWeeks":  "Generate weeks",
+    "session.generateUntil":  "Generate until",
     "roster.participants":  "Participants list",
     "roster.emailAll":  "Send mail to all",
     "room.supportsRemote":  "Supports remote",
@@ -705,4 +707,39 @@
     "birthday.smsSubtitle":  "Send a warm birthday message.",
     "birthday.emailAll":  "Email all",
     "birthday.smsAll":  "SMS all"
+    ,"customers.manageTags":  "Manage tags"
+    ,"customers.tagAll":  "All tags"
+    ,"customers.back":  "Back to customers"
+    ,"page.customer.title":  "Customer details"
+    ,"page.customer.subtitle":  "Customer profile and history."
+    ,"customer.details.info":  "Information"
+    ,"customer.details.registrations":  "Registrations"
+    ,"customer.details.noRegistrations":  "No registrations yet."
+    ,"customer.details.attachments":  "Attachments"
+    ,"customer.details.noAttachments":  "No attachments uploaded."
+    ,"customer.details.signedForms":  "Signed forms"
+    ,"customer.details.noForms":  "No signed forms yet."
+    ,"customer.details.submittedAt":  "Submitted"
+    ,"customer.details.signature":  "Signature"
+    ,"customer.details.signatureType":  "Type"
+    ,"customer.details.billing":  "Billing"
+    ,"customer.details.billingAction":  "Add billing record"
+    ,"customer.details.activity":  "Activity log"
+    ,"customer.details.noActivity":  "No activity yet."
+    ,"customer.details.notFound":  "Customer not found."
+    ,"customerTags.title":  "Customer tags"
+    ,"customerTags.subtitle":  "Create tags to help segment customers."
+    ,"customerTags.name":  "Tag name"
+    ,"customerTags.actions":  "Actions"
+    ,"customerTags.add":  "Add tag"
+    ,"customerTags.update":  "Update tag"
+    ,"customerTags.new":  "New tag"
+    ,"customerTags.delete":  "Delete"
+    ,"customerTags.deleteTitle":  "Delete tag"
+    ,"customerTags.deleteSubtitle":  "Choose a replacement tag or remove it entirely."
+    ,"customerTags.replaceLabel":  "Replace with (optional)"
+    ,"customerTags.replaceNone":  "No replacement"
+    ,"customerTags.deleteHint":  "Customers with this tag will be updated."
+    ,"customerTags.nameRequired":  "Tag name is required."
+    ,"customerTags.saveError":  "Unable to save tag."
 }

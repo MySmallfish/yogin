@@ -4,11 +4,12 @@ import { apiGet, apiPost, apiPut, apiDelete } from "../shared/api.js";
 import { login, logout, getSession, loadSessionHint, consumeForceLogout } from "../shared/auth.js";
 import { setLocale, t, resolveLocale, getStoredLocale } from "../shared/i18n.js";
 import { compileTemplate } from "../shared/templates.js";
-import { formatMoney, getQueryParam, toDateInputValue } from "../shared/utils.js";
+import { formatMoney, formatDateTime, getQueryParam, toDateInputValue } from "../shared/utils.js";
 
 const root = document.getElementById("app");
 const sessionHint = loadSessionHint();
 Handlebars.registerHelper("t", (key, fallback) => t(key, fallback));
+Handlebars.registerHelper("eq", (a, b) => a === b);
 const debugEnabled = new URLSearchParams(window.location.search).has("debug")
     || localStorage.getItem("letmein.debug") === "1";
 function debugLog(...args) {
@@ -140,7 +141,15 @@ const layoutTemplate = compileTemplate("layout", `
             <div class="user-email">{{userEmail}}</div>
           </div>
         </div>
-        <button class="secondary" id="logout-btn">{{t "nav.logout" "Log out"}}</button>
+        <button class="icon-button logout-btn" id="logout-btn" aria-label="{{t "nav.logout" "Log out"}}">
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M10 17l5-5-5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M15 12H3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </span>
+        </button>
         <div class="tag">{{t "nav.demo" "Demo mode enabled"}}</div>
       </footer>
     </aside>
@@ -274,7 +283,7 @@ const calendarTemplate = compileTemplate("calendar", `
         {{#if day.hasEvents}}
           <div class="calendar-events">
             {{#each day.events}}
-              <div class="calendar-event {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
+              <div class="calendar-event {{#if isCancelled}}cancelled{{/if}} {{#if isPast}}past{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
                 {{#unless suppressActions}}
                   <button class="event-actions" type="button" aria-label="{{t "calendar.actions" "Actions"}}">
                     <span class="icon" aria-hidden="true">
@@ -330,7 +339,7 @@ const calendarTemplate = compileTemplate("calendar", `
             {{#if hasEvents}}
               <div class="calendar-day-events">
                 {{#each events}}
-                  <div class="calendar-event compact {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
+                  <div class="calendar-event compact {{#if isCancelled}}cancelled{{/if}} {{#if isPast}}past{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
                     {{#unless suppressActions}}
                       <button class="event-actions" type="button" aria-label="{{t "calendar.actions" "Actions"}}">
                         <span class="icon" aria-hidden="true">
@@ -387,7 +396,7 @@ const calendarTemplate = compileTemplate("calendar", `
                 {{#if hasEvents}}
                   <div class="calendar-month-events">
                     {{#each eventsPreview}}
-                      <div class="calendar-event mini {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
+                      <div class="calendar-event mini {{#if isCancelled}}cancelled{{/if}} {{#if isPast}}past{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
                         <span class="event-time">{{time}}</span>
                         <span class="event-title">
                           {{title}}
@@ -477,18 +486,8 @@ const rosterTemplate = compileTemplate("roster", `
       {{t "roster.selectAll" "Select all"}}
     </label>
     <div class="roster-actions-buttons">
-      <button class="secondary btn-icon" id="roster-email">
-        <span class="icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 7l9 6 9-6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-        </span>
-        {{t "roster.emailAll" "Send mail to all"}}
-      </button>
-      <button class="secondary btn-icon" id="roster-sms">
-        <span class="icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-        </span>
-        {{t "roster.smsSelected" "Send SMS"}}
-      </button>
+      <button class="secondary" id="roster-email">{{t "roster.emailShort" "Send Email"}}</button>
+      <button class="secondary" id="roster-sms">{{t "roster.smsShort" "Send SMS"}}</button>
     </div>
   </div>
   {{#if roster.length}}
@@ -873,27 +872,10 @@ const sessionRegistrationsModalTemplate = compileTemplate("session-registrations
         {{#if hasSessionDescription}}
           <div class="session-description">{{sessionDescription}}</div>
         {{/if}}
-        <div class="registrations-header">
-          <div>
-            <h4>{{t "session.participantsTitle" "Participants list"}}</h4>
-            <div class="meta" data-capacity-summary>{{capacitySummary}}</div>
-          </div>
-          <button class="secondary btn-icon" id="share-session-link" aria-label="{{t "calendar.actionShare" "Share"}}">
-            <span class="icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M18 8a3 3 0 1 0-2.83-4H15a3 3 0 0 0 .17 1l-7.1 4.13a3 3 0 0 0-2.17-1 3 3 0 1 0 2.17 5l7.1 4.13A3 3 0 1 0 15 16a3 3 0 0 0 .17 1l-7.1-4.13a3 3 0 0 0 0-2.74l7.1-4.13A3 3 0 0 0 18 8z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-            </span>
-            {{t "calendar.actionShare" "Share"}}
-          </button>
-        </div>
-        <div class="roster" data-roster-panel>
-          {{{rosterHtml}}}
-        </div>
         <div class="registration-form">
           <h4 class="registration-title">{{t "session.registrationTitle" "Registration"}}</h4>
-          <div class="meta registration-hint">{{t "session.addCustomerHint" "Select an existing customer or add a new one."}}</div>
           <div class="form-grid">
             <div class="span-2">
-              <label>{{t "session.findCustomer" "Find existing customer"}}</label>
               <div class="registration-lookup-row">
                 <input name="customerLookup" list="customer-list" placeholder="{{t "session.findCustomerPlaceholder" "Start typing a name or email"}}" autocomplete="off" />
                 <select name="attendanceType" class="attendance-select" aria-label="{{t "session.attendance" "Attendance"}}">
@@ -920,6 +902,21 @@ const sessionRegistrationsModalTemplate = compileTemplate("session-registrations
               <button id="register-customer">{{t "session.registerCustomer" "Register customer"}}</button>
             </div>
           </div>
+        </div>
+        <div class="registrations-header">
+          <div>
+            <h4>{{t "session.participantsTitle" "Participants list"}}</h4>
+            <div class="meta" data-capacity-summary>{{capacitySummary}}</div>
+          </div>
+          <button class="secondary btn-icon" id="share-session-link" aria-label="{{t "calendar.actionShare" "Share"}}">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M18 8a3 3 0 1 0-2.83-4H15a3 3 0 0 0 .17 1l-7.1 4.13a3 3 0 0 0-2.17-1 3 3 0 1 0 2.17 5l7.1 4.13A3 3 0 1 0 15 16a3 3 0 0 0 .17 1l-7.1-4.13a3 3 0 0 0 0-2.74l7.1-4.13A3 3 0 0 0 18 8z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            </span>
+            {{t "calendar.actionShare" "Share"}}
+          </button>
+        </div>
+        <div class="roster" data-roster-panel>
+          {{{rosterHtml}}}
         </div>
       </div>
     </div>
@@ -1350,6 +1347,10 @@ const sessionModalTemplate = compileTemplate("session-modal", `
           <label>{{t "session.startDate" "Start date"}}</label>
           <input type="text" class="date-input" name="startDate" value="{{focusDateDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
         </div>
+        <div>
+          <label>{{t "session.generateUntil" "Generate until"}}</label>
+          <input type="text" class="date-input" name="generateUntil" value="{{generateUntilDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
+        </div>
         <div class="span-2">
           <label>{{t "session.daysOfWeek" "Days of week"}}</label>
           <div class="weekday-pills">
@@ -1365,10 +1366,6 @@ const sessionModalTemplate = compileTemplate("session-modal", `
         <div>
           <label>{{t "session.recurrence" "Recurrence (weeks)"}}</label>
           <input type="number" name="recurrenceIntervalWeeks" value="1" />
-        </div>
-        <div>
-          <label>{{t "session.generateWeeks" "Generate weeks"}}</label>
-          <input type="number" name="generateWeeks" value="8" />
         </div>
       </div>
       <div class="modal-footer">
@@ -1495,18 +1492,14 @@ const seriesModalTemplate = compileTemplate("series-modal", `
             <label>{{t "series.description" "Description"}}</label>
             <textarea name="description" rows="4" placeholder="{{t "series.descriptionHintPlain" "Add description"}}">{{description}}</textarea>
           </div>
-          <div>
-            <label>{{t "series.recurrence" "Recurrence (weeks)"}}</label>
-            <input type="number" name="recurrenceIntervalWeeks" value="{{recurrenceIntervalWeeks}}" />
-          </div>
-          <div>
-            <label>{{t "series.generateWeeks" "Generate (weeks)"}}</label>
-            <input type="number" name="generateWeeks" value="{{generateWeeks}}" min="1" />
-          </div>
-          <div>
-            <label>{{t "series.generateUntil" "Generate until"}}</label>
+        <div>
+          <label>{{t "series.recurrence" "Recurrence (weeks)"}}</label>
+          <input type="number" name="recurrenceIntervalWeeks" value="{{recurrenceIntervalWeeks}}" />
+        </div>
+        <div>
+          <label>{{t "series.generateUntil" "Generate until"}}</label>
           <input type="text" class="date-input" name="generateUntil" value="{{generateUntilDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
-          </div>
+        </div>
           <div>
             <label>{{t "series.cancellationWindow" "Cancellation window (hours)"}}</label>
             <input type="number" name="cancellationWindowHours" value="{{cancellationWindowHours}}" />
@@ -2090,6 +2083,67 @@ const planModalTemplate = compileTemplate("plan-modal", `
   </div>
 `);
 
+const customerTagModalTemplate = compileTemplate("customer-tag-modal", `
+  <div class="modal-overlay" id="customer-tag-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h3>{{t "customerTags.title" "Customer tags"}}</h3>
+          <div class="muted">{{t "customerTags.subtitle" "Create tags to help segment customers."}}</div>
+        </div>
+        <button class="modal-close" id="close-tags" type="button" aria-label="{{t "common.close" "Close"}}"></button>
+      </div>
+      <input type="hidden" name="tagOriginal" value="{{tagOriginal}}" />
+      <div class="form-grid status-form">
+        <div>
+          <label>{{t "customerTags.name" "Tag name"}}</label>
+          <input name="tagName" value="{{tagName}}" />
+        </div>
+      </div>
+      <div class="modal-actions" style="margin-top:12px;">
+        <button id="save-tag">{{saveLabel}}</button>
+        <button class="secondary" id="reset-tag">{{t "customerTags.new" "New tag"}}</button>
+      </div>
+      <div style="margin-top:20px;">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>{{t "customerTags.name" "Tag name"}}</th>
+              <th>{{t "customerTags.actions" "Actions"}}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each tags}}
+            <tr>
+              <td>{{name}}</td>
+              <td>
+                <button class="secondary btn-edit" data-tag-edit="{{name}}">
+                  <span class="icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+                  </span>
+                  {{t "common.edit" "Edit"}}
+                </button>
+                <button class="secondary btn-danger" data-tag-delete="{{name}}">
+                  <span class="icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      <path d="M8 6V4h8v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      <path d="M19 6l-1 14H6L5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      <path d="M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </span>
+                  {{t "customerTags.delete" "Delete"}}
+                </button>
+              </td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+`);
+
 const planCategoryModalTemplate = compileTemplate("plan-category-modal", `
   <div class="modal-overlay" id="plan-category-modal">
     <div class="modal">
@@ -2296,6 +2350,7 @@ const customersTemplate = compileTemplate("customers", `
       {{t "customers.add" "Add customer"}}
     </button>
     <button class="secondary" id="manage-statuses">{{t "customers.manageStatuses" "Manage statuses"}}</button>
+    <button class="secondary" id="manage-tags">{{t "customers.manageTags" "Manage tags"}}</button>
     <button class="secondary" id="export-customers">{{t "customers.export" "Export CSV"}}</button>
     <label class="import-card" id="import-customers-zone">
       <input type="file" id="import-customers" accept=".csv,.xlsx" />
@@ -2309,6 +2364,12 @@ const customersTemplate = compileTemplate("customers", `
       <option value="">{{t "customers.statusAll" "All statuses"}}</option>
       {{#each statusOptions}}
         <option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>
+      {{/each}}
+    </select>
+    <select name="tagFilter">
+      <option value="">{{t "customers.tagAll" "All tags"}}</option>
+      {{#each tagOptions}}
+        <option value="{{value}}" {{#if selected}}selected{{/if}}>{{value}}</option>
       {{/each}}
     </select>
     <label class="checkbox">
@@ -2330,10 +2391,10 @@ const customersTemplate = compileTemplate("customers", `
     <thead>
       <tr>
         <th></th>
-        <th>{{t "customers.name" "Name"}}</th>
-        <th>{{t "customers.email" "Email"}}</th>
-        <th>{{t "customers.phone" "Phone"}}</th>
-        <th>{{t "customers.status" "Status"}}</th>
+        <th class="sortable {{#if (eq sortKey "name")}}sorted {{sortDir}}{{/if}}" data-sort="name">{{t "customers.name" "Name"}}</th>
+        <th class="sortable {{#if (eq sortKey "email")}}sorted {{sortDir}}{{/if}}" data-sort="email">{{t "customers.email" "Email"}}</th>
+        <th class="sortable {{#if (eq sortKey "phone")}}sorted {{sortDir}}{{/if}}" data-sort="phone">{{t "customers.phone" "Phone"}}</th>
+        <th class="sortable {{#if (eq sortKey "status")}}sorted {{sortDir}}{{/if}}" data-sort="status">{{t "customers.status" "Status"}}</th>
         <th>{{t "customers.actions" "Actions"}}</th>
       </tr>
     </thead>
@@ -2341,7 +2402,7 @@ const customersTemplate = compileTemplate("customers", `
       {{#each customers}}
       <tr class="{{#if isArchived}}row-muted{{/if}}">
         <td><input type="checkbox" data-customer-select="{{id}}" /></td>
-        <td>{{fullName}}</td>
+        <td><a href="#/customer/{{id}}" class="link-button">{{fullName}}</a></td>
         <td><a href="mailto:{{email}}">{{email}}</a></td>
         <td>
           <a href="tel:{{phone}}">{{phone}}</a>
@@ -2371,6 +2432,156 @@ const customersTemplate = compileTemplate("customers", `
       {{/each}}
     </tbody>
   </table>
+`);
+
+const customerDetailsTemplate = compileTemplate("customer-details", `
+  <div class="customer-details">
+    <div class="details-header">
+      <button class="secondary btn-icon" id="back-to-customers">
+        <span class="icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        {{t "customers.back" "Back to customers"}}
+      </button>
+      <div>
+        <h2>{{fullName}}</h2>
+        <div class="muted">{{email}}{{#if phone}} · {{phone}}{{/if}}</div>
+        <div class="meta">{{statusLabel}}</div>
+      </div>
+      <button class="secondary btn-edit" id="edit-customer">
+        <span class="icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+        </span>
+        {{t "common.edit" "Edit"}}
+      </button>
+    </div>
+    <div class="details-grid">
+      <section class="details-card">
+        <h3>{{t "customer.details.info" "Information"}}</h3>
+        <div class="details-list">
+          <div><span class="label">{{t "customers.name" "Name"}}</span><span>{{fullName}}</span></div>
+          <div><span class="label">{{t "customers.email" "Email"}}</span><span>{{email}}</span></div>
+          <div><span class="label">{{t "customers.phone" "Phone"}}</span><span>{{phone}}</span></div>
+          <div><span class="label">{{t "customer.idNumber" "ID number"}}</span><span>{{idNumber}}</span></div>
+          <div><span class="label">{{t "customer.sex" "Sex"}}</span><span>{{gender}}</span></div>
+          <div><span class="label">{{t "customer.dateOfBirth" "Date of birth"}}</span><span>{{dateOfBirth}}</span></div>
+          <div><span class="label">{{t "customer.city" "City"}}</span><span>{{city}}</span></div>
+          <div><span class="label">{{t "customer.address" "Address"}}</span><span>{{address}}</span></div>
+          <div><span class="label">{{t "customer.tags" "Tags"}}</span><span>{{tags}}</span></div>
+          <div><span class="label">{{t "customer.signedHealth" "Signed health waiver"}}</span><span>{{signedHealthLabel}}</span></div>
+        </div>
+      </section>
+      <section class="details-card">
+        <h3>{{t "customer.details.registrations" "Registrations"}}</h3>
+        {{#if registrations.length}}
+          <table class="table details-table">
+            <thead>
+              <tr>
+                <th>{{t "calendar.list.date" "Date"}}</th>
+                <th>{{t "calendar.list.time" "Time"}}</th>
+                <th>{{t "calendar.list.class" "Class"}}</th>
+                <th>{{t "calendar.list.room" "Room"}}</th>
+                <th>{{t "calendar.list.instructor" "Instructor"}}</th>
+                <th>{{t "roster.booking" "Booking"}}</th>
+                <th>{{t "roster.attendance" "Attendance"}}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each registrations}}
+              <tr>
+                <td>{{dateLabel}}</td>
+                <td>{{timeLabel}}</td>
+                <td>{{seriesTitle}}</td>
+                <td>{{roomName}}</td>
+                <td>{{instructorName}}</td>
+                <td>{{bookingStatusLabel}}</td>
+                <td>{{attendanceLabel}}</td>
+              </tr>
+              {{/each}}
+            </tbody>
+          </table>
+        {{else}}
+          <div class="empty-state">{{t "customer.details.noRegistrations" "No registrations yet."}}</div>
+        {{/if}}
+      </section>
+      <section class="details-card">
+        <h3>{{t "customer.details.attachments" "Attachments"}}</h3>
+        {{#if attachments.length}}
+          <div class="attachments-list">
+            {{#each attachments}}
+              <div class="attachment-row">
+                <div>
+                  <div class="attachment-name">{{fileName}}</div>
+                  <div class="meta">{{uploadedLabel}}</div>
+                </div>
+                <div class="attachment-actions">
+                  <a class="secondary" href="{{downloadUrl}}" target="_blank" rel="noreferrer">{{t "customer.download" "Download"}}</a>
+                </div>
+              </div>
+            {{/each}}
+          </div>
+        {{else}}
+          <div class="empty-state">{{t "customer.details.noAttachments" "No attachments uploaded."}}</div>
+        {{/if}}
+      </section>
+      <section class="details-card">
+        <h3>{{t "customer.details.signedForms" "Signed forms"}}</h3>
+        {{#if healthDeclarations.length}}
+          <table class="table details-table">
+            <thead>
+              <tr>
+                <th>{{t "customer.details.submittedAt" "Submitted"}}</th>
+                <th>{{t "customer.details.signature" "Signature"}}</th>
+                <th>{{t "customer.details.signatureType" "Type"}}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each healthDeclarations}}
+              <tr>
+                <td>{{submittedLabel}}</td>
+                <td>{{signatureName}}</td>
+                <td>{{signatureType}}</td>
+              </tr>
+              {{/each}}
+            </tbody>
+          </table>
+        {{else}}
+          <div class="empty-state">{{t "customer.details.noForms" "No signed forms yet."}}</div>
+        {{/if}}
+      </section>
+      <section class="details-card">
+        <h3>{{t "customer.details.billing" "Billing"}}</h3>
+        <button class="secondary" type="button">{{t "customer.details.billingAction" "Add billing record"}}</button>
+      </section>
+      <section class="details-card">
+        <h3>{{t "customer.details.activity" "Activity log"}}</h3>
+        {{#if auditLogs.length}}
+          <table class="table details-table">
+            <thead>
+              <tr>
+                <th>{{t "audit.time" "Time"}}</th>
+                <th>{{t "audit.actor" "Actor"}}</th>
+                <th>{{t "audit.action" "Action"}}</th>
+                <th>{{t "audit.summary" "Summary"}}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each auditLogs}}
+              <tr>
+                <td>{{timeLabel}}</td>
+                <td>{{actorLabel}}</td>
+                <td>{{actionLabel}}</td>
+                <td>{{summary}}</td>
+              </tr>
+              {{/each}}
+            </tbody>
+          </table>
+        {{else}}
+          <div class="empty-state">{{t "customer.details.noActivity" "No activity yet."}}</div>
+        {{/if}}
+      </section>
+    </div>
+  </div>
 `);
 
 const usersTemplate = compileTemplate("users", `
@@ -2705,7 +2916,8 @@ const settingsTemplate = compileTemplate("settings", `
     </div>
     <div>
       <label>{{t "settings.weekStartsOn" "Week starts on"}}</label>
-      <input name="weekStartsOn" type="number" value="{{weekStartsOn}}" />
+      <div class="static-value">{{t "settings.weekStartsOnSunday" "Sunday"}}</div>
+      <input name="weekStartsOn" type="hidden" value="0" />
     </div>
     <div>
       <label>{{t "settings.defaultLocale" "Default language"}}</label>
@@ -3025,16 +3237,17 @@ const adminMachine = createMachine({
                 case "calendar": {
                     const view = input.calendarView || "week";
                     const focusDate = input.calendarDate || toDateInputValue(new Date());
-                    const range = getCalendarRange(view, focusDate, studio.weekStartsOn ?? 0);
-                    const [items, rooms, instructors, customers, plans, planCategories] = await Promise.all([
+                    const range = getCalendarRange(view, focusDate, 0);
+                    const [items, rooms, instructors, customers, plans, planCategories, customerTags] = await Promise.all([
                         apiGet(`/api/admin/calendar?from=${range.from}&to=${range.to}`),
                         apiGet("/api/admin/rooms"),
                         apiGet("/api/admin/instructors"),
                         apiGet("/api/admin/customers"),
                         apiGet("/api/admin/plans"),
-                        apiGet("/api/admin/plan-categories")
+                        apiGet("/api/admin/plan-categories"),
+                        apiGet("/api/admin/customer-tags")
                     ]);
-                    return { studio, items, rooms, instructors, customers, plans, planCategories, calendar: { view, focusDate, studio, range } };
+                    return { studio, items, rooms, instructors, customers, plans, planCategories, customerTags, calendar: { view, focusDate, studio, range } };
                 }
                 case "events": {
                     const [series, rooms, instructors, plans, planCategories] = await Promise.all([
@@ -3079,16 +3292,31 @@ const adminMachine = createMachine({
                     const search = getQueryParam("search") || "";
                     const includeArchived = getQueryParam("archived") === "1";
                     const statusId = getQueryParam("statusId") || "";
+                    const tag = getQueryParam("tag") || "";
+                    const sort = getQueryParam("sort") || "";
+                    const dir = getQueryParam("dir") || "";
                     const query = new URLSearchParams();
                     if (search) query.set("search", search);
                     if (includeArchived) query.set("includeArchived", "true");
                     if (statusId) query.set("statusId", statusId);
+                    if (tag) query.set("tag", tag);
+                    if (sort) query.set("sort", sort);
+                    if (dir) query.set("dir", dir);
                     const qs = query.toString();
-                    const [customers, customerStatuses] = await Promise.all([
+                    const [customers, customerStatuses, customerTags] = await Promise.all([
                         apiGet(`/api/admin/customers${qs ? `?${qs}` : ""}`),
-                        apiGet("/api/admin/customer-statuses")
+                        apiGet("/api/admin/customer-statuses"),
+                        apiGet("/api/admin/customer-tags")
                     ]);
-                    return { studio, customers, customerStatuses, customerFilters: { search, includeArchived, statusId } };
+                    return { studio, customers, customerStatuses, customerTags, customerFilters: { search, includeArchived, statusId, tag, sort, dir } };
+                }
+                case "customer": {
+                    const id = getRouteParam("customer");
+                    if (!id) {
+                        return { studio, customerDetails: null };
+                    }
+                    const customerDetails = await apiGet(`/api/admin/customers/${id}/details`);
+                    return { studio, customerDetails };
                 }
                 case "users": {
                     const role = getQueryParam("role") || "";
@@ -3151,6 +3379,7 @@ function render(state) {
         rooms: t("page.rooms.title", "Rooms"),
         plans: t("page.plans.title", "Membership plans"),
         customers: t("page.customers.title", "Customer roster"),
+        customer: t("page.customer.title", "Customer details"),
         users: t("page.users.title", "Team access"),
         guests: t("page.guests.title", "Guest directory"),
         reports: t("page.reports.title", "Performance pulse"),
@@ -3165,6 +3394,7 @@ function render(state) {
         rooms: t("page.rooms.subtitle", "Spaces and rooms in the studio."),
         plans: t("page.plans.subtitle", "Sell weekly limits or unlimited passes."),
         customers: t("page.customers.subtitle", "Top-level view of active clients."),
+        customer: t("page.customer.subtitle", "Customer profile and history."),
         users: t("page.users.subtitle", "Manage roles and instructor profiles."),
         guests: t("page.guests.subtitle", "Read-only viewers with schedule access."),
         reports: t("page.reports.subtitle", "Revenue and occupancy at a glance."),
@@ -3186,7 +3416,7 @@ function render(state) {
         const focusDate = calendarMeta.focusDate || state.context.calendarDate || toDateInputValue(new Date());
         const studio = calendarMeta.studio || {};
         const timeZone = getLocalTimeZone();
-        const weekStartsOn = studio.weekStartsOn ?? 0;
+        const weekStartsOn = 0;
         const search = state.context.calendarSearch || "";
         const viewState = buildCalendarView(data.items || [], {
             view,
@@ -3250,7 +3480,7 @@ function render(state) {
             statusLabel: formatCustomerStatus(c.isArchived ? "Archived" : (c.statusName || "Active")),
             archiveLabel: c.isArchived ? t("customers.restore", "Restore") : t("customers.archive", "Archive")
         }));
-        const filters = data.customerFilters || { search: "", includeArchived: false, statusId: "" };
+        const filters = data.customerFilters || { search: "", includeArchived: false, statusId: "", tag: "", sort: "", dir: "" };
         const statusOptions = (data.customerStatuses || [])
             .filter(status => status.isActive !== false)
             .map(status => ({
@@ -3258,12 +3488,78 @@ function render(state) {
                 name: formatCustomerStatus(status.name),
                 selected: String(status.id) === String(filters.statusId || "")
             }));
+        const tagOptions = collectTagSuggestions(data.customers || [], data.customerTags || []).map(tagValue => ({
+            value: tagValue,
+            selected: String(tagValue) === String(filters.tag || "")
+        }));
+        const sortKey = (filters.sort || "").toLowerCase();
+        const sortDir = (filters.dir || "asc").toLowerCase() === "desc" ? "desc" : "asc";
         content = customersTemplate({
             customers,
             search: filters.search || "",
             includeArchived: filters.includeArchived,
-            statusOptions
+            statusOptions,
+            tagOptions,
+            sortKey,
+            sortDir
         });
+    }
+
+    if (route === "customer") {
+        const details = data.customerDetails || {};
+        const customer = details.customer || {};
+        if (!customer.id) {
+            content = `<div class="empty-state">${t("customer.details.notFound", "Customer not found.")}</div>`;
+        } else {
+        const statusLabel = formatCustomerStatus(customer.isArchived ? "Archived" : (customer.statusName || "Active"));
+        const signedHealthLabel = customer.signedHealthView ? t("common.yes", "Yes") : t("common.no", "No");
+        const registrations = (details.registrations || []).map(reg => {
+            const start = reg.startUtc ? new Date(reg.startUtc) : null;
+            const end = reg.endUtc ? new Date(reg.endUtc) : null;
+            const dateLabel = start ? formatDateDisplay(start) : "-";
+            const timeLabel = start
+                ? `${formatTimeOnly(start)}${end ? ` - ${formatTimeOnly(end)}` : ""}`
+                : "-";
+            const bookingStatusLabel = normalizeBookingStatus(reg.status);
+            const attendanceLabel = reg.attendanceStatus ? normalizeAttendanceStatus(reg.attendanceStatus) : "-";
+            const seriesTitle = reg.seriesTitle || t("session.sessionFallback", "Session");
+            return {
+                ...reg,
+                dateLabel,
+                timeLabel,
+                bookingStatusLabel,
+                attendanceLabel,
+                seriesTitle
+            };
+        });
+        const attachments = (details.attachments || []).map(item => ({
+            ...item,
+            uploadedLabel: formatDateTime(item.uploadedAtUtc),
+            downloadUrl: `/api/admin/customers/${customer.id}/attachments/${item.id}`
+        }));
+        const healthDeclarations = (details.healthDeclarations || []).map(item => ({
+            ...item,
+            submittedLabel: formatDateTime(item.submittedAtUtc),
+            signatureName: item.signatureName || "",
+            signatureType: item.signatureType || ""
+        }));
+        const auditLogs = (details.auditLogs || []).map(log => ({
+            ...log,
+            timeLabel: formatDateTime(log.createdAtUtc),
+            actorLabel: log.actorName || log.actorRole || "-",
+            actionLabel: formatAuditAction(log.action || "")
+        }));
+        content = customerDetailsTemplate({
+            ...customer,
+            statusLabel,
+            signedHealthLabel,
+            dateOfBirth: customer.dateOfBirth ? formatDateDisplay(customer.dateOfBirth) : "",
+            registrations,
+            attachments,
+            healthDeclarations,
+            auditLogs
+        });
+        }
     }
 
     if (route === "users") {
@@ -3719,7 +4015,7 @@ function bindRouteActions(route, data, state) {
                 const type = button.getAttribute("data-export");
                 if (!type) return;
                 const studioMeta = calendarMeta.studio || data.studio || {};
-                const range = calendarMeta.range || getCalendarRange(currentView, currentDate, studioMeta.weekStartsOn ?? 0);
+                const range = calendarMeta.range || getCalendarRange(currentView, currentDate, 0);
                 const params = new URLSearchParams();
                 if (range?.from) params.set("from", range.from);
                 if (range?.to) params.set("to", range.to);
@@ -3907,6 +4203,7 @@ function bindRouteActions(route, data, state) {
     if (route === "customers") {
         const addBtn = document.getElementById("add-customer");
         const manageStatusesBtn = document.getElementById("manage-statuses");
+        const manageTagsBtn = document.getElementById("manage-tags");
         const exportBtn = document.getElementById("export-customers");
         const importInput = document.getElementById("import-customers");
         const importZone = document.getElementById("import-customers-zone");
@@ -3926,6 +4223,12 @@ function bindRouteActions(route, data, state) {
         if (manageStatusesBtn) {
             manageStatusesBtn.addEventListener("click", () => {
                 openCustomerStatusModal(data.customerStatuses || []);
+            });
+        }
+
+        if (manageTagsBtn) {
+            manageTagsBtn.addEventListener("click", () => {
+                openCustomerTagModal(data.customerTags || []);
             });
         }
 
@@ -3987,9 +4290,11 @@ function bindRouteActions(route, data, state) {
                 const searchInput = document.querySelector("[name=\"search\"]");
                 const includeArchivedInput = document.querySelector("[name=\"includeArchived\"]");
                 const statusInput = document.querySelector("[name=\"statusFilter\"]");
+                const tagInput = document.querySelector("[name=\"tagFilter\"]");
                 const searchValue = searchInput?.value || "";
                 const includeArchived = includeArchivedInput?.checked;
                 const statusValue = statusInput?.value || "";
+                const tagValue = tagInput?.value || "";
                 const params = new URLSearchParams();
                 if (searchValue) {
                     params.set("search", searchValue);
@@ -4000,10 +4305,51 @@ function bindRouteActions(route, data, state) {
                 if (statusValue) {
                     params.set("statusId", statusValue);
                 }
+                if (tagValue) {
+                    params.set("tag", tagValue);
+                }
+                const sortKey = data.customerFilters?.sort || "";
+                const sortDir = data.customerFilters?.dir || "";
+                if (sortKey) {
+                    params.set("sort", sortKey);
+                }
+                if (sortDir) {
+                    params.set("dir", sortDir);
+                }
                 const query = params.toString();
                 window.location.hash = `#/customers${query ? `?${query}` : ""}`;
             });
         }
+
+        document.querySelectorAll("th[data-sort]").forEach(header => {
+            header.addEventListener("click", () => {
+                const sortKey = header.getAttribute("data-sort") || "";
+                if (!sortKey) return;
+                const currentSort = data.customerFilters?.sort || "";
+                const currentDir = data.customerFilters?.dir || "asc";
+                let nextDir = "asc";
+                if (currentSort === sortKey) {
+                    nextDir = currentDir === "asc" ? "desc" : "asc";
+                }
+                const params = new URLSearchParams();
+                const searchInput = document.querySelector("[name=\"search\"]");
+                const includeArchivedInput = document.querySelector("[name=\"includeArchived\"]");
+                const statusInput = document.querySelector("[name=\"statusFilter\"]");
+                const tagInput = document.querySelector("[name=\"tagFilter\"]");
+                const searchValue = searchInput?.value || "";
+                const includeArchived = includeArchivedInput?.checked;
+                const statusValue = statusInput?.value || "";
+                const tagValue = tagInput?.value || "";
+                if (searchValue) params.set("search", searchValue);
+                if (includeArchived) params.set("archived", "1");
+                if (statusValue) params.set("statusId", statusValue);
+                if (tagValue) params.set("tag", tagValue);
+                params.set("sort", sortKey);
+                params.set("dir", nextDir);
+                const query = params.toString();
+                window.location.hash = `#/customers${query ? `?${query}` : ""}`;
+            });
+        });
 
         document.querySelectorAll("button[data-edit]").forEach(btn => {
             btn.addEventListener("click", () => {
@@ -4102,6 +4448,32 @@ function bindRouteActions(route, data, state) {
                     return;
                 }
                 await openBulkRegistrationModal(selected, data);
+            });
+        }
+    }
+
+    if (route === "customer") {
+        const backBtn = document.getElementById("back-to-customers");
+        const editBtn = document.getElementById("edit-customer");
+        if (backBtn) {
+            backBtn.addEventListener("click", () => {
+                window.location.hash = "#/customers";
+            });
+        }
+        if (editBtn) {
+            editBtn.addEventListener("click", async () => {
+                const details = data.customerDetails || {};
+                const customer = details.customer;
+                if (!customer?.id) return;
+                const [customerStatuses, customerTags] = await Promise.all([
+                    apiGet("/api/admin/customer-statuses"),
+                    apiGet("/api/admin/customer-tags")
+                ]);
+                openCustomerModal(customer, {
+                    customerStatuses,
+                    customerTags,
+                    customers: []
+                });
             });
         }
     }
@@ -4350,7 +4722,6 @@ function bindRouteActions(route, data, state) {
             button.addEventListener("click", async () => {
                 const formValues = readFormValues([
                     "name",
-                    "weekStartsOn",
                     "themeJson",
                     "logoUrl",
                     "faviconUrl",
@@ -4392,7 +4763,7 @@ function bindRouteActions(route, data, state) {
                 await apiPut("/api/admin/studio", {
                     name: formValues.name,
                     timezone: getLocalTimeZone(),
-                    weekStartsOn: Number(formValues.weekStartsOn),
+                    weekStartsOn: 0,
                     themeJson: JSON.stringify(theme, null, 2),
                     defaultLocale,
                     holidayCalendarsJson,
@@ -4590,8 +4961,9 @@ function setupCustomerAddressAutocomplete(root, apiKey) {
     }).catch(() => {});
 }
 
-function collectTagSuggestions(customers) {
+function collectTagSuggestions(customers, tagCatalog = []) {
     const set = new Set();
+    (tagCatalog || []).forEach(tag => set.add(tag));
     (customers || []).forEach(customer => {
         const value = customer.tags || formatTags(customer.tagsJson);
         parseTagList(value).forEach(tag => set.add(tag));
@@ -6320,6 +6692,53 @@ function confirmWithModal(options) {
     });
 }
 
+function openTagReplaceModal(tagName, replacements) {
+    return new Promise(resolve => {
+        const overlay = document.createElement("div");
+        overlay.className = "modal-overlay";
+        overlay.innerHTML = `
+          <div class="modal modal-compact">
+            <div class="modal-header">
+              <div>
+                <h3>${t("customerTags.deleteTitle", "Delete tag")}</h3>
+                <div class="muted">${t("customerTags.deleteSubtitle", "Choose a replacement tag or remove it entirely.")}</div>
+              </div>
+              <button class="modal-close" id="close-tag-replace" type="button" aria-label="${t("common.close", "Close")}"></button>
+            </div>
+            <div class="modal-body">
+              <label>${t("customerTags.replaceLabel", "Replace with (optional)")}</label>
+              <select id="tag-replace-select">
+                <option value="">${t("customerTags.replaceNone", "No replacement")}</option>
+                ${(replacements || []).map(name => `<option value="${name}">${name}</option>`).join("")}
+              </select>
+              <div class="meta">${t("customerTags.deleteHint", "Customers with this tag will be updated.")}</div>
+            </div>
+            <div class="modal-actions">
+              <button id="confirm-tag-delete">${t("customerTags.delete", "Delete")}</button>
+              <button class="secondary" id="cancel-tag-delete">${t("common.cancel", "Cancel")}</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+
+        let cleanupEscape = () => {};
+        const closeModal = (value) => {
+            cleanupEscape();
+            overlay.remove();
+            resolve(value);
+        };
+        cleanupEscape = bindModalEscape(() => closeModal(null));
+        bindModalBackdrop(overlay);
+
+        overlay.querySelector("#close-tag-replace")?.addEventListener("click", () => closeModal(null));
+        overlay.querySelector("#cancel-tag-delete")?.addEventListener("click", () => closeModal(null));
+        overlay.querySelector("#confirm-tag-delete")?.addEventListener("click", () => {
+            const replacement = overlay.querySelector("#tag-replace-select")?.value || "";
+            closeModal(replacement);
+        });
+    });
+}
+
 function bindIconPreview(container) {
     if (!container) return;
     container.querySelectorAll(".icon-field").forEach(field => {
@@ -6646,8 +7065,11 @@ function openSessionModal(data, options = {}) {
     }));
     const titleSuggestions = buildTitleSuggestions(data);
     const titleSuggestionId = createTitleSuggestionId("session-title");
+    const baseDate = parseDateInput(options.date || focusDate);
+    const defaultGenerateUntil = formatDateDisplay(addDays(baseDate, 56));
     const modalMarkup = sessionModalTemplate({
         focusDateDisplay,
+        generateUntilDisplay: defaultGenerateUntil,
         rooms: data.rooms || [],
         instructors: data.instructors || [],
         plans,
@@ -6683,12 +7105,16 @@ function openSessionModal(data, options = {}) {
     if (options.date) {
         const dateInput = overlay.querySelector("[name=\"date\"]");
         const startDateInput = overlay.querySelector("[name=\"startDate\"]");
+        const generateUntilInput = overlay.querySelector("[name=\"generateUntil\"]");
         if (dateInput) dateInput.value = formatDateDisplay(options.date);
         if (startDateInput) startDateInput.value = formatDateDisplay(options.date);
         const dateValue = parseDateInput(options.date);
         overlay.querySelectorAll("input[name=\"recurringDays\"]").forEach(input => {
             input.checked = Number(input.value) === dateValue.getDay();
         });
+        if (generateUntilInput) {
+            generateUntilInput.value = formatDateDisplay(addDays(dateValue, 56));
+        }
     }
 
     const setValue = (name, value) => {
@@ -6767,7 +7193,8 @@ function openSessionModal(data, options = {}) {
                         .map(input => Number(input.value))
                         .filter(value => Number.isFinite(value));
                     const recurrenceIntervalWeeks = Number(getValue("recurrenceIntervalWeeks") || 1);
-                    const generateWeeks = Number(getValue("generateWeeks") || 8);
+                    const generateUntil = normalizeDateInputValue(getValue("generateUntil"))
+                        || formatDateKeyLocal(addDays(parseDateInput(startDate), 56));
 
                     if (!selectedDays.length) {
                         showToast(t("session.daysRequired", "Select at least one day of week."), "error");
@@ -6785,7 +7212,7 @@ function openSessionModal(data, options = {}) {
                         startTimeLocal: payload.startTimeLocal,
                         durationMinutes: payload.durationMinutes,
                         recurrenceIntervalWeeks,
-                        generateWeeks,
+                        generateUntil,
                         generateFrom: startDate,
                         defaultCapacity: payload.capacity,
                         remoteCapacity: payload.remoteCapacity,
@@ -7018,7 +7445,7 @@ function openCustomerModal(customer, data, options = {}) {
         { value: "Male", label: t("gender.male", "Male"), selected: genderValue === "Male" },
         { value: "Female", label: t("gender.female", "Female"), selected: genderValue === "Female" }
     ];
-    const tagSuggestions = collectTagSuggestions(data?.customers || []);
+    const tagSuggestions = collectTagSuggestions(data?.customers || [], data?.customerTags || []);
     const modalMarkup = customerModalTemplate({
         title: isEdit ? t("customer.editTitle", "Edit customer") : t("customer.addTitle", "Add customer"),
         subtitle: isEdit
@@ -7343,6 +7770,109 @@ function openCustomerStatusModal(statuses) {
                 actor.send({ type: "REFRESH" });
             } catch (error) {
                 showToast(error.message || t("customerStatus.saveError", "Unable to save status."), "error");
+            }
+        });
+    }
+}
+
+function openCustomerTagModal(tags) {
+    const existing = document.getElementById("customer-tag-modal");
+    if (existing) {
+        clearModalEscape();
+        existing.remove();
+    }
+
+    const tagRows = (tags || []).map(name => ({ name }));
+    const modalMarkup = customerTagModalTemplate({
+        tags: tagRows,
+        tagOriginal: "",
+        tagName: "",
+        saveLabel: t("customerTags.add", "Add tag")
+    });
+
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = modalMarkup;
+    const overlay = wrapper.firstElementChild;
+    if (!overlay) return;
+
+    document.body.appendChild(overlay);
+
+    let cleanupEscape = () => {};
+    const closeModal = () => {
+        cleanupEscape();
+        overlay.remove();
+    };
+    cleanupEscape = bindModalEscape(closeModal);
+    bindModalBackdrop(overlay);
+
+    const closeBtn = overlay.querySelector("#close-tags");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", closeModal);
+    }
+
+    const saveBtn = overlay.querySelector("#save-tag");
+    const resetBtn = overlay.querySelector("#reset-tag");
+    const setForm = (tagName) => {
+        overlay.querySelector("[name=\"tagOriginal\"]").value = tagName || "";
+        overlay.querySelector("[name=\"tagName\"]").value = tagName || "";
+        if (saveBtn) {
+            saveBtn.textContent = tagName
+                ? t("customerTags.update", "Update tag")
+                : t("customerTags.add", "Add tag");
+        }
+    };
+
+    if (resetBtn) {
+        resetBtn.addEventListener("click", () => setForm(""));
+    }
+
+    overlay.querySelectorAll("[data-tag-edit]").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const name = btn.getAttribute("data-tag-edit") || "";
+            if (!name) return;
+            setForm(name);
+        });
+    });
+
+    overlay.querySelectorAll("[data-tag-delete]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            const name = btn.getAttribute("data-tag-delete") || "";
+            if (!name) return;
+            const replacement = await openTagReplaceModal(name, tagRows.map(item => item.name).filter(tag => tag !== name));
+            if (replacement === null) return;
+            const params = new URLSearchParams({ name });
+            if (replacement) {
+                params.set("replacement", replacement);
+            }
+            try {
+                await apiDelete(`/api/admin/customer-tags?${params.toString()}`);
+                closeModal();
+                actor.send({ type: "REFRESH" });
+            } catch (error) {
+                showToast(error.message || t("customerTags.saveError", "Unable to save tag."), "error");
+            }
+        });
+    });
+
+    if (saveBtn) {
+        saveBtn.addEventListener("click", async () => {
+            const original = overlay.querySelector("[name=\"tagOriginal\"]")?.value || "";
+            const name = overlay.querySelector("[name=\"tagName\"]")?.value?.trim() || "";
+            if (!name) {
+                showToast(t("customerTags.nameRequired", "Tag name is required."), "error");
+                return;
+            }
+
+            try {
+                if (original) {
+                    await apiPut("/api/admin/customer-tags", { name: original, newName: name });
+                } else {
+                    await apiPost("/api/admin/customer-tags", { name });
+                }
+                closeModal();
+                actor.send({ type: "REFRESH" });
+            } catch (error) {
+                showToast(error.message || t("customerTags.saveError", "Unable to save tag."), "error");
             }
         });
     }
@@ -8075,6 +8605,9 @@ function openSeriesModal(series, data) {
     }));
     const titleSuggestions = buildTitleSuggestions(data);
     const titleSuggestionId = createTitleSuggestionId("series-title");
+    const generateUntilDisplay = series?.generateUntil
+        ? formatDateDisplay(series.generateUntil)
+        : formatDateDisplay(addDays(new Date(), 56));
     const modalMarkup = seriesModalTemplate({
         modalTitle: isEdit ? t("series.editTitle", "Edit series") : t("series.newTitle", "New series"),
         subtitle: isEdit
@@ -8095,8 +8628,7 @@ function openSeriesModal(series, data) {
         remoteInviteUrl: series?.remoteInviteUrl || "",
         description: series?.description || "",
         recurrenceIntervalWeeks: series?.recurrenceIntervalWeeks ?? 1,
-        generateWeeks: series?.generateWeeks ?? 8,
-        generateUntilDisplay: series?.generateUntil ? formatDateDisplay(series.generateUntil) : "",
+        generateUntilDisplay,
         cancellationWindowHours: series?.cancellationWindowHours ?? 6,
         isActive: series?.isActive ?? true,
         rooms,
@@ -8175,7 +8707,6 @@ function openSeriesModal(series, data) {
                 startTimeLocal,
                 durationMinutes: Number(getValue("durationMinutes")),
                 recurrenceIntervalWeeks: Number(getValue("recurrenceIntervalWeeks") || 1),
-                generateWeeks: Number(getValue("generateWeeks") || 8),
                 generateUntil: normalizeDateInputValue(getValue("generateUntil")) || null,
                 defaultCapacity: Number(getValue("capacity") || 0),
                 remoteCapacity: Number(getValue("remoteCapacity") || 0),
@@ -8292,6 +8823,7 @@ function buildCalendarView(items, options) {
                 time: event.startTime,
                 title: event.seriesTitle,
                 isCancelled: event.isCancelled,
+                isPast: event.isPast,
                 isBirthday: event.isBirthday,
                 hasBirthdayList: event.hasBirthdayList,
                 birthdayNamesJson: event.birthdayNamesJson,
@@ -8606,6 +9138,7 @@ function normalizeAttendanceStatus(value) {
 
 function buildEventMap(items, timeZone) {
     const map = new Map();
+    const now = new Date();
     items.forEach(item => {
         const start = new Date(item.startUtc);
         const end = item.endUtc ? new Date(item.endUtc) : null;
@@ -8613,6 +9146,8 @@ function buildEventMap(items, timeZone) {
         const isHoliday = Boolean(item.isHoliday);
         const isBirthday = Boolean(item.isBirthday);
         const isAllDay = isHoliday || isBirthday;
+        const pastCheck = end ?? start;
+        const isPast = !isAllDay && pastCheck < now;
         const startTime = isAllDay ? "" : formatTimeOnly(start, timeZone);
         const endTime = isAllDay || !end ? "" : formatTimeOnly(end, timeZone);
         const timeRange = endTime ? `${startTime} - ${endTime}` : startTime;
@@ -8666,6 +9201,7 @@ function buildEventMap(items, timeZone) {
                     isBirthdayGroup: true,
                     isLocked: true,
                     suppressActions: true,
+                    isPast: false,
                     seriesTitle,
                     seriesIcon: "",
                     registeredSummary: "",
@@ -8696,6 +9232,7 @@ function buildEventMap(items, timeZone) {
             isCancelled,
             isHoliday,
             isBirthday,
+            isPast,
             isLocked: isAllDay,
             suppressActions: isHoliday || isBirthday || isAllDay,
             seriesTitle,
@@ -9164,7 +9701,16 @@ actor.subscribe((state) => {
 
 actor.start();
 
-const adminRoutes = new Set(["calendar", "events", "rooms", "plans", "customers", "users", "guests", "reports", "payroll", "audit", "settings"]);
+const adminRoutes = new Set(["calendar", "events", "rooms", "plans", "customers", "customer", "users", "guests", "reports", "payroll", "audit", "settings"]);
+
+function getRouteParam(route, index = 1) {
+    const hash = window.location.hash || `#/${route}`;
+    const cleaned = hash.replace(/^#\/?/, "");
+    const [path] = cleaned.split("?");
+    const parts = path.split("/");
+    if (parts[0] !== route) return "";
+    return parts[index] || "";
+}
 
 function resolveRouteFromHash(defaultRoute) {
     const hash = window.location.hash || `#/${defaultRoute}`;

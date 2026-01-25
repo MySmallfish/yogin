@@ -235,6 +235,16 @@ html[lang^="he"] .section-title {
   gap: 14px;
 }
 
+.logout-btn {
+  align-self: flex-start;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--slate);
+}
+
 .user-card {
   display: flex;
   align-items: center;
@@ -386,10 +396,44 @@ html[dir="rtl"] .table,
   color: var(--muted);
 }
 
+.table th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.table th.sortable::after {
+  content: "↕";
+  font-size: 10px;
+  margin-inline-start: 6px;
+  opacity: 0.4;
+}
+
+.table th.sortable.sorted.asc::after {
+  content: "▲";
+  opacity: 0.8;
+}
+
+.table th.sortable.sorted.desc::after {
+  content: "▼";
+  opacity: 0.8;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 14px;
+}
+
+.static-value {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--slate);
+  font-size: 14px;
 }
 
 .form-grid .span-2 {
@@ -804,6 +848,52 @@ button .icon svg {
   align-items: center;
 }
 
+.details-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.details-card {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.05);
+}
+
+.details-card h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 15px;
+}
+
+.details-list {
+  display: grid;
+  gap: 8px;
+}
+
+.details-list .label {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: inline-block;
+  min-width: 90px;
+}
+
+.details-table th {
+  font-size: 11px;
+}
+
 .customer-controls input[type="search"] {
   max-width: 240px;
 }
@@ -1089,7 +1179,7 @@ button .icon svg {
 }
 
 [dir="rtl"] .calendar-nav-row {
-  flex-direction: row-reverse;
+  flex-direction: row;
   justify-content: flex-end;
 }
 
@@ -1283,6 +1373,10 @@ button .icon svg {
 
 .calendar-event.dragging {
   opacity: 0.55;
+}
+
+.calendar-event.past {
+  opacity: 0.7;
 }
 
 .calendar-event.compact {
@@ -2057,7 +2151,7 @@ button .icon svg {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .roster-select-all {
@@ -2068,7 +2162,7 @@ button .icon svg {
 .roster-actions-buttons {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .session-description {

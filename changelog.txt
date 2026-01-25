@@ -17,3 +17,4 @@
 2026-01-25 02:42  Move Today button into calendar nav after Next and remove RTL row-reverse on nav so prev/next positions are correct.
 2026-01-25 08:45  Make Calendar/Customers group headers clickable, streamline registrations modal (single header, session description, inline attendance selector), and fix roster select-all layout.
 2026-01-25 15:28  Remove customer first/last name fields, add Google Places (IL) autocomplete for city/address, and store Places API key in studio settings + schema.
+2026-01-26 01:11  Enforced Sunday week start, added past-session styling and registration layout tweaks, introduced customer tags management + filtering/sorting, and built customer details page with registrations/attachments/forms/activity plus new customer tags schema.

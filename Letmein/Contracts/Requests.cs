@@ -135,6 +135,8 @@ public record CustomerUpdateRequest(
     bool IsArchived);
 
 public record CustomerStatusRequest(string Name, bool IsDefault, bool IsActive);
+public record CustomerTagRequest(string Name);
+public record CustomerTagUpdateRequest(string Name, string NewName);
 public record PlanCategoryRequest(string Name, bool IsDefault, bool IsActive);
 
 public record UserCreateRequest(

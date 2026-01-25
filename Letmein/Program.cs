@@ -1913,6 +1913,127 @@ adminApi.MapDelete("/customer-statuses/{id:guid}", async (ClaimsPrincipal user, 
     return Results.NoContent();
 });
 
+adminApi.MapGet("/customer-tags", async (ClaimsPrincipal user, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var studio = await db.Studios.AsNoTracking().FirstAsync(s => s.Id == studioId);
+    var tags = ParseStringListJson(studio.CustomerTagsJson)
+        .OrderBy(tag => tag, StringComparer.OrdinalIgnoreCase)
+        .ToList();
+    return Results.Ok(tags);
+});
+
+adminApi.MapPost("/customer-tags", async (ClaimsPrincipal user, CustomerTagRequest request, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var name = request.Name?.Trim() ?? "";
+    if (string.IsNullOrWhiteSpace(name))
+    {
+        return Results.BadRequest(new { error = "Tag name required" });
+    }
+
+    var studio = await db.Studios.FirstAsync(s => s.Id == studioId);
+    var tags = ParseStringListJson(studio.CustomerTagsJson);
+    if (!tags.Contains(name, StringComparer.OrdinalIgnoreCase))
+    {
+        tags.Add(name);
+        studio.CustomerTagsJson = JsonSerializer.Serialize(tags);
+        await db.SaveChangesAsync();
+        await LogAuditAsync(db, user, "Create", "CustomerTag", studioId.ToString(), $"Created customer tag {name}");
+    }
+
+    return Results.Ok(tags.OrderBy(tag => tag, StringComparer.OrdinalIgnoreCase));
+});
+
+adminApi.MapPut("/customer-tags", async (ClaimsPrincipal user, CustomerTagUpdateRequest request, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var name = request.Name?.Trim() ?? "";
+    var newName = request.NewName?.Trim() ?? "";
+    if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(newName))
+    {
+        return Results.BadRequest(new { error = "Tag name required" });
+    }
+
+    var studio = await db.Studios.FirstAsync(s => s.Id == studioId);
+    var tags = ParseStringListJson(studio.CustomerTagsJson);
+    if (!tags.Contains(name, StringComparer.OrdinalIgnoreCase))
+    {
+        return Results.NotFound();
+    }
+
+    tags = tags
+        .Where(tag => !tag.Equals(name, StringComparison.OrdinalIgnoreCase))
+        .Concat(new[] { newName })
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToList();
+    studio.CustomerTagsJson = JsonSerializer.Serialize(tags);
+
+    var customers = await db.Customers.Where(c => c.StudioId == studioId && c.TagsJson != null && c.TagsJson != "").ToListAsync();
+    foreach (var customer in customers)
+    {
+        var customerTags = ParseTags(customer.TagsJson)
+            .Select(tag => tag.Equals(name, StringComparison.OrdinalIgnoreCase) ? newName : tag)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        customer.TagsJson = JsonSerializer.Serialize(customerTags);
+    }
+
+    await db.SaveChangesAsync();
+    await LogAuditAsync(db, user, "Update", "CustomerTag", studioId.ToString(), $"Renamed customer tag {name} to {newName}");
+    return Results.Ok(tags.OrderBy(tag => tag, StringComparer.OrdinalIgnoreCase));
+});
+
+adminApi.MapDelete("/customer-tags", async (ClaimsPrincipal user, string name, string? replacement, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var trimmed = name?.Trim() ?? "";
+    if (string.IsNullOrWhiteSpace(trimmed))
+    {
+        return Results.BadRequest(new { error = "Tag name required" });
+    }
+
+    var studio = await db.Studios.FirstAsync(s => s.Id == studioId);
+    var tags = ParseStringListJson(studio.CustomerTagsJson);
+    if (!tags.Contains(trimmed, StringComparer.OrdinalIgnoreCase))
+    {
+        return Results.NotFound();
+    }
+
+    var replacementTag = replacement?.Trim() ?? "";
+    tags = tags.Where(tag => !tag.Equals(trimmed, StringComparison.OrdinalIgnoreCase)).ToList();
+    if (!string.IsNullOrWhiteSpace(replacementTag))
+    {
+        if (!tags.Contains(replacementTag, StringComparer.OrdinalIgnoreCase))
+        {
+            tags.Add(replacementTag);
+        }
+    }
+    studio.CustomerTagsJson = JsonSerializer.Serialize(tags);
+
+    var customers = await db.Customers.Where(c => c.StudioId == studioId && c.TagsJson != null && c.TagsJson != "").ToListAsync();
+    foreach (var customer in customers)
+    {
+        var customerTags = ParseTags(customer.TagsJson);
+        if (!customerTags.Any(tag => tag.Equals(trimmed, StringComparison.OrdinalIgnoreCase)))
+        {
+            continue;
+        }
+        var updated = customerTags
+            .Where(tag => !tag.Equals(trimmed, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        if (!string.IsNullOrWhiteSpace(replacementTag) && !updated.Contains(replacementTag, StringComparer.OrdinalIgnoreCase))
+        {
+            updated.Add(replacementTag);
+        }
+        customer.TagsJson = JsonSerializer.Serialize(updated);
+    }
+
+    await db.SaveChangesAsync();
+    await LogAuditAsync(db, user, "Delete", "CustomerTag", studioId.ToString(), $"Deleted customer tag {trimmed}");
+    return Results.NoContent();
+});
+
 adminApi.MapGet("/plan-categories", async (ClaimsPrincipal user, AppDbContext db) =>
 {
     var studioId = GetStudioId(user);
@@ -2032,7 +2153,7 @@ adminApi.MapDelete("/plan-categories/{id:guid}", async (ClaimsPrincipal user, Gu
     return Results.NoContent();
 });
 
-adminApi.MapGet("/customers", async (ClaimsPrincipal user, string? search, bool? includeArchived, Guid? statusId, AppDbContext db) =>
+adminApi.MapGet("/customers", async (ClaimsPrincipal user, string? search, bool? includeArchived, Guid? statusId, string? tag, string? sort, string? dir, AppDbContext db) =>
 {
     var studioId = GetStudioId(user);
     var query = db.Customers.AsNoTracking()
@@ -2089,6 +2210,25 @@ adminApi.MapGet("/customers", async (ClaimsPrincipal user, string? search, bool?
             c.Phone.Contains(term, StringComparison.OrdinalIgnoreCase) ||
             c.email.Contains(term, StringComparison.OrdinalIgnoreCase));
     }
+
+    if (!string.IsNullOrWhiteSpace(tag))
+    {
+        var tagFilter = tag.Trim();
+        results = results.Where(c => ParseTags(c.TagsJson).Any(t => t.Equals(tagFilter, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    var sortKey = sort?.Trim().ToLowerInvariant() ?? "";
+    var sortDir = dir?.Trim().ToLowerInvariant() ?? "asc";
+    var descending = sortDir == "desc";
+    results = sortKey switch
+    {
+        "name" => descending ? results.OrderByDescending(c => c.FullName) : results.OrderBy(c => c.FullName),
+        "email" => descending ? results.OrderByDescending(c => c.email) : results.OrderBy(c => c.email),
+        "phone" => descending ? results.OrderByDescending(c => c.Phone) : results.OrderBy(c => c.Phone),
+        "status" => descending ? results.OrderByDescending(c => c.statusName) : results.OrderBy(c => c.statusName),
+        "created" => descending ? results.OrderByDescending(c => c.CreatedAtUtc) : results.OrderBy(c => c.CreatedAtUtc),
+        _ => results.OrderBy(c => c.FullName)
+    };
 
     return Results.Ok(results);
 });
@@ -2505,6 +2645,158 @@ adminApi.MapGet("/customers/{id:guid}", async (ClaimsPrincipal user, Guid id, Ap
         customer.IsArchived,
         memberships,
         bookings
+    });
+});
+
+adminApi.MapGet("/customers/{id:guid}/details", async (ClaimsPrincipal user, Guid id, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var customer = await db.Customers.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id && c.StudioId == studioId);
+    if (customer == null)
+    {
+        return Results.NotFound();
+    }
+
+    var userRow = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == customer.UserId);
+    var bookings = await db.Bookings.AsNoTracking()
+        .Where(b => b.CustomerId == customer.Id && b.StudioId == studioId)
+        .OrderByDescending(b => b.CreatedAtUtc)
+        .ToListAsync();
+    var eventIds = bookings.Select(b => b.EventInstanceId).Distinct().ToList();
+    var events = await db.EventInstances.AsNoTracking()
+        .Where(i => i.StudioId == studioId && eventIds.Contains(i.Id))
+        .ToListAsync();
+    var eventMap = events.ToDictionary(e => e.Id, e => e);
+    var seriesIds = events.Select(e => e.EventSeriesId).Distinct().ToList();
+    var seriesMap = await db.EventSeries.AsNoTracking()
+        .Where(s => s.StudioId == studioId && seriesIds.Contains(s.Id))
+        .ToDictionaryAsync(s => s.Id, s => s);
+    var roomIds = events.Where(e => e.RoomId.HasValue).Select(e => e.RoomId!.Value).Distinct().ToList();
+    var roomMap = await db.Rooms.AsNoTracking()
+        .Where(r => r.StudioId == studioId && roomIds.Contains(r.Id))
+        .ToDictionaryAsync(r => r.Id, r => r.Name);
+    var instructorIds = events.Where(e => e.InstructorId.HasValue).Select(e => e.InstructorId!.Value).Distinct().ToList();
+    var instructorMap = await db.Instructors.AsNoTracking()
+        .Where(i => i.StudioId == studioId && instructorIds.Contains(i.Id))
+        .ToDictionaryAsync(i => i.Id, i => i.DisplayName);
+    var attendanceMap = await db.Attendance.AsNoTracking()
+        .Where(a => a.StudioId == studioId && a.CustomerId == customer.Id && eventIds.Contains(a.EventInstanceId))
+        .ToDictionaryAsync(a => a.EventInstanceId, a => a.Status);
+
+    var registrations = bookings.Select(booking =>
+    {
+        eventMap.TryGetValue(booking.EventInstanceId, out var instance);
+        var seriesTitle = "";
+        var roomName = "";
+        var instructorName = "";
+        DateTime? startUtc = null;
+        DateTime? endUtc = null;
+        EventStatus? status = null;
+        if (instance != null)
+        {
+            startUtc = instance.StartUtc;
+            endUtc = instance.EndUtc;
+            status = instance.Status;
+            if (seriesMap.TryGetValue(instance.EventSeriesId, out var series))
+            {
+                seriesTitle = series.Title;
+            }
+            roomName = instance.RoomId.HasValue && roomMap.TryGetValue(instance.RoomId.Value, out var roomLabel) ? roomLabel : "";
+            instructorName = instance.InstructorId.HasValue && instructorMap.TryGetValue(instance.InstructorId.Value, out var instructorLabel) ? instructorLabel : "";
+        }
+        attendanceMap.TryGetValue(booking.EventInstanceId, out var attendanceStatus);
+        return new
+        {
+            booking.Id,
+            booking.EventInstanceId,
+            booking.Status,
+            booking.IsRemote,
+            booking.CreatedAtUtc,
+            booking.CancelledAtUtc,
+            attendanceStatus,
+            seriesTitle,
+            roomName,
+            instructorName,
+            startUtc,
+            endUtc,
+            eventStatus = status
+        };
+    }).ToList();
+
+    var attachments = await db.CustomerAttachments.AsNoTracking()
+        .Where(a => a.CustomerId == customer.Id && a.StudioId == studioId)
+        .OrderByDescending(a => a.UploadedAtUtc)
+        .Select(a => new
+        {
+            a.Id,
+            a.FileName,
+            a.ContentType,
+            a.UploadedAtUtc
+        })
+        .ToListAsync();
+
+    var healthDeclarations = await db.HealthDeclarations.AsNoTracking()
+        .Where(h => h.CustomerId == customer.Id && h.StudioId == studioId)
+        .OrderByDescending(h => h.SubmittedAtUtc)
+        .Select(h => new
+        {
+            h.Id,
+            h.SubmittedAtUtc,
+            h.SignatureType,
+            h.SignatureName
+        })
+        .ToListAsync();
+
+    var auditLogs = await db.AuditLogs.AsNoTracking()
+        .Where(l => l.StudioId == studioId && l.EntityId == customer.Id.ToString())
+        .OrderByDescending(l => l.CreatedAtUtc)
+        .Take(200)
+        .ToListAsync();
+    var actorIds = auditLogs.Where(l => l.ActorUserId.HasValue).Select(l => l.ActorUserId!.Value).Distinct().ToList();
+    var actorMap = await db.Users.AsNoTracking()
+        .Where(u => u.StudioId == studioId && actorIds.Contains(u.Id))
+        .ToDictionaryAsync(u => u.Id, u => u.DisplayName);
+
+    var auditPayload = auditLogs.Select(log => new
+    {
+        log.Id,
+        log.Action,
+        log.EntityType,
+        log.EntityId,
+        log.Summary,
+        log.ActorRole,
+        log.CreatedAtUtc,
+        actorName = log.ActorUserId.HasValue && actorMap.TryGetValue(log.ActorUserId.Value, out var actorName) ? actorName : ""
+    });
+
+    return Results.Ok(new
+    {
+        customer = new
+        {
+            customer.Id,
+            customer.FirstName,
+            customer.LastName,
+            customer.FullName,
+            customer.Phone,
+            customer.DateOfBirth,
+            customer.IdNumber,
+            customer.Gender,
+            customer.City,
+            customer.Address,
+            customer.Occupation,
+            customer.SignedHealthView,
+            statusId = customer.StatusId,
+            statusName = await GetStatusNameAsync(db, studioId, customer.StatusId),
+            email = userRow?.Email ?? "",
+            tags = TagsToDisplay(customer.TagsJson),
+            customer.TagsJson,
+            customer.IsArchived,
+            customer.CreatedAtUtc
+        },
+        registrations,
+        attachments,
+        healthDeclarations,
+        auditLogs = auditPayload
     });
 });
 

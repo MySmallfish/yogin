@@ -10,6 +10,7 @@ public class Studio
     public string DefaultLocale { get; set; } = "en";
     public string HolidayCalendarsJson { get; set; } = "[\"hebrew\"]";
     public string GooglePlacesApiKey { get; set; } = "";
+    public string CustomerTagsJson { get; set; } = "[]";
     public int WeekStartsOn { get; set; } = 0;
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 }
