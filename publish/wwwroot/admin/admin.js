@@ -58,8 +58,7 @@ const layoutTemplate = compileTemplate("layout", `
       </div>
       <nav class="nav">
         <div class="nav-section">
-          <div class="nav-group">{{t "nav.section.calendar" "Calendar"}}</div>
-          <a href="#/calendar" data-route="calendar" class="nav-item">
+          <a href="#/calendar" data-route="calendar" class="nav-group nav-item">
             <span class="nav-short" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 6H4v10h16V8z"/></svg>
             </span>
@@ -79,8 +78,7 @@ const layoutTemplate = compileTemplate("layout", `
           </a>
         </div>
         <div class="nav-section">
-          <div class="nav-group">{{t "nav.section.customers" "Customers"}}</div>
-          <a href="#/customers" data-route="customers" class="nav-item">
+          <a href="#/customers" data-route="customers" class="nav-group nav-item">
             <span class="nav-short" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-3.3 0-8 1.67-8 5v3h16v-3c0-3.33-4.7-5-8-5z"/></svg>
             </span>
@@ -473,9 +471,8 @@ const calendarTemplate = compileTemplate("calendar", `
   </div>
 `);
 const rosterTemplate = compileTemplate("roster", `
-  <h4>{{t "roster.participants" "Participants list"}}</h4>
   <div class="roster-actions">
-    <label class="checkbox">
+    <label class="checkbox roster-select-all">
       <input type="checkbox" id="roster-select-all" />
       {{t "roster.selectAll" "Select all"}}
     </label>
@@ -873,6 +870,9 @@ const sessionRegistrationsModalTemplate = compileTemplate("session-registrations
         <button class="modal-close" id="close-registrations" type="button" aria-label="{{t "common.close" "Close"}}"></button>
       </div>
       <div class="modal-body">
+        {{#if hasSessionDescription}}
+          <div class="session-description">{{sessionDescription}}</div>
+        {{/if}}
         <div class="registrations-header">
           <div>
             <h4>{{t "session.participantsTitle" "Participants list"}}</h4>
@@ -896,6 +896,12 @@ const sessionRegistrationsModalTemplate = compileTemplate("session-registrations
               <label>{{t "session.findCustomer" "Find existing customer"}}</label>
               <div class="registration-lookup-row">
                 <input name="customerLookup" list="customer-list" placeholder="{{t "session.findCustomerPlaceholder" "Start typing a name or email"}}" autocomplete="off" />
+                <select name="attendanceType" class="attendance-select" aria-label="{{t "session.attendance" "Attendance"}}">
+                  <option value="in-person">{{t "session.attendance.inPerson" "In-studio"}}</option>
+                  {{#if hasRemoteCapacity}}
+                    <option value="remote">{{t "session.attendance.remote" "Remote (Zoom)"}}</option>
+                  {{/if}}
+                </select>
                 <button class="icon-button add-inline" type="button" id="add-customer-modal" aria-label="{{t "customer.addTitle" "Add customer"}}">
                   <span class="icon" aria-hidden="true">+</span>
                   <span class="add-label">{{t "common.add" "Add"}}</span>
@@ -907,15 +913,6 @@ const sessionRegistrationsModalTemplate = compileTemplate("session-registrations
                   <option value="{{lookupLabel}}" data-customer-id="{{id}}"></option>
                 {{/each}}
               </datalist>
-            </div>
-            <div>
-              <label>{{t "session.attendance" "Attendance"}}</label>
-              <select name="attendanceType">
-                <option value="in-person">{{t "session.attendance.inPerson" "In-studio"}}</option>
-                {{#if hasRemoteCapacity}}
-                  <option value="remote">{{t "session.attendance.remote" "Remote (Zoom)"}}</option>
-                {{/if}}
-              </select>
             </div>
           </div>
           <div class="modal-footer">
@@ -5591,6 +5588,8 @@ async function openSessionRegistrationsModal(item, data, options = {}) {
         lookupLabel: `${customer.fullName}${customer.email ? ` (${customer.email})` : ""}`
     }));
     const instructorDetails = (data.instructors || []).find(instructor => String(instructor.id) === String(item.instructorId));
+    const sessionDescription = (item.seriesDescription || item.description || "").trim();
+    const hasSessionDescription = sessionDescription.length > 0;
 
     const modalMarkup = sessionRegistrationsModalTemplate({
         ...item,
@@ -5600,7 +5599,9 @@ async function openSessionRegistrationsModal(item, data, options = {}) {
         customers,
         capacitySummary,
         hasRemoteCapacity: remoteCapacityValue > 0,
-        hasInstructorDetails: Boolean(instructorDetails)
+        hasInstructorDetails: Boolean(instructorDetails),
+        sessionDescription,
+        hasSessionDescription
     });
 
     const wrapper = document.createElement("div");

@@ -168,6 +168,16 @@ html[lang^="he"] .section-title {
   color: var(--slate);
 }
 
+.nav a.nav-group {
+  font-size: 14px;
+  font-weight: 700;
+  padding-inline-start: 14px;
+}
+
+.nav a.nav-group.nav-item {
+  padding-inline-start: 14px;
+}
+
 .nav a {
   text-decoration: none;
   color: var(--slate);
@@ -1946,6 +1956,16 @@ button .icon svg {
   min-width: 0;
 }
 
+.registration-lookup-row .attendance-select {
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  padding: 6px 12px;
+  background: white;
+  color: var(--slate);
+  min-width: 140px;
+}
+
 .registration-lookup-row .add-inline {
   flex-shrink: 0;
 }
@@ -2040,10 +2060,24 @@ button .icon svg {
   flex-wrap: wrap;
 }
 
+.roster-select-all {
+  white-space: nowrap;
+  max-width: 100%;
+}
+
 .roster-actions-buttons {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.session-description {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(241, 194, 50, 0.12);
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .checkbox {
