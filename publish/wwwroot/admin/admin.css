@@ -1087,12 +1087,21 @@ button .icon svg {
   flex-direction: row-reverse;
 }
 
+[dir="rtl"] .calendar-nav .nav-arrow .icon svg {
+  transform: scaleX(-1);
+}
+
 [dir="rtl"] .calendar-views-stack {
   align-items: flex-end;
 }
 
 [dir="rtl"] .calendar-range {
   justify-content: flex-end;
+}
+
+[dir="rtl"] .calendar-actions-row {
+  flex-direction: row-reverse;
+  justify-content: flex-start;
 }
 
 .calendar-week-number {
