@@ -215,7 +215,6 @@ const calendarTemplate = compileTemplate("calendar", `
               {{t "calendar.addSession" "Add session"}}
             </button>
           </div>
-          <button class="secondary" id="calendar-today">{{t "calendar.today" "Today"}}</button>
         </div>
       </div>
       <div class="calendar-nav-col">
@@ -264,6 +263,7 @@ const calendarTemplate = compileTemplate("calendar", `
                 <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
               </span>
             </button>
+            <button class="secondary" id="calendar-today">{{t "calendar.today" "Today"}}</button>
           </div>
         </div>
       </div>

@@ -1083,10 +1083,6 @@ button .icon svg {
   justify-content: flex-end;
 }
 
-[dir="rtl"] .calendar-nav {
-  flex-direction: row-reverse;
-}
-
 [dir="rtl"] .calendar-nav .nav-arrow .icon svg {
   transform: scaleX(-1);
 }
