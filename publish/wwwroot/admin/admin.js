@@ -1569,14 +1569,6 @@ const customerModalTemplate = compileTemplate("customer-modal", `
           <input name="fullName" value="{{fullName}}" />
         </div>
         <div>
-          <label>{{t "customer.firstName" "First name"}}</label>
-          <input name="firstName" value="{{firstName}}" />
-        </div>
-        <div>
-          <label>{{t "customer.lastName" "Last name"}}</label>
-          <input name="lastName" value="{{lastName}}" />
-        </div>
-        <div>
           <label>{{t "customer.email" "Email"}}</label>
           <input name="email" type="email" value="{{email}}" />
         </div>
@@ -2731,6 +2723,10 @@ const settingsTemplate = compileTemplate("settings", `
         {{/each}}
       </select>
     </div>
+    <div>
+      <label>{{t "settings.googlePlacesKey" "Google Places API key"}}</label>
+      <input name="googlePlacesApiKey" value="{{googlePlacesApiKey}}" placeholder="AIza..." />
+    </div>
   </div>
   <div class="holiday-section">
     <h4>{{t "settings.holidays.title" "Holiday calendars"}}</h4>
@@ -3535,6 +3531,7 @@ function render(state) {
             themeSecondary: ensureHexColor(theme.secondary, "#f6d88a"),
             themeAccent: ensureHexColor(theme.accent, "#f9e7b7"),
             themeBackground: ensureHexColor(theme.background, "#fff7de"),
+            googlePlacesApiKey: studio.googlePlacesApiKey || "",
             defaultLanguageOptions,
             userLanguageOptions,
             holidayCalendarOptions
@@ -4362,7 +4359,8 @@ function bindRouteActions(route, data, state) {
                     "themeAccent",
                     "themeBackground",
                     "defaultLocale",
-                    "userLocale"
+                    "userLocale",
+                    "googlePlacesApiKey"
                 ]);
                 const holidayCalendars = Array.from(document.querySelectorAll("input[name=\"holidayCalendars\"]:checked"))
                     .map(input => input.value)
@@ -4397,7 +4395,8 @@ function bindRouteActions(route, data, state) {
                     weekStartsOn: Number(formValues.weekStartsOn),
                     themeJson: JSON.stringify(theme, null, 2),
                     defaultLocale,
-                    holidayCalendarsJson
+                    holidayCalendarsJson,
+                    googlePlacesApiKey: formValues.googlePlacesApiKey
                 });
                 const currentUser = state.context.user || {};
                 await apiPut("/api/admin/profile", {
@@ -4518,6 +4517,77 @@ function setupTagInput(root) {
 
     hidden.value = serializeTags(tags);
     render();
+}
+
+let googlePlacesPromise = null;
+
+function loadGooglePlaces(apiKey) {
+    if (!apiKey) return Promise.resolve(null);
+    if (window.google?.maps?.places) return Promise.resolve(window.google);
+    if (googlePlacesPromise) return googlePlacesPromise;
+    googlePlacesPromise = new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places&language=he&region=IL`;
+        script.async = true;
+        script.defer = true;
+        script.onload = () => resolve(window.google);
+        script.onerror = () => reject(new Error("Unable to load Google Places."));
+        document.head.appendChild(script);
+    });
+    return googlePlacesPromise;
+}
+
+function setupCustomerAddressAutocomplete(root, apiKey) {
+    if (!apiKey) return;
+    const cityInput = root.querySelector("input[name=\"city\"]");
+    const addressInput = root.querySelector("input[name=\"address\"]");
+    if (!cityInput && !addressInput) return;
+    loadGooglePlaces(apiKey).then((google) => {
+        if (!google?.maps?.places) return;
+        const cityAutocomplete = cityInput
+            ? new google.maps.places.Autocomplete(cityInput, {
+                types: ["(cities)"],
+                componentRestrictions: { country: "il" }
+            })
+            : null;
+        const addressAutocomplete = addressInput
+            ? new google.maps.places.Autocomplete(addressInput, {
+                types: ["address"],
+                componentRestrictions: { country: "il" }
+            })
+            : null;
+
+        if (cityAutocomplete) {
+            cityAutocomplete.addListener("place_changed", () => {
+                const place = cityAutocomplete.getPlace();
+                if (place?.name) {
+                    cityInput.value = place.name;
+                }
+                if (addressAutocomplete && place?.geometry?.viewport) {
+                    addressAutocomplete.setBounds(place.geometry.viewport);
+                    addressAutocomplete.setOptions({ strictBounds: true });
+                }
+            });
+        }
+
+        if (addressAutocomplete && cityInput) {
+            addressAutocomplete.addListener("place_changed", () => {
+                const place = addressAutocomplete.getPlace();
+                if (place?.formatted_address) {
+                    addressInput.value = place.formatted_address;
+                } else if (place?.name) {
+                    addressInput.value = place.name;
+                }
+                const cityComponent = place?.address_components?.find(component =>
+                    component.types?.includes("locality") ||
+                    component.types?.includes("administrative_area_level_2") ||
+                    component.types?.includes("administrative_area_level_1"));
+                if (cityComponent?.long_name) {
+                    cityInput.value = cityComponent.long_name;
+                }
+            });
+        }
+    }).catch(() => {});
 }
 
 function collectTagSuggestions(customers) {
@@ -4950,8 +5020,6 @@ function setFieldValue(name, value) {
 function fillCustomerForm(customer) {
     setFieldValue("customerId", customer.id);
     setFieldValue("fullName", customer.fullName);
-    setFieldValue("firstName", customer.firstName);
-    setFieldValue("lastName", customer.lastName);
     setFieldValue("email", customer.email);
     setFieldValue("phone", customer.phone);
     setFieldValue("idNumber", customer.idNumber);
@@ -4973,8 +5041,6 @@ function fillCustomerForm(customer) {
 function resetCustomerForm() {
     setFieldValue("customerId", "");
     setFieldValue("fullName", "");
-    setFieldValue("firstName", "");
-    setFieldValue("lastName", "");
     setFieldValue("email", "");
     setFieldValue("phone", "");
     setFieldValue("idNumber", "");
@@ -6963,8 +7029,6 @@ function openCustomerModal(customer, data, options = {}) {
         isEdit,
         customerId: customer?.id || "",
         fullName: customer?.fullName || "",
-        firstName: customer?.firstName || "",
-        lastName: customer?.lastName || "",
         email: customer?.email || "",
         phone: customer?.phone || "",
         idNumber: customer?.idNumber || "",
@@ -6996,6 +7060,7 @@ function openCustomerModal(customer, data, options = {}) {
     cleanupEscape = bindModalEscape(closeModal);
     bindModalBackdrop(overlay);
     setupTagInput(overlay);
+    setupCustomerAddressAutocomplete(overlay, data?.studio?.googlePlacesApiKey || "");
 
     const closeBtn = overlay.querySelector("#close-customer");
     if (closeBtn) {
@@ -7121,8 +7186,6 @@ function openCustomerModal(customer, data, options = {}) {
         saveBtn.addEventListener("click", async () => {
             const getValue = (name) => overlay.querySelector(`[name="${name}"]`)?.value || "";
             const fullName = getValue("fullName").trim();
-            const firstName = getValue("firstName").trim();
-            const lastName = getValue("lastName").trim();
             const email = getValue("email").trim();
             const phone = getValue("phone").trim();
             const idNumber = getValue("idNumber").trim();
@@ -7146,8 +7209,6 @@ function openCustomerModal(customer, data, options = {}) {
                 if (isEdit && customer?.id) {
                     saved = await apiPut(`/api/admin/customers/${customer.id}`, {
                         fullName,
-                        firstName,
-                        lastName,
                         email,
                         phone,
                         idNumber,
@@ -7164,8 +7225,6 @@ function openCustomerModal(customer, data, options = {}) {
                 } else {
                     saved = await apiPost("/api/admin/customers", {
                         fullName,
-                        firstName,
-                        lastName,
                         email,
                         phone,
                         idNumber,

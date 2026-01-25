@@ -5,7 +5,7 @@ namespace Letmein.Contracts;
 public record LoginRequest(string Email, string Password, string Role, string StudioSlug);
 public record RegisterRequest(string Email, string Password, string StudioSlug, string FullName, string Phone);
 
-public record StudioUpdateRequest(string Name, string Timezone, int WeekStartsOn, string ThemeJson, string? DefaultLocale, string? HolidayCalendarsJson);
+public record StudioUpdateRequest(string Name, string Timezone, int WeekStartsOn, string ThemeJson, string? DefaultLocale, string? HolidayCalendarsJson, string? GooglePlacesApiKey);
 
 public record RoomRequest(string Name, bool SupportsRemote, string? RemoteLink);
 
@@ -94,8 +94,6 @@ public record ProfileUpdateRequest(
     string FullName,
     string Phone,
     string? PreferredLocale,
-    string? FirstName,
-    string? LastName,
     string? Gender,
     string? City,
     string? Address,
@@ -108,8 +106,6 @@ public record CustomerCreateRequest(
     string FullName,
     string Email,
     string Phone,
-    string? FirstName,
-    string? LastName,
     string? Gender,
     string? City,
     string? Address,
@@ -126,8 +122,6 @@ public record CustomerUpdateRequest(
     string FullName,
     string Email,
     string Phone,
-    string? FirstName,
-    string? LastName,
     string? Gender,
     string? City,
     string? Address,
@@ -198,8 +192,7 @@ public record InstructorInstanceUpdateRequest(
     EventStatus? Status);
 
 public record HealthDeclarationRequest(
-    string FirstName,
-    string LastName,
+    string FullName,
     string Email,
     string Phone,
     DateOnly? DateOfBirth,

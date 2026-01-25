@@ -417,13 +417,9 @@ const waiverTemplate = compileTemplate("waiver", `
     <div class="waiver-section">
       <h3>{{t "waiver.section.details" "Customer details"}}</h3>
       <div class="form-grid">
-        <div>
-          <label>{{t "waiver.field.firstName" "First name"}}</label>
-          <input name="firstName" value="{{firstName}}" required />
-        </div>
-        <div>
-          <label>{{t "waiver.field.lastName" "Last name"}}</label>
-          <input name="lastName" value="{{lastName}}" required />
+        <div class="span-2">
+          <label>{{t "waiver.field.fullName" "Full name"}}</label>
+          <input name="fullName" value="{{fullName}}" required />
         </div>
         <div>
           <label>{{t "waiver.field.email" "Email"}}</label>
@@ -1010,9 +1006,6 @@ function render(state) {
 
     if (route === "waiver") {
         const profile = data.profile || {};
-        const nameParts = splitName(profile.fullName || "");
-        const firstName = profile.firstName || nameParts.firstName;
-        const lastName = profile.lastName || nameParts.lastName;
         const genderValue = (profile.gender || "").trim();
         const genderOptions = [
             { value: "", label: t("common.select", "Select"), selected: !genderValue },
@@ -1021,9 +1014,8 @@ function render(state) {
         ];
         content = waiverTemplate({
             ...profile,
-            firstName,
-            lastName,
-            signatureName: profile.fullName || `${firstName} ${lastName}`.trim(),
+            fullName: profile.fullName || "",
+            signatureName: profile.fullName || "",
             dateOfBirth: profile.dateOfBirth || "",
             genderOptions,
             signedHealthView: profile.signedHealthView
@@ -1210,6 +1202,7 @@ function bindRouteActions(route, data, state) {
     {
         const profileForm = document.getElementById("profile-form");
         if (profileForm) {
+            setupCustomerAddressAutocomplete(profileForm, state.context.studio?.googlePlacesApiKey || "");
             profileForm.addEventListener("submit", async (event) => {
                 event.preventDefault();
                 const formData = new FormData(profileForm);
@@ -1261,6 +1254,7 @@ function bindRouteActions(route, data, state) {
         }
 
         if (waiverForm) {
+            setupCustomerAddressAutocomplete(waiverForm, state.context.studio?.googlePlacesApiKey || "");
             waiverForm.addEventListener("submit", async (event) => {
                 event.preventDefault();
                 if (!waiverForm.reportValidity()) return;
@@ -1273,8 +1267,7 @@ function bindRouteActions(route, data, state) {
                 const toBool = (value) => value === "yes";
                 try {
                     await apiPost("/api/app/me/health-declaration", {
-                        firstName: formData.get("firstName"),
-                        lastName: formData.get("lastName"),
+                        fullName: formData.get("fullName"),
                         email: formData.get("email"),
                         phone: formData.get("phone"),
                         dateOfBirth: formData.get("dateOfBirth") || null,
@@ -1355,18 +1348,6 @@ function buildMembershipLabel(membership) {
     return plan.name || "Membership";
 }
 
-function splitName(fullName) {
-    const trimmed = (fullName || "").trim();
-    if (!trimmed) {
-        return { firstName: "", lastName: "" };
-    }
-    const parts = trimmed.split(/\s+/);
-    if (parts.length === 1) {
-        return { firstName: parts[0], lastName: "" };
-    }
-    return { firstName: parts[0], lastName: parts.slice(1).join(" ") };
-}
-
 function groupScheduleItems(items) {
     const map = new Map();
     items.forEach(item => {
@@ -1394,6 +1375,77 @@ function formatDateLabel(value) {
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
+}
+
+let googlePlacesPromise = null;
+
+function loadGooglePlaces(apiKey) {
+    if (!apiKey) return Promise.resolve(null);
+    if (window.google?.maps?.places) return Promise.resolve(window.google);
+    if (googlePlacesPromise) return googlePlacesPromise;
+    googlePlacesPromise = new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places&language=he&region=IL`;
+        script.async = true;
+        script.defer = true;
+        script.onload = () => resolve(window.google);
+        script.onerror = () => reject(new Error("Unable to load Google Places."));
+        document.head.appendChild(script);
+    });
+    return googlePlacesPromise;
+}
+
+function setupCustomerAddressAutocomplete(root, apiKey) {
+    if (!apiKey) return;
+    const cityInput = root.querySelector("input[name=\"city\"]");
+    const addressInput = root.querySelector("input[name=\"address\"]");
+    if (!cityInput && !addressInput) return;
+    loadGooglePlaces(apiKey).then((google) => {
+        if (!google?.maps?.places) return;
+        const cityAutocomplete = cityInput
+            ? new google.maps.places.Autocomplete(cityInput, {
+                types: ["(cities)"],
+                componentRestrictions: { country: "il" }
+            })
+            : null;
+        const addressAutocomplete = addressInput
+            ? new google.maps.places.Autocomplete(addressInput, {
+                types: ["address"],
+                componentRestrictions: { country: "il" }
+            })
+            : null;
+
+        if (cityAutocomplete) {
+            cityAutocomplete.addListener("place_changed", () => {
+                const place = cityAutocomplete.getPlace();
+                if (place?.name) {
+                    cityInput.value = place.name;
+                }
+                if (addressAutocomplete && place?.geometry?.viewport) {
+                    addressAutocomplete.setBounds(place.geometry.viewport);
+                    addressAutocomplete.setOptions({ strictBounds: true });
+                }
+            });
+        }
+
+        if (addressAutocomplete && cityInput) {
+            addressAutocomplete.addListener("place_changed", () => {
+                const place = addressAutocomplete.getPlace();
+                if (place?.formatted_address) {
+                    addressInput.value = place.formatted_address;
+                } else if (place?.name) {
+                    addressInput.value = place.name;
+                }
+                const cityComponent = place?.address_components?.find(component =>
+                    component.types?.includes("locality") ||
+                    component.types?.includes("administrative_area_level_2") ||
+                    component.types?.includes("administrative_area_level_1"));
+                if (cityComponent?.long_name) {
+                    cityInput.value = cityComponent.long_name;
+                }
+            });
+        }
+    }).catch(() => {});
 }
 
 actor.subscribe((state) => {

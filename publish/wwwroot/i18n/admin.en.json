@@ -84,6 +84,7 @@
     "settings.background":  "Background",
     "settings.defaultLocale":  "Default language",
     "settings.userLocale":  "Your language",
+    "settings.googlePlacesKey":  "Google Places API key",
     "settings.userLocaleDefault":  "Use studio default",
     "settings.save":  "Save settings",
     "profile.title":  "Your profile",

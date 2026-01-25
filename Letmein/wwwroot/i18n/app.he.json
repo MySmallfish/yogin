@@ -92,6 +92,7 @@
     "waiver.section.signature":  "תנאים וחתימה",
     "waiver.field.firstName":  "שם פרטי",
     "waiver.field.lastName":  "שם משפחה",
+    "waiver.field.fullName":  "שם מלא",
     "waiver.field.email":  "אימייל",
     "waiver.field.phone":  "טלפון",
     "waiver.field.dateOfBirth":  "תאריך לידה",

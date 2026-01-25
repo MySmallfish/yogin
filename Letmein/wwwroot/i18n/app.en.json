@@ -92,6 +92,7 @@
   "waiver.section.signature": "Terms & signature",
   "waiver.field.firstName": "First name",
   "waiver.field.lastName": "Last name",
+  "waiver.field.fullName": "Full name",
   "waiver.field.email": "Email",
   "waiver.field.phone": "Phone",
   "waiver.field.dateOfBirth": "Date of birth",

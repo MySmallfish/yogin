@@ -606,6 +606,10 @@ adminApi.MapPut("/studio", async (ClaimsPrincipal user, StudioUpdateRequest requ
     {
         studio.DefaultLocale = request.DefaultLocale;
     }
+    if (request.GooglePlacesApiKey != null)
+    {
+        studio.GooglePlacesApiKey = request.GooglePlacesApiKey.Trim();
+    }
     if (request.HolidayCalendarsJson != null)
     {
         studio.HolidayCalendarsJson = NormalizeStringListJson(request.HolidayCalendarsJson);
@@ -2416,7 +2420,7 @@ adminApi.MapPost("/customers", async (ClaimsPrincipal user, CustomerCreateReques
     }
 
     var tagsJson = NormalizeTagsJson(request.TagsJson, request.Tags);
-    var (firstName, lastName) = ResolveNameParts(request.FullName, request.FirstName, request.LastName);
+    var (firstName, lastName) = ResolveNameParts(request.FullName, null, null);
     var resolvedStatusId = await ResolveCustomerStatusIdAsync(db, studioId, request.StatusId);
     var customer = new Customer
     {
@@ -2534,7 +2538,7 @@ adminApi.MapPut("/customers/{id:guid}", async (ClaimsPrincipal user, Guid id, Cu
     customer.FullName = request.FullName.Trim();
     customer.Phone = request.Phone?.Trim() ?? "";
     customer.IdNumber = request.IdNumber?.Trim() ?? "";
-    var (firstName, lastName) = ResolveNameParts(customer.FullName, request.FirstName, request.LastName);
+    var (firstName, lastName) = ResolveNameParts(customer.FullName, null, null);
     customer.FirstName = firstName;
     customer.LastName = lastName;
     customer.DateOfBirth = request.DateOfBirth;
@@ -3730,7 +3734,7 @@ appApi.MapPut("/me/profile", async (ClaimsPrincipal user, ProfileUpdateRequest r
     customer.FullName = request.FullName;
     customer.Phone = request.Phone;
     customer.IdNumber = request.IdNumber?.Trim() ?? customer.IdNumber;
-    var (firstName, lastName) = ResolveNameParts(customer.FullName, request.FirstName, request.LastName);
+    var (firstName, lastName) = ResolveNameParts(customer.FullName, null, null);
     customer.FirstName = firstName;
     customer.LastName = lastName;
     customer.DateOfBirth = request.DateOfBirth ?? customer.DateOfBirth;
@@ -3793,8 +3797,7 @@ appApi.MapPost("/me/health-declaration", async (ClaimsPrincipal user, HealthDecl
         return Results.NotFound();
     }
 
-    if (string.IsNullOrWhiteSpace(request.FirstName) ||
-        string.IsNullOrWhiteSpace(request.LastName) ||
+    if (string.IsNullOrWhiteSpace(request.FullName) ||
         string.IsNullOrWhiteSpace(request.Email) ||
         string.IsNullOrWhiteSpace(request.Phone) ||
         string.IsNullOrWhiteSpace(request.IdNumber) ||
@@ -3833,9 +3836,8 @@ appApi.MapPost("/me/health-declaration", async (ClaimsPrincipal user, HealthDecl
         return Results.Conflict(new { error = "Email already in use" });
     }
 
-    var firstName = request.FirstName.Trim();
-    var lastName = request.LastName.Trim();
-    var fullName = $"{firstName} {lastName}".Trim();
+    var fullName = request.FullName.Trim();
+    var (firstName, lastName) = ResolveNameParts(fullName, null, null);
 
     customer.FirstName = firstName;
     customer.LastName = lastName;
@@ -3865,8 +3867,7 @@ appApi.MapPost("/me/health-declaration", async (ClaimsPrincipal user, HealthDecl
 
     var payload = JsonSerializer.Serialize(new
     {
-        request.FirstName,
-        request.LastName,
+        request.FullName,
         request.Email,
         request.Phone,
         request.DateOfBirth,

@@ -16,3 +16,4 @@
 2026-01-25 02:31  Fix RTL calendar nav arrow direction and move Today button to left in RTL toolbar.
 2026-01-25 02:42  Move Today button into calendar nav after Next and remove RTL row-reverse on nav so prev/next positions are correct.
 2026-01-25 08:45  Make Calendar/Customers group headers clickable, streamline registrations modal (single header, session description, inline attendance selector), and fix roster select-all layout.
+2026-01-25 15:28  Remove customer first/last name fields, add Google Places (IL) autocomplete for city/address, and store Places API key in studio settings + schema.
