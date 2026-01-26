@@ -7,10 +7,10 @@ test.describe('Admin calendar', () => {
   test('toolbar layout and navigation render', async ({ page }) => {
     await loginAsAdmin(page);
     await expect(page.locator('.calendar-grid')).toBeVisible();
-    await expect(page.locator('.calendar-actions-col')).toBeVisible();
-    await expect(page.locator('.calendar-nav-col')).toBeVisible();
-    await expect(page.locator('.calendar-nav-row')).toBeVisible();
     await expect(page.locator('.calendar-actions-row')).toBeVisible();
+    await expect(page.locator('.calendar-actions-main')).toBeVisible();
+    await expect(page.locator('.calendar-nav')).toBeVisible();
+    await expect(page.locator('.calendar-views-stack')).toBeVisible();
   });
 
   test('create a one-time session and find it in list', async ({ page }) => {
