@@ -119,6 +119,8 @@
     "roster.selectAll": "\u05d1\u05d7\u05e8 \u05d4\u05db\u05dc",
     "roster.emailSelected": "\u05e9\u05dc\u05d7 \u05de\u05d9\u05d9\u05dc \u05dc\u05e0\u05d1\u05d7\u05e8\u05d9\u05dd",
     "roster.smsSelected": "\u05e9\u05dc\u05d7 SMS \u05dc\u05e0\u05d1\u05d7\u05e8\u05d9\u05dd",
+    "roster.emailShort": "\u05e9\u05dc\u05d7 \u05de\u05d9\u05d9\u05dc",
+    "roster.smsShort": "\u05e9\u05dc\u05d7 SMS",
     "roster.customer": "\u05dc\u05e7\u05d5\u05d7",
     "roster.email": "\u05d3\u05d5\u05d0\"\u05dc",
     "roster.booking": "\u05d4\u05e8\u05e9\u05de\u05d4",
@@ -741,5 +743,6 @@
     "customerTags.replaceNone": "ללא החלפה",
     "customerTags.deleteHint": "לקוחות עם תגית זו יעודכנו.",
     "customerTags.nameRequired": "נדרש שם תגית.",
-    "customerTags.saveError": "לא ניתן לשמור תגית."
+    "customerTags.saveError": "לא ניתן לשמור תגית.",
+    "customerTags.saveSuccess": "תגית נשמרה."
 }

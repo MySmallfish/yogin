@@ -1917,9 +1917,22 @@ adminApi.MapGet("/customer-tags", async (ClaimsPrincipal user, AppDbContext db) 
 {
     var studioId = GetStudioId(user);
     var studio = await db.Studios.AsNoTracking().FirstAsync(s => s.Id == studioId);
-    var tags = ParseStringListJson(studio.CustomerTagsJson)
-        .OrderBy(tag => tag, StringComparer.OrdinalIgnoreCase)
-        .ToList();
+    var tags = ParseStringListJson(studio.CustomerTagsJson);
+    var customerTags = await db.Customers.AsNoTracking()
+        .Where(c => c.StudioId == studioId && c.TagsJson != null && c.TagsJson != "")
+        .Select(c => c.TagsJson!)
+        .ToListAsync();
+    foreach (var tagsJson in customerTags)
+    {
+        foreach (var tag in ParseTags(tagsJson))
+        {
+            if (!tags.Contains(tag, StringComparer.OrdinalIgnoreCase))
+            {
+                tags.Add(tag);
+            }
+        }
+    }
+    tags = tags.OrderBy(tag => tag, StringComparer.OrdinalIgnoreCase).ToList();
     return Results.Ok(tags);
 });
 
@@ -2325,6 +2338,8 @@ adminApi.MapPost("/customers/import", async (ClaimsPrincipal user, HttpRequest r
     int created = 0;
     int updated = 0;
     int skipped = 0;
+    var importedTags = new List<string>();
+    var importedTagSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
     foreach (var cells in rows.Skip(1))
     {
@@ -2374,6 +2389,13 @@ adminApi.MapPost("/customers/import", async (ClaimsPrincipal user, HttpRequest r
 
         var tags = SplitTags(tagsValue);
         var tagsJson = tags.Length > 0 ? NormalizeTagsJson(null, string.Join(",", tags)) : null;
+        foreach (var tag in ParseTags(tagsJson))
+        {
+            if (importedTagSet.Add(tag))
+            {
+                importedTags.Add(tag);
+            }
+        }
 
         var userRow = await db.Users.FirstOrDefaultAsync(u => u.StudioId == studioId && u.Email == email);
         var customer = userRow != null
@@ -2497,6 +2519,7 @@ adminApi.MapPost("/customers/import", async (ClaimsPrincipal user, HttpRequest r
         }
     }
 
+    await MergeCustomerTagsAsync(db, studioId, importedTags);
     await db.SaveChangesAsync();
     await LogAuditAsync(db, user, "Import", "Customer", studioId.ToString(), $"Imported customers (created: {created}, updated: {updated}, skipped: {skipped})");
     return Results.Ok(new { created, updated, skipped });
@@ -2560,6 +2583,7 @@ adminApi.MapPost("/customers", async (ClaimsPrincipal user, CustomerCreateReques
     }
 
     var tagsJson = NormalizeTagsJson(request.TagsJson, request.Tags);
+    await MergeCustomerTagsAsync(db, studioId, ParseTags(tagsJson));
     var (firstName, lastName) = ResolveNameParts(request.FullName, null, null);
     var resolvedStatusId = await ResolveCustomerStatusIdAsync(db, studioId, request.StatusId);
     var customer = new Customer
@@ -2840,6 +2864,7 @@ adminApi.MapPut("/customers/{id:guid}", async (ClaimsPrincipal user, Guid id, Cu
     customer.Occupation = request.Occupation?.Trim() ?? "";
     customer.SignedHealthView = request.SignedHealthView;
     customer.TagsJson = NormalizeTagsJson(request.TagsJson, request.Tags);
+    await MergeCustomerTagsAsync(db, studioId, ParseTags(customer.TagsJson));
     customer.IsArchived = request.IsArchived;
     if (request.StatusId.HasValue)
     {
@@ -5551,6 +5576,50 @@ static string NormalizeTagsJson(string? tagsJson, string? tags)
     var source = !string.IsNullOrWhiteSpace(tagsJson) ? tagsJson : tags;
     var parsed = ParseTags(source);
     return JsonSerializer.Serialize(parsed);
+}
+
+static async Task MergeCustomerTagsAsync(AppDbContext db, Guid studioId, IEnumerable<string> tags)
+{
+    if (tags == null)
+    {
+        return;
+    }
+
+    var incoming = tags.Select(tag => tag?.Trim())
+        .Where(tag => !string.IsNullOrWhiteSpace(tag))
+        .Cast<string>()
+        .ToList();
+    if (incoming.Count == 0)
+    {
+        return;
+    }
+
+    var studio = await db.Studios.FirstOrDefaultAsync(s => s.Id == studioId);
+    if (studio == null)
+    {
+        return;
+    }
+
+    var existing = ParseStringListJson(studio.CustomerTagsJson);
+    var updated = new List<string>(existing);
+    var changed = false;
+    foreach (var tag in incoming)
+    {
+        if (updated.Contains(tag, StringComparer.OrdinalIgnoreCase))
+        {
+            continue;
+        }
+        updated.Add(tag);
+        changed = true;
+    }
+
+    if (!changed)
+    {
+        return;
+    }
+
+    studio.CustomerTagsJson = JsonSerializer.Serialize(updated);
+    db.Studios.Update(studio);
 }
 
 static async Task<CustomerStatus> EnsureDefaultCustomerStatusAsync(AppDbContext db, Guid studioId)

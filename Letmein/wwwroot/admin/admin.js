@@ -199,78 +199,72 @@ const loginTemplate = compileTemplate("login", `
 const calendarTemplate = compileTemplate("calendar", `
   <div class="calendar-toolbar">
     <div class="calendar-grid">
-      <div class="calendar-actions-col">
-        <div class="calendar-actions-row">
-          <div class="calendar-actions-main">
-            <input type="search" id="calendar-search" placeholder="{{t "calendar.search" "Search sessions"}}" value="{{search}}" />
-            <div class="calendar-export" aria-label="{{t "calendar.export" "Export"}}">
-            <button class="icon-button export-btn" data-export="outlook" title="{{t "calendar.exportOutlook" "Outlook (.ics)"}}" aria-label="{{t "calendar.exportOutlook" "Outlook (.ics)"}}">
-              <span class="icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 8H4v10h16V10z"/></svg>
-              </span>
-              <span class="sr-only">{{t "calendar.exportOutlook" "Outlook (.ics)"}}</span>
-            </button>
-            <button class="icon-button export-btn" data-export="excel" title="{{t "calendar.exportExcel" "Excel (.csv)"}}" aria-label="{{t "calendar.exportExcel" "Excel (.csv)"}}">
-              <span class="icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M4 3h12l4 4v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm11 1v4h4M7 9l2 3-2 3h2l1-2 1 2h2l-2-3 2-3h-2l-1 2-1-2H7z"/></svg>
-              </span>
-              <span class="sr-only">{{t "calendar.exportExcel" "Excel (.csv)"}}</span>
-            </button>
-            </div>
-            <button id="add-session">
-              <span class="icon" aria-hidden="true">+</span>
-              {{t "calendar.addSession" "Add session"}}
-            </button>
+      <div class="calendar-actions-row">
+        <div class="calendar-actions-main">
+          <input type="search" id="calendar-search" placeholder="{{t "calendar.search" "Search sessions"}}" value="{{search}}" />
+          <div class="calendar-export" aria-label="{{t "calendar.export" "Export"}}">
+          <button class="icon-button export-btn" data-export="outlook" title="{{t "calendar.exportOutlook" "Outlook (.ics)"}}" aria-label="{{t "calendar.exportOutlook" "Outlook (.ics)"}}">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 8H4v10h16V10z"/></svg>
+            </span>
+            <span class="sr-only">{{t "calendar.exportOutlook" "Outlook (.ics)"}}</span>
+          </button>
+          <button class="icon-button export-btn" data-export="excel" title="{{t "calendar.exportExcel" "Excel (.csv)"}}" aria-label="{{t "calendar.exportExcel" "Excel (.csv)"}}">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 3h12l4 4v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm11 1v4h4M7 9l2 3-2 3h2l1-2 1 2h2l-2-3 2-3h-2l-1 2-1-2H7z"/></svg>
+            </span>
+            <span class="sr-only">{{t "calendar.exportExcel" "Excel (.csv)"}}</span>
+          </button>
           </div>
+          <button id="add-session">
+            <span class="icon" aria-hidden="true">+</span>
+            {{t "calendar.addSession" "Add session"}}
+          </button>
         </div>
-      </div>
-      <div class="calendar-nav-col">
-        <div class="calendar-nav-row">
-          <div class="calendar-views-stack">
-            <div class="calendar-views">
-              <button class="secondary view-btn {{#if isDay}}active{{/if}}" data-view="day">
-                <span class="icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 6H4v10h16V8z"/></svg>
-                </span>
-                {{t "calendar.day" "Day"}}
-              </button>
-              <button class="secondary view-btn {{#if isWeek}}active{{/if}}" data-view="week">
-                <span class="icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M3 5h18a2 2 0 0 1 2 2v2H1V7a2 2 0 0 1 2-2zm-2 6h22v6a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-6zm4 2v2h4v-2H5zm6 0v2h4v-2h-4zm6 0v2h2v-2h-2z"/></svg>
-                </span>
-                {{t "calendar.week" "Week"}}
-              </button>
-              <button class="secondary view-btn {{#if isMonth}}active{{/if}}" data-view="month">
-                <span class="icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v3H2V6a2 2 0 0 1 2-2h3V2zm15 9H2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-9z"/></svg>
-                </span>
-                {{t "calendar.month" "Month"}}
-              </button>
-              <button class="secondary view-btn {{#if isList}}active{{/if}}" data-view="list">
-                <span class="icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M4 6h3v3H4V6zm5 1h11v1H9V7zm-5 6h3v3H4v-3zm5 1h11v1H9v-1zm-5 6h3v3H4v-3zm5 1h11v1H9v-1z"/></svg>
-                </span>
-                {{t "calendar.list" "List"}}
-              </button>
-            </div>
-            <div class="calendar-range">
-              {{#if weekNumberLabel}}<span class="calendar-week-number">{{weekNumberLabel}}</span>{{/if}}
-              <span>{{rangeLabel}}</span>
-            </div>
+        <div class="calendar-nav">
+          <button class="icon-button nav-arrow" data-nav="prev" aria-label="{{t "calendar.prev" "Prev"}}">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
+            </span>
+          </button>
+          <input type="text" class="date-input" id="calendar-date" value="{{focusDateDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
+          <button class="icon-button nav-arrow" data-nav="next" aria-label="{{t "calendar.next" "Next"}}">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+            </span>
+          </button>
+          <button class="secondary" id="calendar-today">{{t "calendar.today" "Today"}}</button>
+        </div>
+        <div class="calendar-views-stack">
+          <div class="calendar-views">
+            <button class="secondary view-btn {{#if isDay}}active{{/if}}" data-view="day">
+              <span class="icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 6H4v10h16V8z"/></svg>
+              </span>
+              {{t "calendar.day" "Day"}}
+            </button>
+            <button class="secondary view-btn {{#if isWeek}}active{{/if}}" data-view="week">
+              <span class="icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M3 5h18a2 2 0 0 1 2 2v2H1V7a2 2 0 0 1 2-2zm-2 6h22v6a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-6zm4 2v2h4v-2H5zm6 0v2h4v-2h-4zm6 0v2h2v-2h-2z"/></svg>
+              </span>
+              {{t "calendar.week" "Week"}}
+            </button>
+            <button class="secondary view-btn {{#if isMonth}}active{{/if}}" data-view="month">
+              <span class="icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v3H2V6a2 2 0 0 1 2-2h3V2zm15 9H2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-9z"/></svg>
+              </span>
+              {{t "calendar.month" "Month"}}
+            </button>
+            <button class="secondary view-btn {{#if isList}}active{{/if}}" data-view="list">
+              <span class="icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 6h3v3H4V6zm5 1h11v1H9V7zm-5 6h3v3H4v-3zm5 1h11v1H9v-1zm-5 6h3v3H4v-3zm5 1h11v1H9v-1z"/></svg>
+              </span>
+              {{t "calendar.list" "List"}}
+            </button>
           </div>
-          <div class="calendar-nav">
-            <button class="icon-button nav-arrow" data-nav="prev" aria-label="{{t "calendar.prev" "Prev"}}">
-              <span class="icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
-              </span>
-            </button>
-            <input type="text" class="date-input" id="calendar-date" value="{{focusDateDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
-            <button class="icon-button nav-arrow" data-nav="next" aria-label="{{t "calendar.next" "Next"}}">
-              <span class="icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
-              </span>
-            </button>
-            <button class="secondary" id="calendar-today">{{t "calendar.today" "Today"}}</button>
+          <div class="calendar-range">
+            {{#if weekNumberLabel}}<span class="calendar-week-number">{{weekNumberLabel}}</span>{{/if}}
+            <span>{{rangeLabel}}</span>
           </div>
         </div>
       </div>
@@ -2112,11 +2106,11 @@ const customerTagModalTemplate = compileTemplate("customer-tag-modal", `
               <th>{{t "customerTags.actions" "Actions"}}</th>
             </tr>
           </thead>
-          <tbody>
-            {{#each tags}}
-            <tr>
-              <td>{{name}}</td>
-              <td>
+            <tbody id="customer-tag-rows">
+              {{#each tags}}
+              <tr>
+                <td>{{name}}</td>
+                <td>
                 <button class="secondary btn-edit" data-tag-edit="{{name}}">
                   <span class="icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
@@ -7782,7 +7776,7 @@ function openCustomerTagModal(tags) {
         existing.remove();
     }
 
-    const tagRows = (tags || []).map(name => ({ name }));
+    let tagRows = (tags || []).map(name => ({ name }));
     const modalMarkup = customerTagModalTemplate({
         tags: tagRows,
         tagOriginal: "",
@@ -7812,6 +7806,7 @@ function openCustomerTagModal(tags) {
 
     const saveBtn = overlay.querySelector("#save-tag");
     const resetBtn = overlay.querySelector("#reset-tag");
+    const tagBody = overlay.querySelector("#customer-tag-rows");
     const setForm = (tagName) => {
         overlay.querySelector("[name=\"tagOriginal\"]").value = tagName || "";
         overlay.querySelector("[name=\"tagName\"]").value = tagName || "";
@@ -7826,33 +7821,72 @@ function openCustomerTagModal(tags) {
         resetBtn.addEventListener("click", () => setForm(""));
     }
 
-    overlay.querySelectorAll("[data-tag-edit]").forEach(btn => {
-        btn.addEventListener("click", () => {
-            const name = btn.getAttribute("data-tag-edit") || "";
-            if (!name) return;
-            setForm(name);
-        });
-    });
+    const renderTagRows = (nextTags) => {
+        tagRows = (nextTags || []).map(name => ({ name }));
+        if (!tagBody) return;
+        const rowsMarkup = tagRows.map(row => {
+            const safeName = escapeHtml(row.name);
+            return `
+              <tr>
+                <td>${safeName}</td>
+                <td>
+                  <button class="secondary btn-edit" data-tag-edit="${safeName}">
+                    <span class="icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+                    </span>
+                    ${t("common.edit", "Edit")}
+                  </button>
+                  <button class="secondary btn-danger" data-tag-delete="${safeName}">
+                    <span class="icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24">
+                        <path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M8 6V4h8v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M19 6l-1 14H6L5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      </svg>
+                    </span>
+                    ${t("customerTags.delete", "Delete")}
+                  </button>
+                </td>
+              </tr>
+            `;
+        }).join("");
+        tagBody.innerHTML = rowsMarkup;
+        bindTagRowActions();
+    };
 
-    overlay.querySelectorAll("[data-tag-delete]").forEach(btn => {
-        btn.addEventListener("click", async () => {
-            const name = btn.getAttribute("data-tag-delete") || "";
-            if (!name) return;
-            const replacement = await openTagReplaceModal(name, tagRows.map(item => item.name).filter(tag => tag !== name));
-            if (replacement === null) return;
-            const params = new URLSearchParams({ name });
-            if (replacement) {
-                params.set("replacement", replacement);
-            }
-            try {
-                await apiDelete(`/api/admin/customer-tags?${params.toString()}`);
-                closeModal();
-                actor.send({ type: "REFRESH" });
-            } catch (error) {
-                showToast(error.message || t("customerTags.saveError", "Unable to save tag."), "error");
-            }
+    const bindTagRowActions = () => {
+        overlay.querySelectorAll("[data-tag-edit]").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const name = btn.getAttribute("data-tag-edit") || "";
+                if (!name) return;
+                setForm(name);
+            });
         });
-    });
+
+        overlay.querySelectorAll("[data-tag-delete]").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const name = btn.getAttribute("data-tag-delete") || "";
+                if (!name) return;
+                const replacement = await openTagReplaceModal(name, tagRows.map(item => item.name).filter(tag => tag !== name));
+                if (replacement === null) return;
+                const params = new URLSearchParams({ name });
+                if (replacement) {
+                    params.set("replacement", replacement);
+                }
+                try {
+                    await apiDelete(`/api/admin/customer-tags?${params.toString()}`);
+                    const refreshed = await apiGet("/api/admin/customer-tags");
+                    renderTagRows(refreshed || []);
+                    actor.send({ type: "REFRESH" });
+                } catch (error) {
+                    showToast(error.message || t("customerTags.saveError", "Unable to save tag."), "error");
+                }
+            });
+        });
+    };
+
+    bindTagRowActions();
 
     if (saveBtn) {
         saveBtn.addEventListener("click", async () => {
@@ -7869,7 +7903,10 @@ function openCustomerTagModal(tags) {
                 } else {
                     await apiPost("/api/admin/customer-tags", { name });
                 }
-                closeModal();
+                const refreshed = await apiGet("/api/admin/customer-tags");
+                renderTagRows(refreshed || []);
+                setForm("");
+                showToast(t("customerTags.saveSuccess", "Tag saved."), "success");
                 actor.send({ type: "REFRESH" });
             } catch (error) {
                 showToast(error.message || t("customerTags.saveError", "Unable to save tag."), "error");

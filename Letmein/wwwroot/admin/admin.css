@@ -975,42 +975,15 @@ button .icon svg {
 }
 
 .calendar-grid {
-  display: grid;
-  grid-template-columns: minmax(280px, 1fr) auto;
-  grid-template-areas: "actions nav";
-  align-items: flex-start;
-  column-gap: 16px;
-  row-gap: 12px;
-  direction: ltr;
-}
-
-.calendar-actions-col {
-  grid-area: actions;
-  display: flex;
-  align-items: center;
-  min-width: 280px;
-  padding-inline: 2px;
-}
-
-.calendar-nav-col {
-  grid-area: nav;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-width: 320px;
-}
-
-.calendar-nav-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  flex-wrap: nowrap;
+  width: 100%;
 }
 
 .calendar-views-stack {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  margin-inline-start: auto;
+  flex: 0 0 auto;
 }
 
 .calendar-views {
@@ -1035,6 +1008,7 @@ button .icon svg {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: 0 0 auto;
 }
 
 .calendar-nav button {
@@ -1073,9 +1047,8 @@ button .icon svg {
   display: flex;
   gap: 12px;
   align-items: center;
-  flex: 1 1 auto;
-  flex-wrap: nowrap;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  justify-content: flex-start;
   overflow: visible;
   min-width: 0;
   width: 100%;
@@ -1085,9 +1058,9 @@ button .icon svg {
   display: flex;
   gap: 8px;
   align-items: center;
-  flex: 1 1 auto;
+  flex: 1 1 320px;
   min-width: 0;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
 
 .calendar-actions-row #add-session {
@@ -1150,8 +1123,7 @@ button .icon svg {
 }
 
 @media (max-width: 1100px) {
-  .calendar-actions-row,
-  .calendar-nav-row {
+  .calendar-actions-row {
     flex-wrap: wrap;
   }
 }
@@ -1162,25 +1134,6 @@ button .icon svg {
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-[dir="rtl"] .calendar-nav-col {
-  align-items: flex-end;
-}
-
-[dir="rtl"] .calendar-grid {
-  grid-template-columns: auto minmax(280px, 1fr);
-  grid-template-areas: "nav actions";
-}
-
-[dir="rtl"] .calendar-actions-col,
-[dir="rtl"] .calendar-nav-col {
-  direction: rtl;
-}
-
-[dir="rtl"] .calendar-nav-row {
-  flex-direction: row;
-  justify-content: flex-end;
 }
 
 [dir="rtl"] .calendar-nav .nav-arrow .icon svg {
@@ -1196,8 +1149,7 @@ button .icon svg {
 }
 
 [dir="rtl"] .calendar-actions-row {
-  flex-direction: row-reverse;
-  justify-content: flex-start;
+  direction: rtl;
 }
 
 .calendar-week-number {
