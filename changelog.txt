@@ -22,3 +22,4 @@
 2026-01-26 02:06  Update Playwright admin calendar toolbar expectations for new layout.
 2026-01-26 08:42  Move calendar week range above view buttons, redesign customer details into two-column layout, add activity logging with optional photo, and add customer registrations/billing modals.
 2026-01-27 00:15  Prevent past-session registrations, reposition week label under view buttons, center collapsed nav icons with visible group headers, redesign customer header, and add colored tag catalog with chips in customer list/details plus tag color management.
+2026-01-27 00:24  Fix tag color palette helper for top-level Program build.

@@ -5675,7 +5675,7 @@ static string NormalizeTagsJson(string? tagsJson, string? tags)
     return JsonSerializer.Serialize(parsed);
 }
 
-static readonly string[] TagColors = new[]
+static string[] TagColors() => new[]
 {
     "#F87171", "#FB923C", "#FBBF24", "#FACC15", "#A3E635", "#4ADE80", "#34D399", "#2DD4BF",
     "#22D3EE", "#38BDF8", "#60A5FA", "#818CF8", "#A78BFA", "#C084FC", "#E879F9", "#F472B6",
@@ -5686,7 +5686,8 @@ static readonly string[] TagColors = new[]
 static string NextTagColor(IEnumerable<TagCatalogItem> catalog)
 {
     var count = catalog?.Count() ?? 0;
-    return TagColors[count % TagColors.Length];
+    var palette = TagColors();
+    return palette[count % palette.Length];
 }
 
 static string? NormalizeTagColor(string? color)
