@@ -33,6 +33,13 @@ const ICON_OPTIONS = [
     "\u{2764}\u{FE0F}"
 ];
 
+const TAG_COLOR_PALETTE = [
+    "#F87171", "#FB923C", "#FBBF24", "#FACC15", "#A3E635", "#4ADE80", "#34D399", "#2DD4BF",
+    "#22D3EE", "#38BDF8", "#60A5FA", "#818CF8", "#A78BFA", "#C084FC", "#E879F9", "#F472B6",
+    "#FB7185", "#F97316", "#F59E0B", "#EAB308", "#84CC16", "#22C55E", "#10B981", "#14B8A6",
+    "#06B6D4", "#0EA5E9", "#3B82F6", "#6366F1", "#8B5CF6", "#A855F7", "#D946EF", "#EC4899"
+];
+
 const layoutTemplate = compileTemplate("layout", `
   <div class="app-shell">
     <aside class="sidebar">
@@ -59,7 +66,7 @@ const layoutTemplate = compileTemplate("layout", `
       </div>
       <nav class="nav">
         <div class="nav-section">
-          <a href="#/calendar" data-route="calendar" class="nav-group nav-item">
+          <a href="#/calendar" data-route="calendar" class="nav-group nav-item nav-header">
             <span class="nav-short" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 6H4v10h16V8z"/></svg>
             </span>
@@ -79,7 +86,7 @@ const layoutTemplate = compileTemplate("layout", `
           </a>
         </div>
         <div class="nav-section">
-          <a href="#/customers" data-route="customers" class="nav-group nav-item">
+          <a href="#/customers" data-route="customers" class="nav-group nav-item nav-header">
             <span class="nav-short" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-3.3 0-8 1.67-8 5v3h16v-3c0-3.33-4.7-5-8-5z"/></svg>
             </span>
@@ -87,7 +94,12 @@ const layoutTemplate = compileTemplate("layout", `
           </a>
         </div>
         <div class="nav-section">
-          <div class="nav-group">{{t "nav.section.admin" "Admin"}}</div>
+          <div class="nav-group nav-header">
+            <span class="nav-short" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 9.7-8 10-4.5-.3-8-5-8-10V6l8-4z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            </span>
+            <span class="nav-label">{{t "nav.section.admin" "Admin"}}</span>
+          </div>
           <a href="#/reports" data-route="reports" class="nav-item">
             <span class="nav-short" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M4 20h16M6 16h2V8H6v8zm5 0h2V4h-2v12zm5 0h2v-6h-2v6z"/></svg>
@@ -236,10 +248,6 @@ const calendarTemplate = compileTemplate("calendar", `
           <button class="secondary" id="calendar-today">{{t "calendar.today" "Today"}}</button>
         </div>
           <div class="calendar-views-stack">
-            <div class="calendar-range">
-              {{#if weekNumberLabel}}<span class="calendar-week-number">{{weekNumberLabel}}</span>{{/if}}
-              <span>{{rangeLabel}}</span>
-            </div>
             <div class="calendar-views">
               <button class="secondary view-btn {{#if isDay}}active{{/if}}" data-view="day">
                 <span class="icon" aria-hidden="true">
@@ -265,6 +273,10 @@ const calendarTemplate = compileTemplate("calendar", `
                 </span>
                 {{t "calendar.list" "List"}}
               </button>
+            </div>
+            <div class="calendar-range">
+              {{#if weekNumberLabel}}<span class="calendar-week-number">{{weekNumberLabel}}</span>{{/if}}
+              <span>{{rangeLabel}}</span>
             </div>
           </div>
       </div>
@@ -2088,30 +2100,39 @@ const customerTagModalTemplate = compileTemplate("customer-tag-modal", `
         <button class="modal-close" id="close-tags" type="button" aria-label="{{t "common.close" "Close"}}"></button>
       </div>
       <input type="hidden" name="tagOriginal" value="{{tagOriginal}}" />
-      <div class="form-grid status-form">
-        <div>
-          <label>{{t "customerTags.name" "Tag name"}}</label>
-          <input name="tagName" value="{{tagName}}" />
+        <div class="form-grid status-form">
+          <div>
+            <label>{{t "customerTags.name" "Tag name"}}</label>
+            <input name="tagName" value="{{tagName}}" />
+          </div>
+          <div>
+            <label>{{t "customerTags.color" "Color"}}</label>
+            <div class="color-field">
+              <input name="tagColor" value="{{tagColor}}" />
+              <input type="color" name="tagColorPicker" value="{{tagColor}}" />
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="modal-actions" style="margin-top:12px;">
-        <button id="save-tag">{{saveLabel}}</button>
-        <button class="secondary" id="reset-tag">{{t "customerTags.new" "New tag"}}</button>
-      </div>
-      <div style="margin-top:20px;">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>{{t "customerTags.name" "Tag name"}}</th>
-              <th>{{t "customerTags.actions" "Actions"}}</th>
-            </tr>
-          </thead>
+        <div class="modal-actions" style="margin-top:12px;">
+          <button id="save-tag">{{saveLabel}}</button>
+          <button class="secondary" id="reset-tag">{{t "customerTags.new" "New tag"}}</button>
+        </div>
+        <div style="margin-top:20px;">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>{{t "customerTags.name" "Tag name"}}</th>
+                <th>{{t "customerTags.color" "Color"}}</th>
+                <th>{{t "customerTags.actions" "Actions"}}</th>
+              </tr>
+            </thead>
             <tbody id="customer-tag-rows">
               {{#each tags}}
               <tr>
                 <td>{{name}}</td>
+                <td><span class="color-dot" style="background: {{color}};"></span></td>
                 <td>
-                <button class="secondary btn-edit" data-tag-edit="{{name}}">
+                  <button class="secondary btn-edit" data-tag-edit="{{name}}">
                   <span class="icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
                   </span>
@@ -2389,6 +2410,7 @@ const customersTemplate = compileTemplate("customers", `
         <th class="sortable {{#if (eq sortKey "email")}}sorted {{sortDir}}{{/if}}" data-sort="email">{{t "customers.email" "Email"}}</th>
         <th class="sortable {{#if (eq sortKey "phone")}}sorted {{sortDir}}{{/if}}" data-sort="phone">{{t "customers.phone" "Phone"}}</th>
         <th class="sortable {{#if (eq sortKey "status")}}sorted {{sortDir}}{{/if}}" data-sort="status">{{t "customers.status" "Status"}}</th>
+        <th>{{t "customer.tags" "Tags"}}</th>
         <th>{{t "customers.actions" "Actions"}}</th>
       </tr>
     </thead>
@@ -2403,6 +2425,7 @@ const customersTemplate = compileTemplate("customers", `
           <a href="sms:{{phone}}" class="link-muted">{{t "customers.sms" "SMS"}}</a>
         </td>
         <td>{{statusLabel}}</td>
+        <td>{{{tagsHtml}}}</td>
         <td>
           <button class="secondary btn-edit" data-edit="{{id}}">
             <span class="icon" aria-hidden="true">
@@ -2431,23 +2454,19 @@ const customersTemplate = compileTemplate("customers", `
 const customerDetailsTemplate = compileTemplate("customer-details", `
   <div class="customer-details">
     <div class="details-header">
-      <button class="secondary btn-icon" id="back-to-customers">
-        <span class="icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </span>
-        {{t "customers.back" "Back to customers"}}
-      </button>
-      <div>
+      <div class="details-title">
         <h2>{{fullName}}</h2>
         <div class="muted">{{email}}{{#if phone}} · {{phone}}{{/if}}</div>
         <div class="meta">{{statusLabel}}</div>
       </div>
-      <button class="secondary btn-edit" id="edit-customer">
+      <div class="details-actions">
+        <button class="secondary btn-edit" id="edit-customer">
         <span class="icon" aria-hidden="true">
           <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
         </span>
         {{t "common.edit" "Edit"}}
-      </button>
+        </button>
+      </div>
     </div>
     <div class="details-columns">
       <div class="details-main">
@@ -2462,7 +2481,7 @@ const customerDetailsTemplate = compileTemplate("customer-details", `
             <div><span class="label">{{t "customer.dateOfBirth" "Date of birth"}}</span><span>{{dateOfBirth}}</span></div>
             <div><span class="label">{{t "customer.city" "City"}}</span><span>{{city}}</span></div>
             <div><span class="label">{{t "customer.address" "Address"}}</span><span>{{address}}</span></div>
-            <div><span class="label">{{t "customer.tags" "Tags"}}</span><span>{{tags}}</span></div>
+            <div><span class="label">{{t "customer.tags" "Tags"}}</span><span class="tags-inline">{{{tagsHtml}}}</span></div>
             <div><span class="label">{{t "customer.signedHealth" "Signed health waiver"}}</span><span>{{signedHealthLabel}}</span></div>
           </div>
         </section>
@@ -3345,7 +3364,8 @@ const adminMachine = createMachine({
                         return { studio, customerDetails: null };
                     }
                     const customerDetails = await apiGet(`/api/admin/customers/${id}/details`);
-                    return { studio, customerDetails };
+                    const customerTags = await apiGet("/api/admin/customer-tags");
+                    return { studio, customerDetails, customerTags };
                 }
                 case "users": {
                     const role = getQueryParam("role") || "";
@@ -3504,11 +3524,16 @@ function render(state) {
     }
 
     if (route === "customers") {
-        const customers = (data.customers || []).map(c => ({
+        const tagColorMap = buildTagColorMap(data.customerTags || []);
+        const customers = (data.customers || []).map(c => {
+            const tagsValue = c.tags || formatTags(c.tagsJson);
+            return {
             ...c,
             statusLabel: formatCustomerStatus(c.isArchived ? "Archived" : (c.statusName || "Active")),
-            archiveLabel: c.isArchived ? t("customers.restore", "Restore") : t("customers.archive", "Archive")
-        }));
+            archiveLabel: c.isArchived ? t("customers.restore", "Restore") : t("customers.archive", "Archive"),
+            tagsHtml: renderTagChips(tagsValue, tagColorMap)
+        };
+        });
         const filters = data.customerFilters || { search: "", includeArchived: false, statusId: "", tag: "", sort: "", dir: "" };
         const statusOptions = (data.customerStatuses || [])
             .filter(status => status.isActive !== false)
@@ -3540,6 +3565,7 @@ function render(state) {
         if (!customer.id) {
             content = `<div class="empty-state">${t("customer.details.notFound", "Customer not found.")}</div>`;
         } else {
+        const tagColorMap = buildTagColorMap(data.customerTags || []);
         const statusLabel = formatCustomerStatus(customer.isArchived ? "Archived" : (customer.statusName || "Active"));
         const signedHealthLabel = customer.signedHealthView ? t("common.yes", "Yes") : t("common.no", "No");
         const registrations = formatCustomerRegistrations(details.registrations || []);
@@ -3561,11 +3587,13 @@ function render(state) {
             actorLabel: log.actorName || log.actorRole || "-",
             actionLabel: formatAuditAction(log.action || "")
         }));
+        const tagsHtml = renderTagChips(customer.tags || formatTags(customer.tagsJson), tagColorMap);
         content = customerDetailsTemplate({
             ...customer,
             statusLabel,
             signedHealthLabel,
             dateOfBirth: customer.dateOfBirth ? formatDateDisplay(customer.dateOfBirth) : "",
+            tagsHtml,
             registrations,
             recentRegistrations,
             attachments,
@@ -4466,17 +4494,11 @@ function bindRouteActions(route, data, state) {
     }
 
     if (route === "customer") {
-        const backBtn = document.getElementById("back-to-customers");
         const editBtn = document.getElementById("edit-customer");
         const viewAllBtn = document.getElementById("view-all-registrations");
         const billingBtn = document.getElementById("view-billing");
         const attachmentInput = document.getElementById("customer-attachment-input");
         const activityForm = document.getElementById("activity-form");
-        if (backBtn) {
-            backBtn.addEventListener("click", () => {
-                window.location.hash = "#/customers";
-            });
-        }
         if (editBtn) {
             editBtn.addEventListener("click", async () => {
                 const details = data.customerDetails || {};
@@ -4887,6 +4909,53 @@ function parseTagList(value) {
         .filter(Boolean);
 }
 
+function normalizeTagCatalog(tagCatalog) {
+    if (!Array.isArray(tagCatalog)) return [];
+    return tagCatalog.map((item, index) => {
+        if (typeof item === "string") {
+            return { name: item, color: TAG_COLOR_PALETTE[index % TAG_COLOR_PALETTE.length] };
+        }
+        const name = item?.name || item?.Name || "";
+        const color = item?.color || item?.Color || TAG_COLOR_PALETTE[index % TAG_COLOR_PALETTE.length];
+        return { name, color };
+    }).filter(item => item.name);
+}
+
+function buildTagColorMap(tagCatalog) {
+    const map = new Map();
+    normalizeTagCatalog(tagCatalog).forEach(item => {
+        map.set(item.name.toLowerCase(), item.color);
+    });
+    return map;
+}
+
+function nextTagColor(tagCatalog) {
+    const count = normalizeTagCatalog(tagCatalog).length;
+    return TAG_COLOR_PALETTE[count % TAG_COLOR_PALETTE.length];
+}
+
+function tagTextColor(hex) {
+    const clean = String(hex || "").replace("#", "");
+    if (clean.length !== 6) return "#111827";
+    const r = parseInt(clean.slice(0, 2), 16);
+    const g = parseInt(clean.slice(2, 4), 16);
+    const b = parseInt(clean.slice(4, 6), 16);
+    const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    return luminance > 0.6 ? "#111827" : "#ffffff";
+}
+
+function renderTagChips(tags, colorMap) {
+    const list = Array.isArray(tags) ? tags : parseTagList(tags);
+    if (!list.length) return "";
+    const chips = list.map(tag => {
+        const color = colorMap?.get(tag.toLowerCase()) || TAG_COLOR_PALETTE[0];
+        const textColor = tagTextColor(color);
+        const safe = escapeHtml(tag);
+        return `<span class="tag-chip" style="background:${color}; color:${textColor};">${safe}</span>`;
+    }).join("");
+    return `<span class="tag-chips">${chips}</span>`;
+}
+
 function serializeTags(value) {
     const tags = Array.isArray(value) ? value : parseTagList(value);
     const unique = Array.from(new Set(tags.map(tag => tag.trim()).filter(Boolean)));
@@ -4906,7 +4975,7 @@ function formatTags(tagsJson) {
     return tagsJson;
 }
 
-function setupTagInput(root) {
+function setupTagInput(root, colorMap) {
     const wrapper = root?.querySelector("[data-tag-input]");
     if (!wrapper) return;
     const chips = wrapper.querySelector(".tag-chips");
@@ -4921,6 +4990,13 @@ function setupTagInput(root) {
             const chip = document.createElement("span");
             chip.className = "tag-chip";
             chip.textContent = tag;
+            if (colorMap) {
+                const color = colorMap.get(tag.toLowerCase());
+                if (color) {
+                    chip.style.background = color;
+                    chip.style.color = tagTextColor(color);
+                }
+            }
             const remove = document.createElement("button");
             remove.type = "button";
             remove.className = "tag-remove";
@@ -5044,7 +5120,7 @@ function setupCustomerAddressAutocomplete(root, apiKey) {
 
 function collectTagSuggestions(customers, tagCatalog = []) {
     const set = new Set();
-    (tagCatalog || []).forEach(tag => set.add(tag));
+    normalizeTagCatalog(tagCatalog).forEach(tag => set.add(tag.name));
     (customers || []).forEach(customer => {
         const value = customer.tags || formatTags(customer.tagsJson);
         parseTagList(value).forEach(tag => set.add(tag));
@@ -6899,9 +6975,8 @@ function openTagReplaceModal(tagName, replacements) {
               </select>
               <div class="meta">${t("customerTags.deleteHint", "Customers with this tag will be updated.")}</div>
             </div>
-            <div class="modal-actions">
+            <div class="modal-actions" style="justify-content:flex-end;">
               <button id="confirm-tag-delete">${t("customerTags.delete", "Delete")}</button>
-              <button class="secondary" id="cancel-tag-delete">${t("common.cancel", "Cancel")}</button>
             </div>
           </div>
         `;
@@ -6917,7 +6992,6 @@ function openTagReplaceModal(tagName, replacements) {
         bindModalBackdrop(overlay);
 
         overlay.querySelector("#close-tag-replace")?.addEventListener("click", () => closeModal(null));
-        overlay.querySelector("#cancel-tag-delete")?.addEventListener("click", () => closeModal(null));
         overlay.querySelector("#confirm-tag-delete")?.addEventListener("click", () => {
             const replacement = overlay.querySelector("#tag-replace-select")?.value || "";
             closeModal(replacement);
@@ -7632,6 +7706,7 @@ function openCustomerModal(customer, data, options = {}) {
         { value: "Female", label: t("gender.female", "Female"), selected: genderValue === "Female" }
     ];
     const tagSuggestions = collectTagSuggestions(data?.customers || [], data?.customerTags || []);
+    const tagColorMap = buildTagColorMap(data?.customerTags || []);
     const modalMarkup = customerModalTemplate({
         title: isEdit ? t("customer.editTitle", "Edit customer") : t("customer.addTitle", "Add customer"),
         subtitle: isEdit
@@ -7672,7 +7747,7 @@ function openCustomerModal(customer, data, options = {}) {
     };
     cleanupEscape = bindModalEscape(closeModal);
     bindModalBackdrop(overlay);
-    setupTagInput(overlay);
+    setupTagInput(overlay, tagColorMap);
     setupCustomerAddressAutocomplete(overlay, data?.studio?.googlePlacesApiKey || "");
 
     const closeBtn = overlay.querySelector("#close-customer");
@@ -7968,11 +8043,12 @@ function openCustomerTagModal(tags) {
         existing.remove();
     }
 
-    let tagRows = (tags || []).map(name => ({ name }));
+    let tagRows = normalizeTagCatalog(tags);
     const modalMarkup = customerTagModalTemplate({
         tags: tagRows,
         tagOriginal: "",
         tagName: "",
+        tagColor: nextTagColor(tagRows),
         saveLabel: t("customerTags.add", "Add tag")
     });
 
@@ -7999,9 +8075,13 @@ function openCustomerTagModal(tags) {
     const saveBtn = overlay.querySelector("#save-tag");
     const resetBtn = overlay.querySelector("#reset-tag");
     const tagBody = overlay.querySelector("#customer-tag-rows");
-    const setForm = (tagName) => {
+    const colorInput = overlay.querySelector("[name=\"tagColor\"]");
+    const colorPicker = overlay.querySelector("[name=\"tagColorPicker\"]");
+    const setForm = (tagName, tagColor) => {
         overlay.querySelector("[name=\"tagOriginal\"]").value = tagName || "";
         overlay.querySelector("[name=\"tagName\"]").value = tagName || "";
+        if (colorInput) colorInput.value = tagColor || nextTagColor(tagRows);
+        if (colorPicker) colorPicker.value = tagColor || nextTagColor(tagRows);
         if (saveBtn) {
             saveBtn.textContent = tagName
                 ? t("customerTags.update", "Update tag")
@@ -8010,25 +8090,37 @@ function openCustomerTagModal(tags) {
     };
 
     if (resetBtn) {
-        resetBtn.addEventListener("click", () => setForm(""));
+        resetBtn.addEventListener("click", () => setForm("", nextTagColor(tagRows)));
+    }
+
+    if (colorInput && colorPicker) {
+        colorInput.addEventListener("input", () => {
+            colorPicker.value = colorInput.value;
+        });
+        colorPicker.addEventListener("input", () => {
+            colorInput.value = colorPicker.value;
+        });
     }
 
     const renderTagRows = (nextTags) => {
-        tagRows = (nextTags || []).map(name => ({ name }));
+        tagRows = normalizeTagCatalog(nextTags);
         if (!tagBody) return;
         const rowsMarkup = tagRows.map(row => {
             const safeName = escapeHtml(row.name);
+            const safeColor = escapeHtml(row.color || TAG_COLOR_PALETTE[0]);
+            const encoded = encodeURIComponent(row.name);
             return `
               <tr>
                 <td>${safeName}</td>
+                <td><span class="color-dot" style="background: ${safeColor};"></span></td>
                 <td>
-                  <button class="secondary btn-edit" data-tag-edit="${safeName}">
+                  <button class="secondary btn-edit" data-tag-edit="${encoded}">
                     <span class="icon" aria-hidden="true">
                       <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
                     </span>
                     ${t("common.edit", "Edit")}
                   </button>
-                  <button class="secondary btn-danger" data-tag-delete="${safeName}">
+                  <button class="secondary btn-danger" data-tag-delete="${encoded}">
                     <span class="icon" aria-hidden="true">
                       <svg viewBox="0 0 24 24">
                         <path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -8050,16 +8142,19 @@ function openCustomerTagModal(tags) {
     const bindTagRowActions = () => {
         overlay.querySelectorAll("[data-tag-edit]").forEach(btn => {
             btn.addEventListener("click", () => {
-                const name = btn.getAttribute("data-tag-edit") || "";
-                if (!name) return;
-                setForm(name);
+                const encoded = btn.getAttribute("data-tag-edit") || "";
+                if (!encoded) return;
+                const name = decodeURIComponent(encoded);
+                const match = tagRows.find(item => item.name.toLowerCase() === name.toLowerCase());
+                setForm(name, match?.color || nextTagColor(tagRows));
             });
         });
 
         overlay.querySelectorAll("[data-tag-delete]").forEach(btn => {
             btn.addEventListener("click", async () => {
-                const name = btn.getAttribute("data-tag-delete") || "";
-                if (!name) return;
+                const encoded = btn.getAttribute("data-tag-delete") || "";
+                if (!encoded) return;
+                const name = decodeURIComponent(encoded);
                 const replacement = await openTagReplaceModal(name, tagRows.map(item => item.name).filter(tag => tag !== name));
                 if (replacement === null) return;
                 const params = new URLSearchParams({ name });
@@ -8078,12 +8173,14 @@ function openCustomerTagModal(tags) {
         });
     };
 
-    bindTagRowActions();
+    renderTagRows(tagRows);
+    setForm("", nextTagColor(tagRows));
 
     if (saveBtn) {
         saveBtn.addEventListener("click", async () => {
             const original = overlay.querySelector("[name=\"tagOriginal\"]")?.value || "";
             const name = overlay.querySelector("[name=\"tagName\"]")?.value?.trim() || "";
+            const color = overlay.querySelector("[name=\"tagColor\"]")?.value?.trim() || "";
             if (!name) {
                 showToast(t("customerTags.nameRequired", "Tag name is required."), "error");
                 return;
@@ -8091,13 +8188,13 @@ function openCustomerTagModal(tags) {
 
             try {
                 if (original) {
-                    await apiPut("/api/admin/customer-tags", { name: original, newName: name });
+                    await apiPut("/api/admin/customer-tags", { name: original, newName: name, color });
                 } else {
-                    await apiPost("/api/admin/customer-tags", { name });
+                    await apiPost("/api/admin/customer-tags", { name, color });
                 }
                 const refreshed = await apiGet("/api/admin/customer-tags");
                 renderTagRows(refreshed || []);
-                setForm("");
+                setForm("", nextTagColor(tagRows));
                 showToast(t("customerTags.saveSuccess", "Tag saved."), "success");
                 actor.send({ type: "REFRESH" });
             } catch (error) {

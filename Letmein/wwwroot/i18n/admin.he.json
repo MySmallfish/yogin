@@ -748,6 +748,7 @@
     "customerTags.title": "תגיות לקוח",
     "customerTags.subtitle": "יצירת תגיות לסיווג לקוחות.",
     "customerTags.name": "שם תגית",
+    "customerTags.color": "צבע",
     "customerTags.actions": "פעולות",
     "customerTags.add": "הוסף תגית",
     "customerTags.update": "עדכן תגית",

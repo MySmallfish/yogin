@@ -541,6 +541,34 @@ html[dir="rtl"] .table,
   font-size: 12px;
 }
 
+.tags-inline .tag-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.color-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.color-field input[type="color"] {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+  border: 1px solid var(--line);
+}
+
 .tag-remove {
   border: none;
   background: transparent;
@@ -854,6 +882,19 @@ button .icon svg {
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 18px;
+}
+
+.details-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.details-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-inline-start: auto;
 }
 
 .details-columns {
@@ -2741,7 +2782,7 @@ button .icon svg {
 
 .app-shell.collapsed .brand-text,
 .app-shell.collapsed .nav-label,
-.app-shell.collapsed .nav-group,
+.app-shell.collapsed .nav-group:not(.nav-header),
 .app-shell.collapsed .user-meta,
 .app-shell.collapsed .sidebar-footer .tag {
   display: none;
@@ -2752,6 +2793,13 @@ button .icon svg {
 }
 
 .app-shell.collapsed .nav a {
+  justify-content: center;
+  padding: 10px;
+}
+
+.app-shell.collapsed .nav-header {
+  display: flex;
+  align-items: center;
   justify-content: center;
   padding: 10px;
 }

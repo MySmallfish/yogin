@@ -749,6 +749,7 @@
     ,"customerTags.title":  "Customer tags"
     ,"customerTags.subtitle":  "Create tags to help segment customers."
     ,"customerTags.name":  "Tag name"
+    ,"customerTags.color":  "Color"
     ,"customerTags.actions":  "Actions"
     ,"customerTags.add":  "Add tag"
     ,"customerTags.update":  "Update tag"

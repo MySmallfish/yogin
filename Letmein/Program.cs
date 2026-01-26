@@ -1916,24 +1916,36 @@ adminApi.MapDelete("/customer-statuses/{id:guid}", async (ClaimsPrincipal user, 
 adminApi.MapGet("/customer-tags", async (ClaimsPrincipal user, AppDbContext db) =>
 {
     var studioId = GetStudioId(user);
-    var studio = await db.Studios.AsNoTracking().FirstAsync(s => s.Id == studioId);
-    var tags = ParseStringListJson(studio.CustomerTagsJson);
+    var studio = await db.Studios.FirstAsync(s => s.Id == studioId);
+    var catalog = ParseTagCatalog(studio.CustomerTagsJson);
     var customerTags = await db.Customers.AsNoTracking()
         .Where(c => c.StudioId == studioId && c.TagsJson != null && c.TagsJson != "")
         .Select(c => c.TagsJson!)
         .ToListAsync();
+    var changed = false;
     foreach (var tagsJson in customerTags)
     {
         foreach (var tag in ParseTags(tagsJson))
         {
-            if (!tags.Contains(tag, StringComparer.OrdinalIgnoreCase))
+            if (catalog.Any(item => item.Name.Equals(tag, StringComparison.OrdinalIgnoreCase)))
             {
-                tags.Add(tag);
+                continue;
             }
+            catalog.Add(new TagCatalogItem(tag, NextTagColor(catalog)));
+            changed = true;
         }
     }
-    tags = tags.OrderBy(tag => tag, StringComparer.OrdinalIgnoreCase).ToList();
-    return Results.Ok(tags);
+    if (changed)
+    {
+        studio.CustomerTagsJson = NormalizeTagCatalogJson(catalog);
+        db.Studios.Update(studio);
+        await db.SaveChangesAsync();
+    }
+    var ordered = catalog
+        .OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
+        .Select(item => new { name = item.Name, color = item.Color })
+        .ToList();
+    return Results.Ok(ordered);
 });
 
 adminApi.MapPost("/customer-tags", async (ClaimsPrincipal user, CustomerTagRequest request, AppDbContext db) =>
@@ -1946,16 +1958,34 @@ adminApi.MapPost("/customer-tags", async (ClaimsPrincipal user, CustomerTagReque
     }
 
     var studio = await db.Studios.FirstAsync(s => s.Id == studioId);
-    var tags = ParseStringListJson(studio.CustomerTagsJson);
-    if (!tags.Contains(name, StringComparer.OrdinalIgnoreCase))
+    var catalog = ParseTagCatalog(studio.CustomerTagsJson);
+    var existing = catalog.FirstOrDefault(item => item.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+    if (existing == null)
     {
-        tags.Add(name);
-        studio.CustomerTagsJson = JsonSerializer.Serialize(tags);
+        var color = NormalizeTagColor(request.Color) ?? NextTagColor(catalog);
+        catalog.Add(new TagCatalogItem(name, color));
+        studio.CustomerTagsJson = NormalizeTagCatalogJson(catalog);
         await db.SaveChangesAsync();
         await LogAuditAsync(db, user, "Create", "CustomerTag", studioId.ToString(), $"Created customer tag {name}");
     }
+    else
+    {
+        var normalizedColor = NormalizeTagColor(request.Color);
+        if (!string.IsNullOrWhiteSpace(normalizedColor) && !existing.Color.Equals(normalizedColor, StringComparison.OrdinalIgnoreCase))
+        {
+            var updated = catalog.Select(item => item.Name.Equals(existing.Name, StringComparison.OrdinalIgnoreCase)
+                ? new TagCatalogItem(item.Name, normalizedColor!)
+                : item).ToList();
+            studio.CustomerTagsJson = NormalizeTagCatalogJson(updated);
+            await db.SaveChangesAsync();
+        }
+    }
 
-    return Results.Ok(tags.OrderBy(tag => tag, StringComparer.OrdinalIgnoreCase));
+    var ordered = ParseTagCatalog(studio.CustomerTagsJson)
+        .OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
+        .Select(item => new { name = item.Name, color = item.Color })
+        .ToList();
+    return Results.Ok(ordered);
 });
 
 adminApi.MapPut("/customer-tags", async (ClaimsPrincipal user, CustomerTagUpdateRequest request, AppDbContext db) =>
@@ -1969,18 +1999,31 @@ adminApi.MapPut("/customer-tags", async (ClaimsPrincipal user, CustomerTagUpdate
     }
 
     var studio = await db.Studios.FirstAsync(s => s.Id == studioId);
-    var tags = ParseStringListJson(studio.CustomerTagsJson);
-    if (!tags.Contains(name, StringComparer.OrdinalIgnoreCase))
+    var catalog = ParseTagCatalog(studio.CustomerTagsJson);
+    var existing = catalog.FirstOrDefault(item => item.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+    if (existing == null)
     {
         return Results.NotFound();
     }
 
-    tags = tags
-        .Where(tag => !tag.Equals(name, StringComparison.OrdinalIgnoreCase))
-        .Concat(new[] { newName })
-        .Distinct(StringComparer.OrdinalIgnoreCase)
-        .ToList();
-    studio.CustomerTagsJson = JsonSerializer.Serialize(tags);
+    var targetName = newName;
+    var targetColor = NormalizeTagColor(request.Color) ?? existing.Color;
+    var merged = new List<TagCatalogItem>();
+    foreach (var item in catalog)
+    {
+        if (item.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
+        {
+            continue;
+        }
+        if (item.Name.Equals(targetName, StringComparison.OrdinalIgnoreCase))
+        {
+            targetColor = NormalizeTagColor(request.Color) ?? item.Color;
+            continue;
+        }
+        merged.Add(item);
+    }
+    merged.Add(new TagCatalogItem(targetName, targetColor));
+    studio.CustomerTagsJson = NormalizeTagCatalogJson(merged);
 
     var customers = await db.Customers.Where(c => c.StudioId == studioId && c.TagsJson != null && c.TagsJson != "").ToListAsync();
     foreach (var customer in customers)
@@ -1994,7 +2037,11 @@ adminApi.MapPut("/customer-tags", async (ClaimsPrincipal user, CustomerTagUpdate
 
     await db.SaveChangesAsync();
     await LogAuditAsync(db, user, "Update", "CustomerTag", studioId.ToString(), $"Renamed customer tag {name} to {newName}");
-    return Results.Ok(tags.OrderBy(tag => tag, StringComparer.OrdinalIgnoreCase));
+    var ordered = ParseTagCatalog(studio.CustomerTagsJson)
+        .OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
+        .Select(item => new { name = item.Name, color = item.Color })
+        .ToList();
+    return Results.Ok(ordered);
 });
 
 adminApi.MapDelete("/customer-tags", async (ClaimsPrincipal user, string name, string? replacement, AppDbContext db) =>
@@ -2007,22 +2054,22 @@ adminApi.MapDelete("/customer-tags", async (ClaimsPrincipal user, string name, s
     }
 
     var studio = await db.Studios.FirstAsync(s => s.Id == studioId);
-    var tags = ParseStringListJson(studio.CustomerTagsJson);
-    if (!tags.Contains(trimmed, StringComparer.OrdinalIgnoreCase))
+    var catalog = ParseTagCatalog(studio.CustomerTagsJson);
+    if (!catalog.Any(item => item.Name.Equals(trimmed, StringComparison.OrdinalIgnoreCase)))
     {
         return Results.NotFound();
     }
 
     var replacementTag = replacement?.Trim() ?? "";
-    tags = tags.Where(tag => !tag.Equals(trimmed, StringComparison.OrdinalIgnoreCase)).ToList();
-    if (!string.IsNullOrWhiteSpace(replacementTag))
+    var updated = catalog
+        .Where(item => !item.Name.Equals(trimmed, StringComparison.OrdinalIgnoreCase))
+        .ToList();
+    if (!string.IsNullOrWhiteSpace(replacementTag) &&
+        !updated.Any(item => item.Name.Equals(replacementTag, StringComparison.OrdinalIgnoreCase)))
     {
-        if (!tags.Contains(replacementTag, StringComparer.OrdinalIgnoreCase))
-        {
-            tags.Add(replacementTag);
-        }
+        updated.Add(new TagCatalogItem(replacementTag, NextTagColor(updated)));
     }
-    studio.CustomerTagsJson = JsonSerializer.Serialize(tags);
+    studio.CustomerTagsJson = NormalizeTagCatalogJson(updated);
 
     var customers = await db.Customers.Where(c => c.StudioId == studioId && c.TagsJson != null && c.TagsJson != "").ToListAsync();
     foreach (var customer in customers)
@@ -5628,6 +5675,89 @@ static string NormalizeTagsJson(string? tagsJson, string? tags)
     return JsonSerializer.Serialize(parsed);
 }
 
+static readonly string[] TagColors = new[]
+{
+    "#F87171", "#FB923C", "#FBBF24", "#FACC15", "#A3E635", "#4ADE80", "#34D399", "#2DD4BF",
+    "#22D3EE", "#38BDF8", "#60A5FA", "#818CF8", "#A78BFA", "#C084FC", "#E879F9", "#F472B6",
+    "#FB7185", "#F97316", "#F59E0B", "#EAB308", "#84CC16", "#22C55E", "#10B981", "#14B8A6",
+    "#06B6D4", "#0EA5E9", "#3B82F6", "#6366F1", "#8B5CF6", "#A855F7", "#D946EF", "#EC4899"
+};
+
+static string NextTagColor(IEnumerable<TagCatalogItem> catalog)
+{
+    var count = catalog?.Count() ?? 0;
+    return TagColors[count % TagColors.Length];
+}
+
+static string? NormalizeTagColor(string? color)
+{
+    if (string.IsNullOrWhiteSpace(color))
+    {
+        return null;
+    }
+    var trimmed = color.Trim();
+    if (!trimmed.StartsWith("#", StringComparison.Ordinal))
+    {
+        trimmed = $"#{trimmed}";
+    }
+    if (trimmed.Length != 7)
+    {
+        return null;
+    }
+    return trimmed;
+}
+
+static string NormalizeTagCatalogJson(IEnumerable<TagCatalogItem> items)
+{
+    return JsonSerializer.Serialize(items);
+}
+
+static List<TagCatalogItem> ParseTagCatalog(string? json)
+{
+    if (string.IsNullOrWhiteSpace(json))
+    {
+        return new List<TagCatalogItem>();
+    }
+
+    try
+    {
+        var parsed = JsonSerializer.Deserialize<List<TagCatalogItem>>(json);
+        if (parsed != null && parsed.Count > 0)
+        {
+            var normalized = new List<TagCatalogItem>();
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in parsed)
+            {
+                if (item == null || string.IsNullOrWhiteSpace(item.Name))
+                {
+                    continue;
+                }
+                if (!seen.Add(item.Name))
+                {
+                    continue;
+                }
+                var color = NormalizeTagColor(item.Color) ?? NextTagColor(normalized);
+                normalized.Add(new TagCatalogItem(item.Name.Trim(), color));
+            }
+            return normalized;
+        }
+    }
+    catch
+    {
+        // Fall back to string list parsing.
+    }
+
+    var strings = ParseStringListJson(json);
+    var result = new List<TagCatalogItem>();
+    foreach (var name in strings)
+    {
+        if (string.IsNullOrWhiteSpace(name)) continue;
+        if (result.Any(item => item.Name.Equals(name, StringComparison.OrdinalIgnoreCase))) continue;
+        result.Add(new TagCatalogItem(name.Trim(), NextTagColor(result)));
+    }
+    return result;
+}
+
 static async Task MergeCustomerTagsAsync(AppDbContext db, Guid studioId, IEnumerable<string> tags)
 {
     if (tags == null)
@@ -5650,16 +5780,15 @@ static async Task MergeCustomerTagsAsync(AppDbContext db, Guid studioId, IEnumer
         return;
     }
 
-    var existing = ParseStringListJson(studio.CustomerTagsJson);
-    var updated = new List<string>(existing);
+    var catalog = ParseTagCatalog(studio.CustomerTagsJson);
     var changed = false;
     foreach (var tag in incoming)
     {
-        if (updated.Contains(tag, StringComparer.OrdinalIgnoreCase))
+        if (catalog.Any(item => item.Name.Equals(tag, StringComparison.OrdinalIgnoreCase)))
         {
             continue;
         }
-        updated.Add(tag);
+        catalog.Add(new TagCatalogItem(tag, NextTagColor(catalog)));
         changed = true;
     }
 
@@ -5668,7 +5797,7 @@ static async Task MergeCustomerTagsAsync(AppDbContext db, Guid studioId, IEnumer
         return;
     }
 
-    studio.CustomerTagsJson = JsonSerializer.Serialize(updated);
+    studio.CustomerTagsJson = NormalizeTagCatalogJson(catalog);
     db.Studios.Update(studio);
 }
 
@@ -6485,4 +6614,6 @@ record CalendarExportRow(
     string InstructorName,
     string RoomName,
     EventStatus Status);
+
+record TagCatalogItem(string Name, string Color);
 

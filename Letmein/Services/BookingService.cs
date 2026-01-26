@@ -29,6 +29,11 @@ public class BookingService
             return (false, "Event is not available", null, null);
         }
 
+        if (instance.StartUtc <= DateTime.UtcNow)
+        {
+            return (false, "Session is in the past", null, null);
+        }
+
         var existingBooking = await _db.Bookings
             .FirstOrDefaultAsync(b => b.StudioId == studio.Id && b.CustomerId == customer.Id && b.EventInstanceId == instance.Id, ct);
         if (existingBooking != null && existingBooking.Status != BookingStatus.Cancelled)
