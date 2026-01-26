@@ -2079,14 +2079,14 @@ adminApi.MapDelete("/customer-tags", async (ClaimsPrincipal user, string name, s
         {
             continue;
         }
-        var updated = customerTags
+        var customerUpdated = customerTags
             .Where(tag => !tag.Equals(trimmed, StringComparison.OrdinalIgnoreCase))
             .ToList();
-        if (!string.IsNullOrWhiteSpace(replacementTag) && !updated.Contains(replacementTag, StringComparer.OrdinalIgnoreCase))
+        if (!string.IsNullOrWhiteSpace(replacementTag) && !customerUpdated.Contains(replacementTag, StringComparer.OrdinalIgnoreCase))
         {
-            updated.Add(replacementTag);
+            customerUpdated.Add(replacementTag);
         }
-        customer.TagsJson = JsonSerializer.Serialize(updated);
+        customer.TagsJson = JsonSerializer.Serialize(customerUpdated);
     }
 
     await db.SaveChangesAsync();
