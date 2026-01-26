@@ -1127,7 +1127,7 @@ button .icon svg {
 .calendar-actions-row {
   display: flex;
   gap: 12px;
-  align-items: center;
+  align-items: flex-start;
   flex-wrap: wrap;
   justify-content: flex-start;
   overflow: visible;
@@ -1142,6 +1142,12 @@ button .icon svg {
   flex: 1 1 320px;
   min-width: 0;
   flex-wrap: wrap;
+}
+
+.calendar-actions-main,
+.calendar-nav,
+.calendar-views-stack {
+  align-self: flex-start;
 }
 
 .calendar-actions-row #add-session {
@@ -2797,11 +2803,19 @@ button .icon svg {
   padding: 10px;
 }
 
+.app-shell.collapsed .nav {
+  align-items: center;
+}
+
 .app-shell.collapsed .nav-header {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 10px;
+}
+
+.app-shell.collapsed .nav-header-static {
+  display: none;
 }
 
 .app-shell.collapsed .nav a:hover {
@@ -2810,6 +2824,25 @@ button .icon svg {
 
 .app-shell.collapsed .sidebar-toggle {
   margin-left: 0;
+  margin-inline: auto;
+  align-self: center;
+}
+
+.app-shell.collapsed .brand,
+.app-shell.collapsed .sidebar-footer,
+.app-shell.collapsed .user-card {
+  align-items: center;
+  text-align: center;
+}
+
+.app-shell.collapsed .brand-logo,
+.app-shell.collapsed .user-card,
+.app-shell.collapsed .logout-btn {
+  margin-inline: auto;
+}
+
+.app-shell.collapsed .user-card {
+  justify-content: center;
 }
 
 [dir="rtl"] body {

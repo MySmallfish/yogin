@@ -24,3 +24,4 @@
 2026-01-27 00:15  Prevent past-session registrations, reposition week label under view buttons, center collapsed nav icons with visible group headers, redesign customer header, and add colored tag catalog with chips in customer list/details plus tag color management.
 2026-01-27 00:24  Fix tag color palette helper for top-level Program build.
 2026-01-27 00:27  Fix duplicate variable name in tag delete flow.
+2026-01-27 01:29  Align calendar toolbar top edges, hide admin header in collapsed menu, and center collapsed sidebar items.

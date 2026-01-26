@@ -94,7 +94,7 @@ const layoutTemplate = compileTemplate("layout", `
           </a>
         </div>
         <div class="nav-section">
-          <div class="nav-group nav-header">
+          <div class="nav-group nav-header nav-header-static">
             <span class="nav-short" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 9.7-8 10-4.5-.3-8-5-8-10V6l8-4z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
             </span>
