@@ -235,14 +235,18 @@ const calendarTemplate = compileTemplate("calendar", `
           </button>
           <button class="secondary" id="calendar-today">{{t "calendar.today" "Today"}}</button>
         </div>
-        <div class="calendar-views-stack">
-          <div class="calendar-views">
-            <button class="secondary view-btn {{#if isDay}}active{{/if}}" data-view="day">
-              <span class="icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 6H4v10h16V8z"/></svg>
-              </span>
-              {{t "calendar.day" "Day"}}
-            </button>
+          <div class="calendar-views-stack">
+            <div class="calendar-range">
+              {{#if weekNumberLabel}}<span class="calendar-week-number">{{weekNumberLabel}}</span>{{/if}}
+              <span>{{rangeLabel}}</span>
+            </div>
+            <div class="calendar-views">
+              <button class="secondary view-btn {{#if isDay}}active{{/if}}" data-view="day">
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 6H4v10h16V8z"/></svg>
+                </span>
+                {{t "calendar.day" "Day"}}
+              </button>
             <button class="secondary view-btn {{#if isWeek}}active{{/if}}" data-view="week">
               <span class="icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24"><path d="M3 5h18a2 2 0 0 1 2 2v2H1V7a2 2 0 0 1 2-2zm-2 6h22v6a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-6zm4 2v2h4v-2H5zm6 0v2h4v-2h-4zm6 0v2h2v-2h-2z"/></svg>
@@ -255,18 +259,14 @@ const calendarTemplate = compileTemplate("calendar", `
               </span>
               {{t "calendar.month" "Month"}}
             </button>
-            <button class="secondary view-btn {{#if isList}}active{{/if}}" data-view="list">
-              <span class="icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M4 6h3v3H4V6zm5 1h11v1H9V7zm-5 6h3v3H4v-3zm5 1h11v1H9v-1zm-5 6h3v3H4v-3zm5 1h11v1H9v-1z"/></svg>
-              </span>
-              {{t "calendar.list" "List"}}
-            </button>
+              <button class="secondary view-btn {{#if isList}}active{{/if}}" data-view="list">
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M4 6h3v3H4V6zm5 1h11v1H9V7zm-5 6h3v3H4v-3zm5 1h11v1H9v-1zm-5 6h3v3H4v-3zm5 1h11v1H9v-1z"/></svg>
+                </span>
+                {{t "calendar.list" "List"}}
+              </button>
+            </div>
           </div>
-          <div class="calendar-range">
-            {{#if weekNumberLabel}}<span class="calendar-week-number">{{weekNumberLabel}}</span>{{/if}}
-            <span>{{rangeLabel}}</span>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -2449,131 +2449,166 @@ const customerDetailsTemplate = compileTemplate("customer-details", `
         {{t "common.edit" "Edit"}}
       </button>
     </div>
-    <div class="details-grid">
-      <section class="details-card">
-        <h3>{{t "customer.details.info" "Information"}}</h3>
-        <div class="details-list">
-          <div><span class="label">{{t "customers.name" "Name"}}</span><span>{{fullName}}</span></div>
-          <div><span class="label">{{t "customers.email" "Email"}}</span><span>{{email}}</span></div>
-          <div><span class="label">{{t "customers.phone" "Phone"}}</span><span>{{phone}}</span></div>
-          <div><span class="label">{{t "customer.idNumber" "ID number"}}</span><span>{{idNumber}}</span></div>
-          <div><span class="label">{{t "customer.sex" "Sex"}}</span><span>{{gender}}</span></div>
-          <div><span class="label">{{t "customer.dateOfBirth" "Date of birth"}}</span><span>{{dateOfBirth}}</span></div>
-          <div><span class="label">{{t "customer.city" "City"}}</span><span>{{city}}</span></div>
-          <div><span class="label">{{t "customer.address" "Address"}}</span><span>{{address}}</span></div>
-          <div><span class="label">{{t "customer.tags" "Tags"}}</span><span>{{tags}}</span></div>
-          <div><span class="label">{{t "customer.signedHealth" "Signed health waiver"}}</span><span>{{signedHealthLabel}}</span></div>
-        </div>
-      </section>
-      <section class="details-card">
-        <h3>{{t "customer.details.registrations" "Registrations"}}</h3>
-        {{#if registrations.length}}
-          <table class="table details-table">
-            <thead>
-              <tr>
-                <th>{{t "calendar.list.date" "Date"}}</th>
-                <th>{{t "calendar.list.time" "Time"}}</th>
-                <th>{{t "calendar.list.class" "Class"}}</th>
-                <th>{{t "calendar.list.room" "Room"}}</th>
-                <th>{{t "calendar.list.instructor" "Instructor"}}</th>
-                <th>{{t "roster.booking" "Booking"}}</th>
-                <th>{{t "roster.attendance" "Attendance"}}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {{#each registrations}}
-              <tr>
-                <td>{{dateLabel}}</td>
-                <td>{{timeLabel}}</td>
-                <td>{{seriesTitle}}</td>
-                <td>{{roomName}}</td>
-                <td>{{instructorName}}</td>
-                <td>{{bookingStatusLabel}}</td>
-                <td>{{attendanceLabel}}</td>
-              </tr>
-              {{/each}}
-            </tbody>
-          </table>
-        {{else}}
-          <div class="empty-state">{{t "customer.details.noRegistrations" "No registrations yet."}}</div>
-        {{/if}}
-      </section>
-      <section class="details-card">
-        <h3>{{t "customer.details.attachments" "Attachments"}}</h3>
-        {{#if attachments.length}}
-          <div class="attachments-list">
-            {{#each attachments}}
-              <div class="attachment-row">
-                <div>
-                  <div class="attachment-name">{{fileName}}</div>
-                  <div class="meta">{{uploadedLabel}}</div>
-                </div>
-                <div class="attachment-actions">
-                  <a class="secondary" href="{{downloadUrl}}" target="_blank" rel="noreferrer">{{t "customer.download" "Download"}}</a>
-                </div>
-              </div>
-            {{/each}}
+    <div class="details-columns">
+      <div class="details-main">
+        <section class="details-section">
+          <h3>{{t "customer.details.info" "Information"}}</h3>
+          <div class="details-list">
+            <div><span class="label">{{t "customers.name" "Name"}}</span><span>{{fullName}}</span></div>
+            <div><span class="label">{{t "customers.email" "Email"}}</span><span>{{email}}</span></div>
+            <div><span class="label">{{t "customers.phone" "Phone"}}</span><span>{{phone}}</span></div>
+            <div><span class="label">{{t "customer.idNumber" "ID number"}}</span><span>{{idNumber}}</span></div>
+            <div><span class="label">{{t "customer.sex" "Sex"}}</span><span>{{gender}}</span></div>
+            <div><span class="label">{{t "customer.dateOfBirth" "Date of birth"}}</span><span>{{dateOfBirth}}</span></div>
+            <div><span class="label">{{t "customer.city" "City"}}</span><span>{{city}}</span></div>
+            <div><span class="label">{{t "customer.address" "Address"}}</span><span>{{address}}</span></div>
+            <div><span class="label">{{t "customer.tags" "Tags"}}</span><span>{{tags}}</span></div>
+            <div><span class="label">{{t "customer.signedHealth" "Signed health waiver"}}</span><span>{{signedHealthLabel}}</span></div>
           </div>
-        {{else}}
-          <div class="empty-state">{{t "customer.details.noAttachments" "No attachments uploaded."}}</div>
-        {{/if}}
-      </section>
-      <section class="details-card">
-        <h3>{{t "customer.details.signedForms" "Signed forms"}}</h3>
-        {{#if healthDeclarations.length}}
-          <table class="table details-table">
-            <thead>
-              <tr>
-                <th>{{t "customer.details.submittedAt" "Submitted"}}</th>
-                <th>{{t "customer.details.signature" "Signature"}}</th>
-                <th>{{t "customer.details.signatureType" "Type"}}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {{#each healthDeclarations}}
-              <tr>
-                <td>{{submittedLabel}}</td>
-                <td>{{signatureName}}</td>
-                <td>{{signatureType}}</td>
-              </tr>
+        </section>
+        <section class="details-section">
+          <h3>{{t "customer.details.signedForms" "Signed forms"}}</h3>
+          {{#if healthDeclarations.length}}
+            <table class="table details-table">
+              <thead>
+                <tr>
+                  <th>{{t "customer.details.submittedAt" "Submitted"}}</th>
+                  <th>{{t "customer.details.signature" "Signature"}}</th>
+                  <th>{{t "customer.details.signatureType" "Type"}}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{#each healthDeclarations}}
+                <tr>
+                  <td>{{submittedLabel}}</td>
+                  <td>{{signatureName}}</td>
+                  <td>{{signatureType}}</td>
+                </tr>
+                {{/each}}
+              </tbody>
+            </table>
+          {{else}}
+            <div class="empty-state">{{t "customer.details.noForms" "No signed forms yet."}}</div>
+          {{/if}}
+        </section>
+        <section class="details-section">
+          <div class="details-section-header">
+            <h3>{{t "customer.details.attachments" "Attachments"}}</h3>
+            <label class="secondary btn-icon">
+              <span class="icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </span>
+              {{t "customer.details.upload" "Upload"}}
+              <input type="file" id="customer-attachment-input" hidden />
+            </label>
+          </div>
+          {{#if attachments.length}}
+            <div class="attachments-list">
+              {{#each attachments}}
+                <div class="attachment-row">
+                  <div>
+                    <div class="attachment-name">{{fileName}}</div>
+                    <div class="meta">{{uploadedLabel}}</div>
+                  </div>
+                  <div class="attachment-actions">
+                    <a class="secondary" href="{{downloadUrl}}" target="_blank" rel="noreferrer">{{t "customer.download" "Download"}}</a>
+                  </div>
+                </div>
               {{/each}}
-            </tbody>
-          </table>
-        {{else}}
-          <div class="empty-state">{{t "customer.details.noForms" "No signed forms yet."}}</div>
-        {{/if}}
-      </section>
-      <section class="details-card">
-        <h3>{{t "customer.details.billing" "Billing"}}</h3>
-        <button class="secondary" type="button">{{t "customer.details.billingAction" "Add billing record"}}</button>
-      </section>
-      <section class="details-card">
-        <h3>{{t "customer.details.activity" "Activity log"}}</h3>
-        {{#if auditLogs.length}}
-          <table class="table details-table">
-            <thead>
-              <tr>
-                <th>{{t "audit.time" "Time"}}</th>
-                <th>{{t "audit.actor" "Actor"}}</th>
-                <th>{{t "audit.action" "Action"}}</th>
-                <th>{{t "audit.summary" "Summary"}}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {{#each auditLogs}}
-              <tr>
-                <td>{{timeLabel}}</td>
-                <td>{{actorLabel}}</td>
-                <td>{{actionLabel}}</td>
-                <td>{{summary}}</td>
-              </tr>
-              {{/each}}
-            </tbody>
-          </table>
-        {{else}}
-          <div class="empty-state">{{t "customer.details.noActivity" "No activity yet."}}</div>
-        {{/if}}
-      </section>
+            </div>
+          {{else}}
+            <div class="empty-state">{{t "customer.details.noAttachments" "No attachments uploaded."}}</div>
+          {{/if}}
+        </section>
+        <section class="details-section">
+          <div class="details-section-header">
+            <h3>{{t "customer.details.recentRegistrations" "Recent registrations"}}</h3>
+            <button class="secondary" id="view-all-registrations">{{t "customer.details.viewAll" "View all"}}</button>
+          </div>
+          {{#if recentRegistrations.length}}
+            <table class="table details-table">
+              <thead>
+                <tr>
+                  <th>{{t "calendar.list.date" "Date"}}</th>
+                  <th>{{t "calendar.list.time" "Time"}}</th>
+                  <th>{{t "calendar.list.class" "Class"}}</th>
+                  <th>{{t "calendar.list.room" "Room"}}</th>
+                  <th>{{t "calendar.list.instructor" "Instructor"}}</th>
+                  <th>{{t "roster.booking" "Booking"}}</th>
+                  <th>{{t "roster.attendance" "Attendance"}}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{#each recentRegistrations}}
+                <tr>
+                  <td>{{dateLabel}}</td>
+                  <td>{{timeLabel}}</td>
+                  <td>{{seriesTitle}}</td>
+                  <td>{{roomName}}</td>
+                  <td>{{instructorName}}</td>
+                  <td>{{bookingStatusLabel}}</td>
+                  <td>{{attendanceLabel}}</td>
+                </tr>
+                {{/each}}
+              </tbody>
+            </table>
+          {{else}}
+            <div class="empty-state">{{t "customer.details.noRegistrations" "No registrations yet."}}</div>
+          {{/if}}
+        </section>
+        <section class="details-section">
+          <div class="details-section-header">
+            <h3>{{t "customer.details.recentInvoices" "Recent invoices"}}</h3>
+            <button class="secondary" id="view-billing">{{t "customer.details.viewBilling" "View billing"}}</button>
+          </div>
+          <div class="empty-state">{{t "customer.details.noBilling" "No billing activity yet."}}</div>
+        </section>
+      </div>
+      <div class="details-activity">
+        <section class="details-section">
+          <h3>{{t "customer.details.activity" "Activity log"}}</h3>
+          <form id="activity-form" class="activity-form">
+            <label>{{t "customer.details.activityAddTitle" "Log activity"}}</label>
+            <textarea name="activityNote" rows="3" placeholder="{{t "customer.details.activityPlaceholder" "Write a note about the customer."}}"></textarea>
+            <div class="activity-actions">
+              <label class="secondary btn-icon">
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                </span>
+                {{t "customer.details.activityFile" "Add photo"}}
+                <input type="file" name="activityFile" accept="image/*" hidden />
+              </label>
+              <button type="submit" id="save-activity">{{t "customer.details.activityAdd" "Add note"}}</button>
+            </div>
+          </form>
+        </section>
+        <section class="details-section">
+          {{#if auditLogs.length}}
+            <table class="table details-table">
+              <thead>
+                <tr>
+                  <th>{{t "audit.time" "Time"}}</th>
+                  <th>{{t "audit.actor" "Actor"}}</th>
+                  <th>{{t "audit.action" "Action"}}</th>
+                  <th>{{t "audit.summary" "Summary"}}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{#each auditLogs}}
+                <tr>
+                  <td>{{timeLabel}}</td>
+                  <td>{{actorLabel}}</td>
+                  <td>{{actionLabel}}</td>
+                  <td>{{summary}}</td>
+                </tr>
+                {{/each}}
+              </tbody>
+            </table>
+          {{else}}
+            <div class="empty-state">{{t "customer.details.noActivity" "No activity yet."}}</div>
+          {{/if}}
+        </section>
+      </div>
     </div>
   </div>
 `);
@@ -3507,25 +3542,8 @@ function render(state) {
         } else {
         const statusLabel = formatCustomerStatus(customer.isArchived ? "Archived" : (customer.statusName || "Active"));
         const signedHealthLabel = customer.signedHealthView ? t("common.yes", "Yes") : t("common.no", "No");
-        const registrations = (details.registrations || []).map(reg => {
-            const start = reg.startUtc ? new Date(reg.startUtc) : null;
-            const end = reg.endUtc ? new Date(reg.endUtc) : null;
-            const dateLabel = start ? formatDateDisplay(start) : "-";
-            const timeLabel = start
-                ? `${formatTimeOnly(start)}${end ? ` - ${formatTimeOnly(end)}` : ""}`
-                : "-";
-            const bookingStatusLabel = normalizeBookingStatus(reg.status);
-            const attendanceLabel = reg.attendanceStatus ? normalizeAttendanceStatus(reg.attendanceStatus) : "-";
-            const seriesTitle = reg.seriesTitle || t("session.sessionFallback", "Session");
-            return {
-                ...reg,
-                dateLabel,
-                timeLabel,
-                bookingStatusLabel,
-                attendanceLabel,
-                seriesTitle
-            };
-        });
+        const registrations = formatCustomerRegistrations(details.registrations || []);
+        const recentRegistrations = registrations.slice(0, 5);
         const attachments = (details.attachments || []).map(item => ({
             ...item,
             uploadedLabel: formatDateTime(item.uploadedAtUtc),
@@ -3549,6 +3567,7 @@ function render(state) {
             signedHealthLabel,
             dateOfBirth: customer.dateOfBirth ? formatDateDisplay(customer.dateOfBirth) : "",
             registrations,
+            recentRegistrations,
             attachments,
             healthDeclarations,
             auditLogs
@@ -4449,6 +4468,10 @@ function bindRouteActions(route, data, state) {
     if (route === "customer") {
         const backBtn = document.getElementById("back-to-customers");
         const editBtn = document.getElementById("edit-customer");
+        const viewAllBtn = document.getElementById("view-all-registrations");
+        const billingBtn = document.getElementById("view-billing");
+        const attachmentInput = document.getElementById("customer-attachment-input");
+        const activityForm = document.getElementById("activity-form");
         if (backBtn) {
             backBtn.addEventListener("click", () => {
                 window.location.hash = "#/customers";
@@ -4468,6 +4491,70 @@ function bindRouteActions(route, data, state) {
                     customerTags,
                     customers: []
                 });
+            });
+        }
+        if (viewAllBtn) {
+            viewAllBtn.addEventListener("click", () => {
+                const details = data.customerDetails || {};
+                const registrations = formatCustomerRegistrations(details.registrations || []);
+                openCustomerRegistrationsModal(registrations);
+            });
+        }
+        if (billingBtn) {
+            billingBtn.addEventListener("click", () => {
+                openBillingModal();
+            });
+        }
+        if (attachmentInput) {
+            attachmentInput.addEventListener("change", async () => {
+                const details = data.customerDetails || {};
+                const customer = details.customer;
+                if (!customer?.id) return;
+                const file = attachmentInput.files?.[0];
+                if (!file) return;
+                const formData = new FormData();
+                formData.append("file", file);
+                try {
+                    await apiFetch(`/api/admin/customers/${customer.id}/attachments`, {
+                        method: "POST",
+                        body: formData
+                    });
+                    showToast(t("customer.details.uploadSuccess", "Attachment uploaded."), "success");
+                    attachmentInput.value = "";
+                    actor.send({ type: "REFRESH" });
+                } catch (error) {
+                    showToast(error.message || t("customer.details.uploadError", "Unable to upload attachment."), "error");
+                }
+            });
+        }
+        if (activityForm) {
+            activityForm.addEventListener("submit", async (event) => {
+                event.preventDefault();
+                const details = data.customerDetails || {};
+                const customer = details.customer;
+                if (!customer?.id) return;
+                const noteInput = activityForm.querySelector("[name=\"activityNote\"]");
+                const fileInput = activityForm.querySelector("[name=\"activityFile\"]");
+                const note = noteInput?.value?.trim() || "";
+                const file = fileInput?.files?.[0];
+                if (!note && !file) {
+                    showToast(t("customer.details.activityRequired", "Add a note or photo first."), "error");
+                    return;
+                }
+                const formData = new FormData();
+                if (note) formData.append("note", note);
+                if (file) formData.append("file", file);
+                try {
+                    await apiFetch(`/api/admin/customers/${customer.id}/activity`, {
+                        method: "POST",
+                        body: formData
+                    });
+                    showToast(t("customer.details.activitySaved", "Activity saved."), "success");
+                    activityForm.reset();
+                    actor.send({ type: "REFRESH" });
+                } catch (error) {
+                    showToast(error.message || t("customer.details.activityError", "Unable to save activity."), "error");
+                }
             });
         }
     }
@@ -6482,6 +6569,111 @@ function openDescriptionModal(title, description) {
     cleanupEscape = bindModalEscape(closeModal);
     bindModalBackdrop(overlay);
     const closeBtn = overlay.querySelector("#close-description");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", closeModal);
+    }
+}
+
+function openCustomerRegistrationsModal(registrations) {
+    const existing = document.getElementById("customer-registrations-modal");
+    if (existing) {
+        clearModalEscape();
+        existing.remove();
+    }
+
+    const rows = (registrations || []).map(reg => `
+      <tr>
+        <td>${escapeHtml(reg.dateLabel || "-")}</td>
+        <td>${escapeHtml(reg.timeLabel || "-")}</td>
+        <td>${escapeHtml(reg.seriesTitle || "")}</td>
+        <td>${escapeHtml(reg.roomName || "")}</td>
+        <td>${escapeHtml(reg.instructorName || "")}</td>
+        <td>${escapeHtml(reg.bookingStatusLabel || "")}</td>
+        <td>${escapeHtml(reg.attendanceLabel || "")}</td>
+      </tr>
+    `).join("");
+
+    const content = registrations.length
+        ? `<table class="table details-table">
+            <thead>
+              <tr>
+                <th>${t("calendar.list.date", "Date")}</th>
+                <th>${t("calendar.list.time", "Time")}</th>
+                <th>${t("calendar.list.class", "Class")}</th>
+                <th>${t("calendar.list.room", "Room")}</th>
+                <th>${t("calendar.list.instructor", "Instructor")}</th>
+                <th>${t("roster.booking", "Booking")}</th>
+                <th>${t("roster.attendance", "Attendance")}</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>`
+        : `<div class="empty-state">${t("customer.details.noRegistrations", "No registrations yet.")}</div>`;
+
+    const overlay = document.createElement("div");
+    overlay.id = "customer-registrations-modal";
+    overlay.className = "modal-overlay";
+    overlay.innerHTML = `
+      <div class="modal">
+        <div class="modal-header">
+          <div>
+            <h3>${t("customer.details.registrations", "Registrations")}</h3>
+            <div class="muted">${t("customer.details.recentRegistrations", "Recent registrations")}</div>
+          </div>
+          <button class="modal-close" type="button" aria-label="${t("common.close", "Close")}"></button>
+        </div>
+        ${content}
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+    let cleanupEscape = () => {};
+    const closeModal = () => {
+        cleanupEscape();
+        overlay.remove();
+    };
+    cleanupEscape = bindModalEscape(closeModal);
+    bindModalBackdrop(overlay);
+
+    const closeBtn = overlay.querySelector(".modal-close");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", closeModal);
+    }
+}
+
+function openBillingModal() {
+    const existing = document.getElementById("customer-billing-modal");
+    if (existing) {
+        clearModalEscape();
+        existing.remove();
+    }
+
+    const overlay = document.createElement("div");
+    overlay.id = "customer-billing-modal";
+    overlay.className = "modal-overlay";
+    overlay.innerHTML = `
+      <div class="modal">
+        <div class="modal-header">
+          <div>
+            <h3>${t("customer.details.billing", "Billing")}</h3>
+            <div class="muted">${t("customer.details.viewBilling", "View billing")}</div>
+          </div>
+          <button class="modal-close" type="button" aria-label="${t("common.close", "Close")}"></button>
+        </div>
+        <div class="empty-state">${t("customer.details.noBilling", "No billing activity yet.")}</div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+    let cleanupEscape = () => {};
+    const closeModal = () => {
+        cleanupEscape();
+        overlay.remove();
+    };
+    cleanupEscape = bindModalEscape(closeModal);
+    bindModalBackdrop(overlay);
+
+    const closeBtn = overlay.querySelector(".modal-close");
     if (closeBtn) {
         closeBtn.addEventListener("click", closeModal);
     }
@@ -9056,6 +9248,28 @@ function formatCustomerStatus(value) {
     return value;
 }
 
+function formatCustomerRegistrations(registrations) {
+    return (registrations || []).map(reg => {
+        const start = reg.startUtc ? new Date(reg.startUtc) : null;
+        const end = reg.endUtc ? new Date(reg.endUtc) : null;
+        const dateLabel = start ? formatDateDisplay(start) : "-";
+        const timeLabel = start
+            ? `${formatTimeOnly(start)}${end ? ` - ${formatTimeOnly(end)}` : ""}`
+            : "-";
+        const bookingStatusLabel = normalizeBookingStatus(reg.status);
+        const attendanceLabel = reg.attendanceStatus ? normalizeAttendanceStatus(reg.attendanceStatus) : "-";
+        const seriesTitle = reg.seriesTitle || t("session.sessionFallback", "Session");
+        return {
+            ...reg,
+            dateLabel,
+            timeLabel,
+            bookingStatusLabel,
+            attendanceLabel,
+            seriesTitle
+        };
+    });
+}
+
 function formatAuditAction(value) {
     const normalized = String(value || "").trim().toLowerCase();
     if (normalized === "create") return t("audit.action.create", "Created");
@@ -9069,6 +9283,7 @@ function formatAuditAction(value) {
     if (normalized === "generate") return t("audit.action.generate", "Generated");
     if (normalized === "invite") return t("audit.action.invite", "Invited");
     if (normalized === "import") return t("audit.action.import", "Imported");
+    if (normalized === "activity") return t("audit.action.activity", "Activity");
     return value;
 }
 

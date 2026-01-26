@@ -634,6 +634,7 @@
     "audit.action.generate":  "Generated",
     "audit.action.invite":  "Invited",
     "audit.action.import":  "Imported",
+    "audit.action.activity":  "Activity",
     "customers.export":  "Export CSV",
     "customers.import":  "Import",
     "customers.importHint":  "Drop a CSV or Excel file",
@@ -727,6 +728,21 @@
     ,"customer.details.signatureType":  "Type"
     ,"customer.details.billing":  "Billing"
     ,"customer.details.billingAction":  "Add billing record"
+    ,"customer.details.recentRegistrations":  "Recent registrations"
+    ,"customer.details.viewAll":  "View all"
+    ,"customer.details.recentInvoices":  "Recent invoices"
+    ,"customer.details.viewBilling":  "View billing"
+    ,"customer.details.noBilling":  "No billing activity yet."
+    ,"customer.details.upload":  "Upload"
+    ,"customer.details.uploadSuccess":  "Attachment uploaded."
+    ,"customer.details.uploadError":  "Unable to upload attachment."
+    ,"customer.details.activityAddTitle":  "Log activity"
+    ,"customer.details.activityPlaceholder":  "Write a note about the customer."
+    ,"customer.details.activityFile":  "Add photo"
+    ,"customer.details.activityAdd":  "Add note"
+    ,"customer.details.activitySaved":  "Activity saved."
+    ,"customer.details.activityError":  "Unable to save activity."
+    ,"customer.details.activityRequired":  "Add a note or photo first."
     ,"customer.details.activity":  "Activity log"
     ,"customer.details.noActivity":  "No activity yet."
     ,"customer.details.notFound":  "Customer not found."

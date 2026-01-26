@@ -856,24 +856,64 @@ button .icon svg {
   margin-bottom: 18px;
 }
 
-.details-grid {
+.details-columns {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
 }
 
-.details-card {
-  background: white;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.05);
+.details-main,
+.details-activity {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.details-card h3 {
+.details-section {
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.details-section:last-child {
+  border-bottom: none;
+}
+
+.details-section h3 {
   margin-top: 0;
   margin-bottom: 12px;
   font-size: 15px;
+}
+
+.details-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.activity-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.activity-form textarea {
+  min-height: 80px;
+}
+
+.activity-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 1100px) {
+  .details-columns {
+    grid-template-columns: 1fr;
+  }
 }
 
 .details-list {

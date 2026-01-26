@@ -3003,6 +3003,56 @@ adminApi.MapPost("/customers/{id:guid}/attachments", async (ClaimsPrincipal user
     });
 });
 
+adminApi.MapPost("/customers/{id:guid}/activity", async (ClaimsPrincipal user, Guid id, HttpRequest request, AppDbContext db, IFileStorageProvider storage) =>
+{
+    var studioId = GetStudioId(user);
+    var customer = await db.Customers.FirstOrDefaultAsync(c => c.Id == id && c.StudioId == studioId);
+    if (customer == null)
+    {
+        return Results.NotFound();
+    }
+
+    if (!request.HasFormContentType)
+    {
+        return Results.BadRequest(new { error = "Form data required" });
+    }
+
+    var form = await request.ReadFormAsync(request.HttpContext.RequestAborted);
+    var note = form["note"].ToString().Trim();
+    var file = form.Files["file"];
+
+    if (string.IsNullOrWhiteSpace(note) && (file == null || file.Length == 0))
+    {
+        return Results.BadRequest(new { error = "Note or file required" });
+    }
+
+    CustomerAttachment? attachment = null;
+    if (file != null && file.Length > 0)
+    {
+        var storagePath = await storage.SaveAsync(file.OpenReadStream(), file.FileName, file.ContentType, request.HttpContext.RequestAborted);
+        attachment = new CustomerAttachment
+        {
+            Id = Guid.NewGuid(),
+            StudioId = studioId,
+            CustomerId = customer.Id,
+            FileName = file.FileName,
+            ContentType = string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType,
+            StoragePath = storagePath,
+            UploadedAtUtc = DateTime.UtcNow
+        };
+        db.CustomerAttachments.Add(attachment);
+        await db.SaveChangesAsync();
+        await LogAuditAsync(db, user, "Create", "CustomerAttachment", attachment.Id.ToString(), $"Uploaded attachment for customer {customer.FullName}", new { customer.Id, attachment.FileName });
+    }
+
+    var summary = string.IsNullOrWhiteSpace(note)
+        ? $"Added activity for customer {customer.FullName}"
+        : note;
+    await LogAuditAsync(db, user, "Activity", "Customer", customer.Id.ToString(), summary, new { customer.Id, attachmentId = attachment?.Id, attachmentName = attachment?.FileName });
+
+    return Results.Ok(new { attachmentId = attachment?.Id });
+});
+
 adminApi.MapGet("/customers/{customerId:guid}/attachments/{attachmentId:guid}", async (ClaimsPrincipal user, Guid customerId, Guid attachmentId, AppDbContext db, IFileStorageProvider storage) =>
 {
     var studioId = GetStudioId(user);

@@ -20,3 +20,4 @@
 2026-01-26 01:11  Enforced Sunday week start, added past-session styling and registration layout tweaks, introduced customer tags management + filtering/sorting, and built customer details page with registrations/attachments/forms/activity plus new customer tags schema.
 2026-01-26 02:02  Adjust calendar toolbar layout/nav RTL behavior, refresh tag management without closing, merge customer tags into studio catalog, and add missing roster label translations.
 2026-01-26 02:06  Update Playwright admin calendar toolbar expectations for new layout.
+2026-01-26 08:42  Move calendar week range above view buttons, redesign customer details into two-column layout, add activity logging with optional photo, and add customer registrations/billing modals.
