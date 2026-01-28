@@ -160,7 +160,7 @@ html[lang^="he"] .section-title {
 }
 
 .nav-group {
-  padding-inline-start: 14px;
+  padding: 10px 14px;
   font-size: 14px;
   font-weight: 700;
   text-transform: none;
@@ -639,8 +639,10 @@ html[dir="rtl"] .table,
   padding: 0;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: none;
+  background: transparent;
   overflow: hidden;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 .color-field input[type="color"]::-webkit-color-swatch-wrapper {
@@ -2949,6 +2951,7 @@ button .icon svg {
 .app-shell.collapsed .user-card {
   align-items: center;
   text-align: center;
+  width: 100%;
 }
 
 .app-shell.collapsed .brand {
