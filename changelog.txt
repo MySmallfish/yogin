@@ -28,3 +28,4 @@
 2026-01-28 01:22  Adjust nav indentation and center collapsed sidebar icons/logo/logout.
 2026-01-28 19:47  Simplify tag color picker, move registration add-customer into autocomplete option, reorder weekday pills starting Sunday with styled pills, adjust nav indentation, and log customer actions for attachments/reset.
 2026-01-28 19:49  Fix invite endpoint audit logging reference to remove undefined customer.
+2026-01-28 19:52  Fix weekday pill clickability for Playwright by letting input capture pointer events.
