@@ -160,8 +160,8 @@ html[lang^="he"] .section-title {
 }
 
 .nav-group {
-  padding: 10px 14px;
-  font-size: 14px;
+  padding: 10px 0;
+  font-size: 12px;
   font-weight: 700;
   text-transform: none;
   letter-spacing: 0.02em;
@@ -169,13 +169,13 @@ html[lang^="he"] .section-title {
 }
 
 .nav a.nav-group {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
-  padding: 10px 14px;
+  padding: 10px 0;
 }
 
 .nav a.nav-group.nav-item {
-  padding: 10px 14px;
+  padding: 10px 0;
 }
 
 .nav a {
@@ -191,10 +191,11 @@ html[lang^="he"] .section-title {
 }
 
 .nav a.nav-item {
-  font-size: 13px;
-  padding-inline-start: 36px;
+  font-size: 10px;
+  font-weight: 400;
+  padding-inline-start: 3em;
   padding-block: 10px;
-  padding-inline-end: 14px;
+  padding-inline-end: 0;
 }
 
 .nav-short {

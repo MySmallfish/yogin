@@ -32,3 +32,4 @@
 2026-01-28 20:22  Restore Hebrew i18n UTF-8, simplify color/icon controls, add add-customer option in registration, and refine nav indentation.
 2026-01-28 20:56  Switch date inputs to native date pickers, add sex pill radios, tweak RTL alignment, center collapsed nav, and unify color/icon controls.
 2026-01-29 00:02  Align menu groups/indentation, center collapsed nav, enforce date pickers, and style sex pills + icon/color controls.
+2026-01-29 00:22  Set nav group/item indentation and font sizes per spec (group 0 indent, items 3em).
