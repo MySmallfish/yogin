@@ -239,7 +239,7 @@ const calendarTemplate = compileTemplate("calendar", `
               <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
             </span>
           </button>
-          <input type="text" class="date-input" id="calendar-date" value="{{focusDateDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
+          <input type="date" class="date-input" id="calendar-date" value="{{focusDateValue}}" />
           <button class="icon-button nav-arrow" data-nav="next" aria-label="{{t "calendar.next" "Next"}}">
             <span class="icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
@@ -1337,17 +1337,17 @@ const sessionModalTemplate = compileTemplate("session-modal", `
       <div class="form-grid session-one-time">
         <div>
           <label>{{t "session.date" "Date"}}</label>
-          <input type="text" class="date-input" name="date" value="{{focusDateDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
+          <input type="date" class="date-input" name="date" value="{{focusDateValue}}" />
         </div>
       </div>
       <div class="form-grid session-recurring hidden">
         <div>
           <label>{{t "session.startDate" "Start date"}}</label>
-          <input type="text" class="date-input" name="startDate" value="{{focusDateDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
+          <input type="date" class="date-input" name="startDate" value="{{focusDateValue}}" />
         </div>
         <div>
           <label>{{t "session.generateUntil" "Generate until"}}</label>
-          <input type="text" class="date-input" name="generateUntil" value="{{generateUntilDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
+          <input type="date" class="date-input" name="generateUntil" value="{{generateUntilValue}}" />
         </div>
         <div class="span-2">
           <label>{{t "session.daysOfWeek" "Days of week"}}</label>
@@ -1494,7 +1494,7 @@ const seriesModalTemplate = compileTemplate("series-modal", `
         </div>
         <div>
           <label>{{t "series.generateUntil" "Generate until"}}</label>
-          <input type="text" class="date-input" name="generateUntil" value="{{generateUntilDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
+          <input type="date" class="date-input" name="generateUntil" value="{{generateUntilValue}}" />
         </div>
           <div>
             <label>{{t "series.cancellationWindow" "Cancellation window (hours)"}}</label>
@@ -1571,15 +1571,18 @@ const customerModalTemplate = compileTemplate("customer-modal", `
         </div>
         <div>
           <label>{{t "customer.sex" "Sex"}}</label>
-          <select name="gender">
+          <div class="sex-pills">
             {{#each genderOptions}}
-              <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+              <label class="sex-pill">
+                <input type="radio" name="gender" value="{{value}}" {{#if selected}}checked{{/if}} />
+                <span>{{label}}</span>
+              </label>
             {{/each}}
-          </select>
+          </div>
         </div>
         <div>
           <label>{{t "customer.dateOfBirth" "Date of birth"}}</label>
-          <input name="dateOfBirth" type="text" class="date-input" value="{{dateOfBirthDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
+          <input name="dateOfBirth" type="date" class="date-input" value="{{dateOfBirthValue}}" />
         </div>
         <div class="span-2 address-row">
           <div>
@@ -1829,7 +1832,7 @@ const userModalTemplate = compileTemplate("user-modal", `
         </div>
         <div>
           <label>{{t "user.dateOfBirth" "Date of birth"}}</label>
-          <input name="dateOfBirth" type="text" class="date-input" value="{{dateOfBirthDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
+          <input name="dateOfBirth" type="date" class="date-input" value="{{dateOfBirthValue}}" />
         </div>
         <div>
           <label>{{t "user.idNumber" "ID number"}}</label>
@@ -2805,11 +2808,11 @@ const payrollTemplate = compileTemplate("payroll", `
     </select>
     <div>
       <label>{{t "payroll.from" "From"}}</label>
-      <input type="text" class="date-input" name="payrollFrom" value="{{fromDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
+      <input type="date" class="date-input" name="payrollFrom" value="{{fromValue}}" />
     </div>
     <div>
       <label>{{t "payroll.to" "To"}}</label>
-      <input type="text" class="date-input" name="payrollTo" value="{{toDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
+      <input type="date" class="date-input" name="payrollTo" value="{{toValue}}" />
     </div>
     <button class="secondary" id="apply-payroll">{{t "common.apply" "Apply"}}</button>
   </div>
@@ -2869,11 +2872,11 @@ const auditTemplate = compileTemplate("audit", `
   <div class="audit-controls">
     <div>
       <label>{{t "audit.from" "From"}}</label>
-      <input type="text" class="date-input" name="auditFrom" value="{{fromDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
+      <input type="date" class="date-input" name="auditFrom" value="{{fromValue}}" />
     </div>
     <div>
       <label>{{t "audit.to" "To"}}</label>
-      <input type="text" class="date-input" name="auditTo" value="{{toDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
+      <input type="date" class="date-input" name="auditTo" value="{{toValue}}" />
     </div>
     <div>
       <label>{{t "audit.search" "Search"}}</label>
@@ -2892,7 +2895,7 @@ const auditTemplate = compileTemplate("audit", `
   <div class="audit-controls audit-clear">
     <div>
       <label>{{t "audit.clearBefore" "Clear before"}}</label>
-      <input type="text" class="date-input" name="auditClearBefore" value="{{clearBeforeDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
+      <input type="date" class="date-input" name="auditClearBefore" value="{{clearBeforeValue}}" />
     </div>
     <div class="audit-actions">
       <button class="secondary" id="clear-audit">{{t "audit.clear" "Clear logs"}}</button>
@@ -3457,6 +3460,7 @@ function render(state) {
             customers: data.customers || []
         });
         viewState.focusDateDisplay = formatDateDisplay(focusDate);
+        viewState.focusDateValue = normalizeDateInputValue(focusDate);
         const subtitleMapView = {
             day: t("calendar.subtitle.day", "Daily schedule focus."),
             week: t("calendar.subtitle.week", "Weekly schedule overview."),
@@ -3674,8 +3678,8 @@ function render(state) {
             selected: String(instructor.id) === String(data.payrollFilters?.instructorId || "")
         }));
         const filters = data.payrollFilters || {};
-        const fromDisplay = filters.from ? formatDateDisplay(filters.from) : "";
-        const toDisplay = filters.to ? formatDateDisplay(filters.to) : "";
+        const fromValue = filters.from ? normalizeDateInputValue(filters.from) : "";
+        const toValue = filters.to ? normalizeDateInputValue(filters.to) : "";
         content = payrollTemplate({
             logs,
             hasLogs: logs.length > 0,
@@ -3684,8 +3688,8 @@ function render(state) {
             instructorOptions,
             from: filters.from || "",
             to: filters.to || "",
-            fromDisplay,
-            toDisplay,
+            fromValue,
+            toValue,
             errorMessage: data.payrollError || ""
         });
     }
@@ -3704,20 +3708,20 @@ function render(state) {
             };
         });
         const filters = data.audit?.filters || {};
-        const fromDisplay = filters.from ? formatDateDisplay(filters.from) : "";
-        const toDisplay = filters.to ? formatDateDisplay(filters.to) : "";
+        const fromValue = filters.from ? normalizeDateInputValue(filters.from) : "";
+        const toValue = filters.to ? normalizeDateInputValue(filters.to) : "";
         const clearBeforeValue = filters.to || "";
-        const clearBeforeDisplay = clearBeforeValue ? formatDateDisplay(clearBeforeValue) : "";
+        const clearBeforeDisplay = clearBeforeValue ? normalizeDateInputValue(clearBeforeValue) : "";
         content = auditTemplate({
             logs,
             hasLogs: logs.length > 0,
             from: filters.from || "",
             to: filters.to || "",
-            fromDisplay,
-            toDisplay,
+            fromValue,
+            toValue,
             search: filters.search || "",
             clearBefore: clearBeforeValue,
-            clearBeforeDisplay,
+            clearBeforeValue: clearBeforeDisplay,
             errorMessage: data.auditError || ""
         });
     }
@@ -4877,6 +4881,11 @@ function bindRouteActions(route, data, state) {
 function readFormValues(fields) {
     const values = {};
     fields.forEach((field) => {
+        const checked = document.querySelector(`[name="${field}"]:checked`);
+        if (checked) {
+            values[field] = checked.value;
+            return;
+        }
         const element = document.querySelector(`[name="${field}"]`);
         values[field] = element ? element.value : "";
     });
@@ -5347,6 +5356,7 @@ function getInitials(value) {
 
 const sidebarStorageKey = "letmein.sidebar.collapsed";
 let activeModalKeyHandler = null;
+let globalEscapeHandlerAttached = false;
 let activeEventMenu = null;
 let activeEventMenuCleanup = null;
 let calendarSearchShouldFocus = false;
@@ -5513,6 +5523,25 @@ function bindModalEscape(closeModal) {
     };
 }
 
+function ensureGlobalEscapeHandler() {
+    if (globalEscapeHandlerAttached) return;
+    const handler = (event) => {
+        if (event.key !== "Escape") return;
+        if (activeModalKeyHandler) return;
+        const overlays = Array.from(document.querySelectorAll(".modal-overlay"));
+        const overlay = overlays[overlays.length - 1];
+        if (!overlay) return;
+        const closeBtn = overlay.querySelector(".modal-close");
+        if (closeBtn) {
+            closeBtn.click();
+        } else {
+            overlay.remove();
+        }
+    };
+    document.addEventListener("keydown", handler);
+    globalEscapeHandlerAttached = true;
+}
+
 function bindModalBackdrop(overlay) {
     if (!overlay) return;
     overlay.addEventListener("click", (event) => {
@@ -5536,7 +5565,7 @@ function fillCustomerForm(customer) {
     setFieldValue("phone", customer.phone);
     setFieldValue("idNumber", customer.idNumber);
     setFieldValue("gender", customer.gender);
-    setFieldValue("dateOfBirth", customer.dateOfBirth ? formatDateDisplay(customer.dateOfBirth) : "");
+    setFieldValue("dateOfBirth", customer.dateOfBirth ? normalizeDateInputValue(customer.dateOfBirth) : "");
     setFieldValue("city", customer.city);
     setFieldValue("address", customer.address);
     setFieldValue("occupation", customer.occupation);
@@ -5579,7 +5608,7 @@ function fillUserForm(userItem) {
     setFieldValue("address", userItem.address);
     setFieldValue("gender", userItem.gender);
     setFieldValue("idNumber", userItem.idNumber);
-    setFieldValue("dateOfBirth", userItem.dateOfBirth ? formatDateDisplay(userItem.dateOfBirth) : "");
+    setFieldValue("dateOfBirth", userItem.dateOfBirth ? normalizeDateInputValue(userItem.dateOfBirth) : "");
     setFieldValue("role", userItem.role || "Admin");
     setFieldValue("isActive", userItem.isActive ? "true" : "false");
     setFieldValue("instructorDisplayName", userItem.instructorName || "");
@@ -7303,6 +7332,7 @@ function openSessionModal(data, options = {}) {
     const calendarMeta = data.calendar || {};
     const focusDate = options.date || calendarMeta.focusDate || toDateInputValue(new Date());
     const focusDateDisplay = formatDateDisplay(focusDate);
+    const focusDateValue = normalizeDateInputValue(focusDate);
     const prefill = options.prefill || {};
     const allowedPlanSet = new Set((prefill.allowedPlanIds || []).map(id => String(id)));
     const defaultPlanCategoryId = (data.planCategories || []).find(category => category.isDefault && category.isActive)?.id || "";
@@ -7317,10 +7347,11 @@ function openSessionModal(data, options = {}) {
     const titleSuggestions = buildTitleSuggestions(data);
     const titleSuggestionId = createTitleSuggestionId("session-title");
     const baseDate = parseDateInput(options.date || focusDate);
-    const defaultGenerateUntil = formatDateDisplay(addDays(baseDate, 56));
+    const defaultGenerateUntil = normalizeDateInputValue(addDays(baseDate, 56));
     const modalMarkup = sessionModalTemplate({
         focusDateDisplay,
-        generateUntilDisplay: defaultGenerateUntil,
+        focusDateValue,
+        generateUntilValue: defaultGenerateUntil,
         rooms: data.rooms || [],
         instructors: data.instructors || [],
         plans,
@@ -7357,14 +7388,14 @@ function openSessionModal(data, options = {}) {
         const dateInput = overlay.querySelector("[name=\"date\"]");
         const startDateInput = overlay.querySelector("[name=\"startDate\"]");
         const generateUntilInput = overlay.querySelector("[name=\"generateUntil\"]");
-        if (dateInput) dateInput.value = formatDateDisplay(options.date);
-        if (startDateInput) startDateInput.value = formatDateDisplay(options.date);
+        if (dateInput) dateInput.value = normalizeDateInputValue(options.date);
+        if (startDateInput) startDateInput.value = normalizeDateInputValue(options.date);
         const dateValue = parseDateInput(options.date);
         overlay.querySelectorAll("input[name=\"recurringDays\"]").forEach(input => {
             input.checked = Number(input.value) === dateValue.getDay();
         });
         if (generateUntilInput) {
-            generateUntilInput.value = formatDateDisplay(addDays(dateValue, 56));
+            generateUntilInput.value = normalizeDateInputValue(addDays(dateValue, 56));
         }
     }
 
@@ -7712,7 +7743,7 @@ function openCustomerModal(customer, data, options = {}) {
         phone: customer?.phone || "",
         idNumber: customer?.idNumber || "",
         genderOptions,
-        dateOfBirthDisplay: customer?.dateOfBirth ? formatDateDisplay(customer.dateOfBirth) : "",
+        dateOfBirthValue: customer?.dateOfBirth ? normalizeDateInputValue(customer.dateOfBirth) : "",
         city: customer?.city || "",
         address: customer?.address || "",
         occupation: customer?.occupation || "",
@@ -8351,7 +8382,7 @@ function openUserModal(userItem) {
         city: userItem?.city || "",
         address: userItem?.address || "",
         idNumber: userItem?.idNumber || "",
-        dateOfBirthDisplay: userItem?.dateOfBirth ? formatDateDisplay(userItem.dateOfBirth) : "",
+        dateOfBirthValue: userItem?.dateOfBirth ? normalizeDateInputValue(userItem.dateOfBirth) : "",
         genderOptions,
         roleOptions,
         isActive: userItem?.isActive !== false,
@@ -8917,9 +8948,9 @@ function openSeriesModal(series, data) {
     }));
     const titleSuggestions = buildTitleSuggestions(data);
     const titleSuggestionId = createTitleSuggestionId("series-title");
-    const generateUntilDisplay = series?.generateUntil
-        ? formatDateDisplay(series.generateUntil)
-        : formatDateDisplay(addDays(new Date(), 56));
+    const generateUntilValue = series?.generateUntil
+        ? normalizeDateInputValue(series.generateUntil)
+        : normalizeDateInputValue(addDays(new Date(), 56));
     const modalMarkup = seriesModalTemplate({
         modalTitle: isEdit ? t("series.editTitle", "Edit series") : t("series.newTitle", "New series"),
         subtitle: isEdit
@@ -8940,7 +8971,7 @@ function openSeriesModal(series, data) {
         remoteInviteUrl: series?.remoteInviteUrl || "",
         description: series?.description || "",
         recurrenceIntervalWeeks: series?.recurrenceIntervalWeeks ?? 1,
-        generateUntilDisplay,
+        generateUntilValue,
         cancellationWindowHours: series?.cancellationWindowHours ?? 6,
         isActive: series?.isActive ?? true,
         rooms,
@@ -10034,6 +10065,7 @@ actor.subscribe((state) => {
     render(state);
 });
 
+ensureGlobalEscapeHandler();
 actor.start();
 
 const adminRoutes = new Set(["calendar", "events", "rooms", "plans", "customers", "customer", "users", "guests", "reports", "payroll", "audit", "settings"]);

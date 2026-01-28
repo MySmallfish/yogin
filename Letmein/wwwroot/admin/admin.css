@@ -160,7 +160,7 @@ html[lang^="he"] .section-title {
 }
 
 .nav-group {
-  padding-inline-start: 0;
+  padding-inline-start: 14px;
   font-size: 14px;
   font-weight: 700;
   text-transform: none;
@@ -171,11 +171,11 @@ html[lang^="he"] .section-title {
 .nav a.nav-group {
   font-size: 14px;
   font-weight: 700;
-  padding: 10px 0;
+  padding: 10px 14px;
 }
 
 .nav a.nav-group.nav-item {
-  padding: 10px 0;
+  padding: 10px 14px;
 }
 
 .nav a {
@@ -192,13 +192,7 @@ html[lang^="he"] .section-title {
 
 .nav a.nav-item {
   font-size: 13px;
-  padding-inline-start: 32px;
-  padding-block: 10px;
-  padding-inline-end: 14px;
-}
-
-.nav a.nav-group {
-  padding-inline-start: 14px;
+  padding-inline-start: 36px;
   padding-block: 10px;
   padding-inline-end: 14px;
 }
@@ -547,6 +541,52 @@ html[dir="rtl"] .table,
   box-shadow: 0 8px 18px rgba(var(--accent-rgb), 0.28);
 }
 
+.sex-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sex-pill {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  font-size: 13px;
+  color: var(--slate);
+  cursor: pointer;
+}
+
+.sex-pill input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.sex-pill span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--slate);
+  min-height: 32px;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  pointer-events: none;
+}
+
+.sex-pill input:checked + span {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+  box-shadow: 0 8px 18px rgba(var(--accent-rgb), 0.28);
+}
+
 .tag-input {
   display: flex;
   flex-wrap: wrap;
@@ -598,9 +638,23 @@ html[dir="rtl"] .table,
   height: 36px;
   padding: 0;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 999px;
   background: none;
   overflow: hidden;
+}
+
+.color-field input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.color-field input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 999px;
+}
+
+.color-field input[type="color"]::-moz-color-swatch {
+  border: none;
+  border-radius: 999px;
 }
 
 .color-dot {
@@ -2862,6 +2916,7 @@ button .icon svg {
 .app-shell.collapsed .nav a {
   justify-content: center;
   padding: 10px;
+  width: 100%;
 }
 
 .app-shell.collapsed .nav {
@@ -2912,6 +2967,13 @@ button .icon svg {
 
 .app-shell.collapsed .nav a .nav-short {
   margin-inline: auto;
+}
+
+[dir="rtl"] input[type="search"],
+[dir="rtl"] input[type="text"],
+[dir="rtl"] input[list],
+[dir="rtl"] textarea {
+  text-align: right;
 }
 
 .app-shell.collapsed .logout-btn {
