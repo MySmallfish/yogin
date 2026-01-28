@@ -3629,7 +3629,6 @@ adminApi.MapPost("/users/{id:guid}/invite", async (ClaimsPrincipal user, Guid id
     db.Users.Update(userRow);
     await db.SaveChangesAsync();
     await LogAuditAsync(db, user, "Update", "User", userRow.Id.ToString(), $"Reset password for {userRow.DisplayName}");
-    await LogAuditAsync(db, user, "Update", "Customer", customer.Id.ToString(), $"Reset password for {customer.FullName}");
 
     var rolesList = GetUserRoles(userRow);
     var primaryRole = GetPrimaryRole(rolesList);

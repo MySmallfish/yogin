@@ -27,3 +27,4 @@
 2026-01-27 01:29  Align calendar toolbar top edges, hide admin header in collapsed menu, and center collapsed sidebar items.
 2026-01-28 01:22  Adjust nav indentation and center collapsed sidebar icons/logo/logout.
 2026-01-28 19:47  Simplify tag color picker, move registration add-customer into autocomplete option, reorder weekday pills starting Sunday with styled pills, adjust nav indentation, and log customer actions for attachments/reset.
+2026-01-28 19:49  Fix invite endpoint audit logging reference to remove undefined customer.
