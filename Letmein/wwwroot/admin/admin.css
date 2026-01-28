@@ -161,7 +161,7 @@ html[lang^="he"] .section-title {
 
 .nav-group {
   padding: 10px 0;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 700;
   text-transform: none;
   letter-spacing: 0.02em;
@@ -169,7 +169,7 @@ html[lang^="he"] .section-title {
 }
 
 .nav a.nav-group {
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 700;
   padding: 10px 0;
 }
@@ -191,7 +191,7 @@ html[lang^="he"] .section-title {
 }
 
 .nav a.nav-item {
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 400;
   padding-inline-start: 3em;
   padding-block: 10px;
@@ -222,7 +222,7 @@ html[lang^="he"] .section-title {
 }
 
 .nav a:hover {
-  transform: translateX(4px);
+  color: var(--accent);
 }
 
 .app-shell.collapsed .nav-title {
