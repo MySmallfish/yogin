@@ -192,7 +192,15 @@ html[lang^="he"] .section-title {
 
 .nav a.nav-item {
   font-size: 13px;
-  padding: 10px 18px;
+  padding-inline-start: 32px;
+  padding-block: 10px;
+  padding-inline-end: 14px;
+}
+
+.nav a.nav-group {
+  padding-inline-start: 14px;
+  padding-block: 10px;
+  padding-inline-end: 14px;
 }
 
 .nav-short {
@@ -2610,25 +2618,44 @@ button .icon svg {
   gap: 8px;
 }
 
-.icon-field input {
-  flex: 1;
+.icon-field input[type="hidden"] {
+  display: none;
 }
 
 .icon-preview {
-  width: 32px;
-  height: 32px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   font-size: 16px;
-  background: white;
   color: var(--ink);
 }
 
 .icon-preview.is-empty {
   color: var(--muted);
+}
+
+.icon-picker-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.icon-picker-button .icon-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--slate);
+}
+
+.icon-picker-button .icon-preview.is-empty {
+  display: none;
+}
+
+.icon-picker-button .icon-preview:not(.is-empty) ~ .icon-fallback {
+  display: none;
 }
 
 .icon-picker-modal .icon-grid {

@@ -719,10 +719,10 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
             <div>
               <label>{{t "session.icon" "Icon"}}</label>
               <div class="icon-field">
-                <span class="icon-preview" data-icon-preview>{{instanceIcon}}</span>
-                <input name="icon" value="{{instanceIcon}}" placeholder="{{seriesIcon}}" />
-                <button type="button" class="icon-button icon-picker-trigger" data-icon-picker data-icon-target="[name=&quot;icon&quot;]" aria-label="{{t "session.pickIcon" "Pick icon"}}">
-                  <span class="icon" aria-hidden="true">
+                <input type="hidden" name="icon" value="{{instanceIcon}}" />
+                <button type="button" class="icon-button icon-picker-trigger icon-picker-button" data-icon-picker data-icon-target="[name=&quot;icon&quot;]" aria-label="{{t "session.pickIcon" "Pick icon"}}">
+                  <span class="icon-preview" data-icon-preview>{{instanceIcon}}</span>
+                  <span class="icon-fallback" aria-hidden="true">
                     <svg viewBox="0 0 24 24"><path d="M4 5h6v6H4V5zm10 0h6v6h-6V5zM4 13h6v6H4v-6zm10 0h6v6h-6v-6z"/></svg>
                   </span>
                 </button>
@@ -733,13 +733,6 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
               <label>{{t "session.color" "Color"}}</label>
               <div class="color-field" data-series-color="{{seriesColor}}">
                 <input class="color-input" name="color" type="color" value="{{colorValue}}" />
-                <div class="color-chip" style="background: {{colorValue}}"></div>
-                <input class="color-text" type="text" value="{{colorValue}}" placeholder="{{seriesColor}}" data-color-text />
-                <button type="button" class="icon-button color-reset" data-color-reset aria-label="{{t "session.useSeriesColor" "Use series color"}}">
-                  <span class="icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><path d="M5 12a7 7 0 1 0 7-7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 5v4h4" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-                  </span>
-                </button>
               </div>
               <div class="meta">{{t "session.colorHint" "Leave blank to use the series color."}}</div>
             </div>
@@ -1417,10 +1410,10 @@ const seriesModalTemplate = compileTemplate("series-modal", `
           <div>
             <label>{{t "series.icon" "Icon"}}</label>
             <div class="icon-field">
-              <span class="icon-preview" data-icon-preview>{{icon}}</span>
-              <input name="icon" value="{{icon}}" placeholder="flow" />
-              <button type="button" class="icon-button icon-picker-trigger" data-icon-picker data-icon-target="[name=&quot;icon&quot;]" aria-label="{{t "session.pickIcon" "Pick icon"}}">
-                <span class="icon" aria-hidden="true">
+              <input type="hidden" name="icon" value="{{icon}}" />
+              <button type="button" class="icon-button icon-picker-trigger icon-picker-button" data-icon-picker data-icon-target="[name=&quot;icon&quot;]" aria-label="{{t "session.pickIcon" "Pick icon"}}">
+                <span class="icon-preview" data-icon-preview>{{icon}}</span>
+                <span class="icon-fallback" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><path d="M4 5h6v6H4V5zm10 0h6v6h-6V5zM4 13h6v6H4v-6zm10 0h6v6h-6v-6z"/></svg>
                 </span>
               </button>
@@ -1430,8 +1423,6 @@ const seriesModalTemplate = compileTemplate("series-modal", `
             <label>{{t "series.color" "Color"}}</label>
             <div class="color-field">
               <input class="color-input" name="color" type="color" value="{{color}}" />
-              <div class="color-chip" style="background: {{color}}"></div>
-              <input class="color-text" type="text" value="{{color}}" placeholder="#f1c232" data-color-text />
             </div>
           </div>
         <div class="span-2">
@@ -3006,32 +2997,24 @@ const settingsTemplate = compileTemplate("settings", `
           <label>{{t "settings.primary" "Primary"}}</label>
           <div class="color-field">
             <input class="color-input" name="themePrimary" type="color" value="{{themePrimary}}" />
-            <div class="color-chip" style="background: {{themePrimary}}"></div>
-            <input class="color-text" type="text" value="{{themePrimary}}" placeholder="#f1c232" data-color-text />
           </div>
         </div>
         <div>
           <label>{{t "settings.secondary" "Secondary"}}</label>
           <div class="color-field">
             <input class="color-input" name="themeSecondary" type="color" value="{{themeSecondary}}" />
-            <div class="color-chip" style="background: {{themeSecondary}}"></div>
-            <input class="color-text" type="text" value="{{themeSecondary}}" placeholder="#f6d88a" data-color-text />
           </div>
         </div>
         <div>
           <label>{{t "settings.accent" "Accent"}}</label>
           <div class="color-field">
             <input class="color-input" name="themeAccent" type="color" value="{{themeAccent}}" />
-            <div class="color-chip" style="background: {{themeAccent}}"></div>
-            <input class="color-text" type="text" value="{{themeAccent}}" placeholder="#f9e7b7" data-color-text />
           </div>
         </div>
         <div>
           <label>{{t "settings.background" "Background"}}</label>
           <div class="color-field">
             <input class="color-input" name="themeBackground" type="color" value="{{themeBackground}}" />
-            <div class="color-chip" style="background: {{themeBackground}}"></div>
-            <input class="color-text" type="text" value="{{themeBackground}}" placeholder="#fff7de" data-color-text />
           </div>
         </div>
       </div>
@@ -5319,22 +5302,24 @@ function bindColorField(container) {
     if (!container) return;
     const colorInput = container.querySelector("input[type=\"color\"]");
     const textInput = container.querySelector("[data-color-text]");
-    if (!colorInput || !textInput) return;
+    if (!colorInput) return;
     const seriesColor = ensureHexColor(container.getAttribute("data-series-color") || "", "");
     colorInput.addEventListener("input", () => updateColorField(colorInput));
-    textInput.addEventListener("input", () => {
-        if (!textInput.value.trim()) {
-            if (seriesColor) {
-                colorInput.value = seriesColor;
-                updateColorField(colorInput);
+    if (textInput) {
+        textInput.addEventListener("input", () => {
+            if (!textInput.value.trim()) {
+                if (seriesColor) {
+                    colorInput.value = seriesColor;
+                    updateColorField(colorInput);
+                }
+                return;
             }
-            return;
-        }
-        const normalized = normalizeHexInput(textInput.value);
-        if (!normalized) return;
-        colorInput.value = normalized;
-        updateColorField(colorInput);
-    });
+            const normalized = normalizeHexInput(textInput.value);
+            if (!normalized) return;
+            colorInput.value = normalized;
+            updateColorField(colorInput);
+        });
+    }
     updateColorField(colorInput);
 }
 
@@ -7012,7 +6997,7 @@ function bindIconPreview(container) {
         const preview = field.querySelector("[data-icon-preview]");
         if (!input || !preview) return;
         const update = () => {
-            const value = input.value?.trim() || input.getAttribute("placeholder") || "";
+            const value = input.value?.trim() || "";
             preview.textContent = value;
             preview.classList.toggle("is-empty", !value);
         };
