@@ -171,11 +171,11 @@ html[lang^="he"] .section-title {
 .nav a.nav-group {
   font-size: 14px;
   font-weight: 700;
-  padding-inline-start: 0;
+  padding: 10px 0;
 }
 
 .nav a.nav-group.nav-item {
-  padding-inline-start: 0;
+  padding: 10px 0;
 }
 
 .nav a {
@@ -192,7 +192,7 @@ html[lang^="he"] .section-title {
 
 .nav a.nav-item {
   font-size: 13px;
-  padding-inline-start: 22px;
+  padding: 10px 18px;
 }
 
 .nav-short {
@@ -502,9 +502,36 @@ html[dir="rtl"] .table,
 .weekday-pill {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  position: relative;
   font-size: 13px;
   color: var(--slate);
+  cursor: pointer;
+}
+
+.weekday-pill input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.weekday-pill span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--slate);
+  min-height: 32px;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.weekday-pill input:checked + span {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+  box-shadow: 0 8px 18px rgba(var(--accent-rgb), 0.28);
 }
 
 .tag-input {
@@ -554,11 +581,13 @@ html[dir="rtl"] .table,
 }
 
 .color-field input[type="color"] {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   padding: 0;
-  border: none;
+  border: 1px solid var(--line);
+  border-radius: 12px;
   background: none;
+  overflow: hidden;
 }
 
 .color-dot {

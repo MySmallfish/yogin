@@ -890,16 +890,15 @@ const sessionRegistrationsModalTemplate = compileTemplate("session-registrations
                     <option value="remote">{{t "session.attendance.remote" "Remote (Zoom)"}}</option>
                   {{/if}}
                 </select>
-                <button class="icon-button add-inline" type="button" id="add-customer-modal" aria-label="{{t "customer.addTitle" "Add customer"}}">
-                  <span class="icon" aria-hidden="true">+</span>
-                  <span class="add-label">{{t "common.add" "Add"}}</span>
-                </button>
               </div>
               <input type="hidden" name="customerId" />
               <datalist id="customer-list">
                 {{#each customers}}
                   <option value="{{lookupLabel}}" data-customer-id="{{id}}"></option>
                 {{/each}}
+                {{#if addCustomerOption}}
+                  <option value="{{addCustomerOption}}" data-add="true"></option>
+                {{/if}}
               </datalist>
             </div>
           </div>
@@ -1360,13 +1359,13 @@ const sessionModalTemplate = compileTemplate("session-modal", `
         <div class="span-2">
           <label>{{t "session.daysOfWeek" "Days of week"}}</label>
           <div class="weekday-pills">
-            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="1" />{{t "weekday.monday" "Monday"}}</label>
-            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="2" />{{t "weekday.tuesday" "Tuesday"}}</label>
-            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="3" />{{t "weekday.wednesday" "Wednesday"}}</label>
-            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="4" />{{t "weekday.thursday" "Thursday"}}</label>
-            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="5" />{{t "weekday.friday" "Friday"}}</label>
-            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="6" />{{t "weekday.saturday" "Saturday"}}</label>
-            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="0" />{{t "weekday.sunday" "Sunday"}}</label>
+            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="0" /><span>{{t "weekday.sunday" "Sunday"}}</span></label>
+            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="1" /><span>{{t "weekday.monday" "Monday"}}</span></label>
+            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="2" /><span>{{t "weekday.tuesday" "Tuesday"}}</span></label>
+            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="3" /><span>{{t "weekday.wednesday" "Wednesday"}}</span></label>
+            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="4" /><span>{{t "weekday.thursday" "Thursday"}}</span></label>
+            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="5" /><span>{{t "weekday.friday" "Friday"}}</span></label>
+            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="6" /><span>{{t "weekday.saturday" "Saturday"}}</span></label>
           </div>
         </div>
         <div>
@@ -1441,7 +1440,7 @@ const seriesModalTemplate = compileTemplate("series-modal", `
             {{#each dayOptions}}
               <label class="weekday-pill">
                 <input type="checkbox" name="seriesDays" value="{{value}}" {{#if selected}}checked{{/if}} />
-                {{label}}
+                <span>{{label}}</span>
               </label>
             {{/each}}
           </div>
@@ -2108,8 +2107,7 @@ const customerTagModalTemplate = compileTemplate("customer-tag-modal", `
           <div>
             <label>{{t "customerTags.color" "Color"}}</label>
             <div class="color-field">
-              <input name="tagColor" value="{{tagColor}}" />
-              <input type="color" name="tagColorPicker" value="{{tagColor}}" />
+              <input class="color-input" type="color" name="tagColor" value="{{tagColor}}" />
             </div>
           </div>
         </div>
@@ -6185,6 +6183,7 @@ async function openSessionRegistrationsModal(item, data, options = {}) {
     const instructorDetails = (data.instructors || []).find(instructor => String(instructor.id) === String(item.instructorId));
     const sessionDescription = (item.seriesDescription || item.description || "").trim();
     const hasSessionDescription = sessionDescription.length > 0;
+    const addCustomerOption = t("session.addCustomerOption", "Add customer...");
 
     const modalMarkup = sessionRegistrationsModalTemplate({
         ...item,
@@ -6196,7 +6195,8 @@ async function openSessionRegistrationsModal(item, data, options = {}) {
         hasRemoteCapacity: remoteCapacityValue > 0,
         hasInstructorDetails: Boolean(instructorDetails),
         sessionDescription,
-        hasSessionDescription
+        hasSessionDescription,
+        addCustomerOption
     });
 
     const wrapper = document.createElement("div");
@@ -6408,6 +6408,7 @@ async function openSessionRegistrationsModal(item, data, options = {}) {
     const resolveCustomerId = (value) => {
         const trimmed = value.trim();
         if (!trimmed) return "";
+        if (trimmed === addCustomerOption) return "";
         const options = Array.from(overlay.querySelectorAll("#customer-list option"));
         const match = options.find(option => option.value === trimmed);
         if (match) {
@@ -6425,9 +6426,27 @@ async function openSessionRegistrationsModal(item, data, options = {}) {
         customerIdInput.value = resolveCustomerId(customerLookupInput.value);
     };
 
+    const openAddCustomerModal = (isRemote) => {
+        openCustomerModal(null, data, {
+            onSaved: async (savedCustomer) => {
+                upsertCustomerOption(savedCustomer);
+                await registerCustomer(savedCustomer?.id || "", isRemote);
+            }
+        });
+    };
+
     if (customerLookupInput && customerIdInput) {
         customerLookupInput.addEventListener("input", syncCustomerLookup);
-        customerLookupInput.addEventListener("change", syncCustomerLookup);
+        customerLookupInput.addEventListener("change", () => {
+            syncCustomerLookup();
+            if (customerLookupInput.value === addCustomerOption) {
+                const attendanceType = overlay.querySelector("[name=\"attendanceType\"]")?.value || "in-person";
+                const isRemote = attendanceType === "remote";
+                customerLookupInput.value = "";
+                customerIdInput.value = "";
+                openAddCustomerModal(isRemote);
+            }
+        });
     }
 
     if (options.focusRegistration && customerLookupInput) {
@@ -6439,7 +6458,6 @@ async function openSessionRegistrationsModal(item, data, options = {}) {
     }
 
     const registerBtn = overlay.querySelector("#register-customer");
-    const addCustomerBtn = overlay.querySelector("#add-customer-modal");
     const upsertCustomerOption = (customerEntry) => {
         if (!customerEntry?.id) return;
         if (customerList.some(entry => entry.id === customerEntry.id)) return;
@@ -6526,18 +6544,6 @@ async function openSessionRegistrationsModal(item, data, options = {}) {
         });
     }
 
-    if (addCustomerBtn) {
-        addCustomerBtn.addEventListener("click", () => {
-            const attendanceType = overlay.querySelector("[name=\"attendanceType\"]")?.value || "in-person";
-            const isRemote = attendanceType === "remote";
-            openCustomerModal(null, data, {
-                onSaved: async (savedCustomer) => {
-                    upsertCustomerOption(savedCustomer);
-                    await registerCustomer(savedCustomer?.id || "", isRemote);
-                }
-            });
-        });
-    }
 }
 
 async function duplicateSessionFromItem(item, data) {
@@ -8076,12 +8082,10 @@ function openCustomerTagModal(tags) {
     const resetBtn = overlay.querySelector("#reset-tag");
     const tagBody = overlay.querySelector("#customer-tag-rows");
     const colorInput = overlay.querySelector("[name=\"tagColor\"]");
-    const colorPicker = overlay.querySelector("[name=\"tagColorPicker\"]");
     const setForm = (tagName, tagColor) => {
         overlay.querySelector("[name=\"tagOriginal\"]").value = tagName || "";
         overlay.querySelector("[name=\"tagName\"]").value = tagName || "";
         if (colorInput) colorInput.value = tagColor || nextTagColor(tagRows);
-        if (colorPicker) colorPicker.value = tagColor || nextTagColor(tagRows);
         if (saveBtn) {
             saveBtn.textContent = tagName
                 ? t("customerTags.update", "Update tag")
@@ -8093,12 +8097,9 @@ function openCustomerTagModal(tags) {
         resetBtn.addEventListener("click", () => setForm("", nextTagColor(tagRows)));
     }
 
-    if (colorInput && colorPicker) {
+    if (colorInput) {
         colorInput.addEventListener("input", () => {
-            colorPicker.value = colorInput.value;
-        });
-        colorPicker.addEventListener("input", () => {
-            colorInput.value = colorPicker.value;
+            colorInput.value = colorInput.value;
         });
     }
 
@@ -8895,13 +8896,13 @@ function openSeriesModal(series, data) {
     const selectedDays = resolveSeriesDays(series);
     const safeDays = selectedDays.length ? selectedDays : [2];
     const dayOptions = [
+        { value: 0, label: dayNames[0] || t("weekday.sunday", "Sunday"), selected: safeDays.includes(0) },
         { value: 1, label: dayNames[1] || t("weekday.monday", "Monday"), selected: safeDays.includes(1) },
         { value: 2, label: dayNames[2] || t("weekday.tuesday", "Tuesday"), selected: safeDays.includes(2) },
         { value: 3, label: dayNames[3] || t("weekday.wednesday", "Wednesday"), selected: safeDays.includes(3) },
         { value: 4, label: dayNames[4] || t("weekday.thursday", "Thursday"), selected: safeDays.includes(4) },
         { value: 5, label: dayNames[5] || t("weekday.friday", "Friday"), selected: safeDays.includes(5) },
-        { value: 6, label: dayNames[6] || t("weekday.saturday", "Saturday"), selected: safeDays.includes(6) },
-        { value: 0, label: dayNames[0] || t("weekday.sunday", "Sunday"), selected: safeDays.includes(0) }
+        { value: 6, label: dayNames[6] || t("weekday.saturday", "Saturday"), selected: safeDays.includes(6) }
     ];
     const rooms = [
         { id: "", name: t("common.unassigned", "Unassigned"), selected: !series?.roomId },

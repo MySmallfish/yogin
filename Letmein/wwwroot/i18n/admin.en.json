@@ -1,4 +1,4 @@
-{
+﻿{
     "brand.subtitle":  "Studio admin",
     "nav.menu":  "Menu",
     "nav.expand":  "Expand",
@@ -411,7 +411,7 @@
     "user.attachmentsEmptyTitle":  "No files yet",
     "user.attachmentsEmpty":  "Upload agreements, IDs, or notes here.",
     "user.upload":  "Upload",
-    "user.uploadDrop":  "Drag & drop a file",
+    "user.uploadDrop":  "Drag \u0026 drop a file",
     "user.uploadClick":  "or click to browse",
     "user.uploadError":  "Unable to upload an attachment.",
     "user.attachmentDeleteError":  "Unable to delete attachment.",
@@ -679,7 +679,6 @@
     "audit.entity.studio":  "Studio",
     "series.generateWeeks":  "Generate (weeks)",
     "series.generateUntil":  "Generate until",
-    "session.generateWeeks":  "Generate weeks",
     "session.generateUntil":  "Generate until",
     "roster.participants":  "Participants list",
     "roster.emailAll":  "Send mail to all",
@@ -710,56 +709,57 @@
     "birthday.smsTitle":  "Send birthday SMS",
     "birthday.smsSubtitle":  "Send a warm birthday message.",
     "birthday.emailAll":  "Email all",
-    "birthday.smsAll":  "SMS all"
-    ,"customers.manageTags":  "Manage tags"
-    ,"customers.tagAll":  "All tags"
-    ,"customers.back":  "Back to customers"
-    ,"page.customer.title":  "Customer details"
-    ,"page.customer.subtitle":  "Customer profile and history."
-    ,"customer.details.info":  "Information"
-    ,"customer.details.registrations":  "Registrations"
-    ,"customer.details.noRegistrations":  "No registrations yet."
-    ,"customer.details.attachments":  "Attachments"
-    ,"customer.details.noAttachments":  "No attachments uploaded."
-    ,"customer.details.signedForms":  "Signed forms"
-    ,"customer.details.noForms":  "No signed forms yet."
-    ,"customer.details.submittedAt":  "Submitted"
-    ,"customer.details.signature":  "Signature"
-    ,"customer.details.signatureType":  "Type"
-    ,"customer.details.billing":  "Billing"
-    ,"customer.details.billingAction":  "Add billing record"
-    ,"customer.details.recentRegistrations":  "Recent registrations"
-    ,"customer.details.viewAll":  "View all"
-    ,"customer.details.recentInvoices":  "Recent invoices"
-    ,"customer.details.viewBilling":  "View billing"
-    ,"customer.details.noBilling":  "No billing activity yet."
-    ,"customer.details.upload":  "Upload"
-    ,"customer.details.uploadSuccess":  "Attachment uploaded."
-    ,"customer.details.uploadError":  "Unable to upload attachment."
-    ,"customer.details.activityAddTitle":  "Log activity"
-    ,"customer.details.activityPlaceholder":  "Write a note about the customer."
-    ,"customer.details.activityFile":  "Add photo"
-    ,"customer.details.activityAdd":  "Add note"
-    ,"customer.details.activitySaved":  "Activity saved."
-    ,"customer.details.activityError":  "Unable to save activity."
-    ,"customer.details.activityRequired":  "Add a note or photo first."
-    ,"customer.details.activity":  "Activity log"
-    ,"customer.details.noActivity":  "No activity yet."
-    ,"customer.details.notFound":  "Customer not found."
-    ,"customerTags.title":  "Customer tags"
-    ,"customerTags.subtitle":  "Create tags to help segment customers."
-    ,"customerTags.name":  "Tag name"
-    ,"customerTags.color":  "Color"
-    ,"customerTags.actions":  "Actions"
-    ,"customerTags.add":  "Add tag"
-    ,"customerTags.update":  "Update tag"
-    ,"customerTags.new":  "New tag"
-    ,"customerTags.delete":  "Delete"
-    ,"customerTags.deleteTitle":  "Delete tag"
-    ,"customerTags.deleteSubtitle":  "Choose a replacement tag or remove it entirely."
-    ,"customerTags.replaceLabel":  "Replace with (optional)"
-    ,"customerTags.replaceNone":  "No replacement"
-    ,"customerTags.deleteHint":  "Customers with this tag will be updated."
-    ,"customerTags.nameRequired":  "Tag name is required."
-    ,"customerTags.saveError":  "Unable to save tag."
+    "birthday.smsAll":  "SMS all",
+    "customers.manageTags":  "Manage tags",
+    "customers.tagAll":  "All tags",
+    "customers.back":  "Back to customers",
+    "page.customer.title":  "Customer details",
+    "page.customer.subtitle":  "Customer profile and history.",
+    "customer.details.info":  "Information",
+    "customer.details.registrations":  "Registrations",
+    "customer.details.noRegistrations":  "No registrations yet.",
+    "customer.details.attachments":  "Attachments",
+    "customer.details.noAttachments":  "No attachments uploaded.",
+    "customer.details.signedForms":  "Signed forms",
+    "customer.details.noForms":  "No signed forms yet.",
+    "customer.details.submittedAt":  "Submitted",
+    "customer.details.signature":  "Signature",
+    "customer.details.signatureType":  "Type",
+    "customer.details.billing":  "Billing",
+    "customer.details.billingAction":  "Add billing record",
+    "customer.details.recentRegistrations":  "Recent registrations",
+    "customer.details.viewAll":  "View all",
+    "customer.details.recentInvoices":  "Recent invoices",
+    "customer.details.viewBilling":  "View billing",
+    "customer.details.noBilling":  "No billing activity yet.",
+    "customer.details.upload":  "Upload",
+    "customer.details.uploadSuccess":  "Attachment uploaded.",
+    "customer.details.uploadError":  "Unable to upload attachment.",
+    "customer.details.activityAddTitle":  "Log activity",
+    "customer.details.activityPlaceholder":  "Write a note about the customer.",
+    "customer.details.activityFile":  "Add photo",
+    "customer.details.activityAdd":  "Add note",
+    "customer.details.activitySaved":  "Activity saved.",
+    "customer.details.activityError":  "Unable to save activity.",
+    "customer.details.activityRequired":  "Add a note or photo first.",
+    "customer.details.activity":  "Activity log",
+    "customer.details.noActivity":  "No activity yet.",
+    "customer.details.notFound":  "Customer not found.",
+    "customerTags.title":  "Customer tags",
+    "customerTags.subtitle":  "Create tags to help segment customers.",
+    "customerTags.name":  "Tag name",
+    "customerTags.color":  "Color",
+    "customerTags.actions":  "Actions",
+    "customerTags.add":  "Add tag",
+    "customerTags.update":  "Update tag",
+    "customerTags.new":  "New tag",
+    "customerTags.delete":  "Delete",
+    "customerTags.deleteTitle":  "Delete tag",
+    "customerTags.deleteSubtitle":  "Choose a replacement tag or remove it entirely.",
+    "customerTags.replaceLabel":  "Replace with (optional)",
+    "customerTags.replaceNone":  "No replacement",
+    "customerTags.deleteHint":  "Customers with this tag will be updated.",
+    "customerTags.nameRequired":  "Tag name is required.",
+    "customerTags.saveError":  "Unable to save tag.",
+    "session.addCustomerOption":  "Add customer..."
 }

@@ -3040,6 +3040,7 @@ adminApi.MapPost("/customers/{id:guid}/attachments", async (ClaimsPrincipal user
     db.CustomerAttachments.Add(attachment);
     await db.SaveChangesAsync();
     await LogAuditAsync(db, user, "Create", "CustomerAttachment", attachment.Id.ToString(), $"Uploaded attachment for customer {customer.FullName}", new { customer.Id, attachment.FileName });
+    await LogAuditAsync(db, user, "Update", "Customer", customer.Id.ToString(), $"Added attachment {attachment.FileName}", new { attachment.Id, attachment.FileName });
 
     return Results.Created($"/api/admin/customers/{customer.Id}/attachments/{attachment.Id}", new
     {
@@ -3132,6 +3133,7 @@ adminApi.MapDelete("/customers/{customerId:guid}/attachments/{attachmentId:guid}
     db.CustomerAttachments.Remove(attachment);
     await db.SaveChangesAsync();
     await LogAuditAsync(db, user, "Delete", "CustomerAttachment", attachment.Id.ToString(), $"Deleted attachment for customer {customerId}", new { attachment.FileName });
+    await LogAuditAsync(db, user, "Update", "Customer", customerId.ToString(), $"Deleted attachment {attachment.FileName}", new { attachment.Id, attachment.FileName });
     return Results.NoContent();
 });
 
@@ -3627,6 +3629,7 @@ adminApi.MapPost("/users/{id:guid}/invite", async (ClaimsPrincipal user, Guid id
     db.Users.Update(userRow);
     await db.SaveChangesAsync();
     await LogAuditAsync(db, user, "Update", "User", userRow.Id.ToString(), $"Reset password for {userRow.DisplayName}");
+    await LogAuditAsync(db, user, "Update", "Customer", customer.Id.ToString(), $"Reset password for {customer.FullName}");
 
     var rolesList = GetUserRoles(userRow);
     var primaryRole = GetPrimaryRole(rolesList);
