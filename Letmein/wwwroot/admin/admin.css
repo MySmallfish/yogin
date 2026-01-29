@@ -1420,7 +1420,7 @@ button .icon svg {
   border-left-width: 4px;
   border-left-color: var(--series-color, var(--line));
   border-radius: 14px;
-  padding: 12px;
+  padding: 10px;
   cursor: pointer;
   position: relative;
   font-size: 13px;
@@ -1576,7 +1576,7 @@ button .icon svg {
 }
 
 .calendar-event.compact {
-  padding: 10px;
+  padding: 8px;
 }
 
 .calendar-event.cancelled {
@@ -1779,6 +1779,18 @@ button .icon svg {
   flex-direction: column;
   justify-content: flex-start;
   align-items: flex-start;
+  gap: 2px;
+  padding: 6px 8px;
+  overflow: hidden;
+}
+
+.calendar-time-grid .calendar-event.has-rail {
+  padding-inline-end: 44px;
+}
+
+[dir="rtl"] .calendar-time-grid .calendar-event.has-rail {
+  padding-inline-end: 8px;
+  padding-inline-start: 44px;
 }
 
 .calendar-week {
