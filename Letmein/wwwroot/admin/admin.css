@@ -1420,7 +1420,7 @@ button .icon svg {
   border-left-width: 1px;
   border-left-color: var(--line);
   border-radius: 14px;
-  padding: 10px;
+  padding: 10px 10px 10px 14px;
   cursor: pointer;
   position: relative;
   font-size: 13px;
@@ -1587,6 +1587,7 @@ button .icon svg {
 
 .calendar-event.past {
   opacity: 1;
+  color: #4b5563;
 }
 
 .calendar-event.past::before {
@@ -1809,7 +1810,7 @@ button .icon svg {
   align-items: flex-start;
   gap: 2px;
   padding: 6px 0;
-  padding-inline-start: 4px;
+  padding-inline-start: 10px;
   overflow: hidden;
   background: #fff;
 }
