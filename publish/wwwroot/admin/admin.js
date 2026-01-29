@@ -295,24 +295,27 @@ const calendarTemplate = compileTemplate("calendar", `
           {{#if day.hasEvents}}
             <div class="calendar-events">
               {{#each day.events}}
-                <div class="calendar-event {{#if isCancelled}}cancelled{{/if}} {{#if isPast}}past{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
+                <div class="calendar-event {{#if isCancelled}}cancelled{{/if}} {{#if isPast}}past{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}} {{#unless suppressActions}}has-rail{{/unless}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
                   {{#unless suppressActions}}
-                    <button class="event-actions" type="button" aria-label="{{t "calendar.actions" "Actions"}}">
-                      <span class="icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24">
-                          <circle cx="5" cy="12" r="2"></circle>
-                          <circle cx="12" cy="12" r="2"></circle>
-                          <circle cx="19" cy="12" r="2"></circle>
-                        </svg>
-                      </span>
-                    </button>
-                    <button class="event-share" type="button" aria-label="{{t "calendar.actionShare" "Share"}}">
-                      <span class="icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M18 8a3 3 0 1 0-2.83-4H15a3 3 0 0 0 .17 1l-7.1 4.13a3 3 0 0 0-2.17-1 3 3 0 1 0 2.17 5l7.1 4.13A3 3 0 1 0 15 16a3 3 0 0 0 .17 1l-7.1-4.13a3 3 0 0 0 0-2.74l7.1-4.13A3 3 0 0 0 18 8z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-                      </span>
-                    </button>
+                    <div class="event-actions-rail" aria-label="{{t "calendar.actions" "Actions"}}">
+                      <button class="event-actions" type="button" aria-label="{{t "calendar.actions" "Actions"}}">
+                        <span class="icon" aria-hidden="true">
+                          <svg viewBox="0 0 24 24">
+                            <circle cx="5" cy="12" r="2"></circle>
+                            <circle cx="12" cy="12" r="2"></circle>
+                            <circle cx="19" cy="12" r="2"></circle>
+                          </svg>
+                        </span>
+                      </button>
+                      <button class="event-share" type="button" aria-label="{{t "calendar.actionShare" "Share"}}">
+                        <span class="icon" aria-hidden="true">
+                          <svg viewBox="0 0 24 24"><path d="M18 8a3 3 0 1 0-2.83-4H15a3 3 0 0 0 .17 1l-7.1 4.13a3 3 0 0 0-2.17-1 3 3 0 1 0 2.17 5l7.1 4.13A3 3 0 1 0 15 16a3 3 0 0 0 .17 1l-7.1-4.13a3 3 0 0 0 0-2.74l7.1-4.13A3 3 0 0 0 18 8z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                        </span>
+                      </button>
+                    </div>
                   {{/unless}}
                 <div class="event-title">
+                  {{#if seriesIcon}}<span class="event-icon-inline" aria-hidden="true">{{seriesIcon}}</span>{{/if}}
                   {{seriesTitle}}
                   {{#if hasBirthdayList}}
                     <span class="birthday-chevron" aria-hidden="true">
@@ -322,7 +325,6 @@ const calendarTemplate = compileTemplate("calendar", `
                 </div>
                 <div class="event-meta">{{roomSummary}}</div>
                 <div class="event-meta">{{instructorName}}</div>
-                {{#if seriesIcon}}<span class="event-icon-corner" aria-hidden="true">{{seriesIcon}}</span>{{/if}}
                 {{#if isCancelled}}
                   <div class="event-meta">{{t "calendar.cancelled" "Cancelled"}}</div>
                 {{/if}}
@@ -354,24 +356,27 @@ const calendarTemplate = compileTemplate("calendar", `
             {{#if hasEvents}}
               <div class="calendar-day-events">
                 {{#each events}}
-                  <div class="calendar-event compact {{#if isCancelled}}cancelled{{/if}} {{#if isPast}}past{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
+                  <div class="calendar-event compact {{#if isCancelled}}cancelled{{/if}} {{#if isPast}}past{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}} {{#unless suppressActions}}has-rail{{/unless}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
                     {{#unless suppressActions}}
-                      <button class="event-actions" type="button" aria-label="{{t "calendar.actions" "Actions"}}">
-                        <span class="icon" aria-hidden="true">
-                          <svg viewBox="0 0 24 24">
-                            <circle cx="5" cy="12" r="2"></circle>
-                            <circle cx="12" cy="12" r="2"></circle>
-                            <circle cx="19" cy="12" r="2"></circle>
-                          </svg>
-                        </span>
-                      </button>
-                      <button class="event-share" type="button" aria-label="{{t "calendar.actionShare" "Share"}}">
-                        <span class="icon" aria-hidden="true">
-                          <svg viewBox="0 0 24 24"><path d="M18 8a3 3 0 1 0-2.83-4H15a3 3 0 0 0 .17 1l-7.1 4.13a3 3 0 0 0-2.17-1 3 3 0 1 0 2.17 5l7.1 4.13A3 3 0 1 0 15 16a3 3 0 0 0 .17 1l-7.1-4.13a3 3 0 0 0 0-2.74l7.1-4.13A3 3 0 0 0 18 8z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-                        </span>
-                      </button>
+                      <div class="event-actions-rail" aria-label="{{t "calendar.actions" "Actions"}}">
+                        <button class="event-actions" type="button" aria-label="{{t "calendar.actions" "Actions"}}">
+                          <span class="icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                              <circle cx="5" cy="12" r="2"></circle>
+                              <circle cx="12" cy="12" r="2"></circle>
+                              <circle cx="19" cy="12" r="2"></circle>
+                            </svg>
+                          </span>
+                        </button>
+                        <button class="event-share" type="button" aria-label="{{t "calendar.actionShare" "Share"}}">
+                          <span class="icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M18 8a3 3 0 1 0-2.83-4H15a3 3 0 0 0 .17 1l-7.1 4.13a3 3 0 0 0-2.17-1 3 3 0 1 0 2.17 5l7.1 4.13A3 3 0 1 0 15 16a3 3 0 0 0 .17 1l-7.1-4.13a3 3 0 0 0 0-2.74l7.1-4.13A3 3 0 0 0 18 8z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                          </span>
+                        </button>
+                      </div>
                     {{/unless}}
                     <div class="event-title">
+                      {{#if seriesIcon}}<span class="event-icon-inline" aria-hidden="true">{{seriesIcon}}</span>{{/if}}
                       {{seriesTitle}}
                       {{#if hasBirthdayList}}
                         <span class="birthday-chevron" aria-hidden="true">
@@ -381,7 +386,6 @@ const calendarTemplate = compileTemplate("calendar", `
                     </div>
                     <div class="event-meta">{{roomSummary}}</div>
                     <div class="event-meta">{{instructorName}}</div>
-                    {{#if seriesIcon}}<span class="event-icon-corner" aria-hidden="true">{{seriesIcon}}</span>{{/if}}
                   </div>
                 {{/each}}
               </div>
@@ -409,6 +413,7 @@ const calendarTemplate = compileTemplate("calendar", `
                     {{#each eventsPreview}}
                       <div class="calendar-event mini {{#if isCancelled}}cancelled{{/if}} {{#if isPast}}past{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
                         <span class="event-title">
+                          {{#if seriesIcon}}<span class="event-icon-inline" aria-hidden="true">{{seriesIcon}}</span>{{/if}}
                           {{title}}
                           {{#if hasBirthdayList}}
                             <span class="birthday-chevron" aria-hidden="true">
