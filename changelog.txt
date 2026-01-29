@@ -35,3 +35,5 @@
 2026-01-29 00:22  Set nav group/item indentation and font sizes per spec (group 0 indent, items 3em).
 2026-01-29 00:30  Increase menu font sizes and update hover color to primary.
 2026-01-29 02:23  Added calendar hour tick column + grid lines for day/week views and locked recurring series to generate-until date with weekly interval default.
+2026-01-29 02:28  Calendar hour grid now starts at 07:00, events use duration-based height, time labels removed from cards, and room/capacity combined in event meta.
+2026-01-29 03:10  Fix admin app load (remove duplicate roomSummary const) while updating calendar event summary and hour grid metadata.

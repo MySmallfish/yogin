@@ -284,7 +284,7 @@ const calendarTemplate = compileTemplate("calendar", `
   </div>
   <div class="calendar-body">
     {{#if isDay}}
-      <div class="calendar-day-view calendar-time-grid" style="--hour-count: {{hourTicks.length}}">
+      <div class="calendar-day-view calendar-time-grid" style="--hour-count: {{hourCount}}">
         <div class="calendar-hours">
           {{#each hourTicks}}
             <div class="calendar-hour">{{this}}</div>
@@ -312,23 +312,20 @@ const calendarTemplate = compileTemplate("calendar", `
                       </span>
                     </button>
                   {{/unless}}
-                  <div class="event-time">{{timeRange}}</div>
-                  <div class="event-title">
-                    {{seriesTitle}}
-                    {{#if hasBirthdayList}}
-                      <span class="birthday-chevron" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg>
-                      </span>
-                    {{/if}}
-                  </div>
-                  <div class="event-meta">{{roomName}} - {{instructorName}}</div>
-                  <div class="event-meta event-meta-compact">
-                    <span>{{registeredSummary}}</span>
-                  </div>
-                  {{#if seriesIcon}}<span class="event-icon-corner" aria-hidden="true">{{seriesIcon}}</span>{{/if}}
-                  {{#if isCancelled}}
-                    <div class="event-meta">{{t "calendar.cancelled" "Cancelled"}}</div>
+                <div class="event-title">
+                  {{seriesTitle}}
+                  {{#if hasBirthdayList}}
+                    <span class="birthday-chevron" aria-hidden="true">
+                      <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg>
+                    </span>
                   {{/if}}
+                </div>
+                <div class="event-meta">{{roomSummary}}</div>
+                <div class="event-meta">{{instructorName}}</div>
+                {{#if seriesIcon}}<span class="event-icon-corner" aria-hidden="true">{{seriesIcon}}</span>{{/if}}
+                {{#if isCancelled}}
+                  <div class="event-meta">{{t "calendar.cancelled" "Cancelled"}}</div>
+                {{/if}}
                   {{#if isBirthday}}
                     <div class="event-meta">{{t "calendar.birthday" "Birthday"}}</div>
                   {{/if}}
@@ -342,7 +339,7 @@ const calendarTemplate = compileTemplate("calendar", `
       </div>
     {{/if}}
     {{#if isWeek}}
-      <div class="calendar-week calendar-time-grid" style="--hour-count: {{hourTicks.length}}">
+      <div class="calendar-week calendar-time-grid" style="--hour-count: {{hourCount}}">
         <div class="calendar-hours">
           {{#each hourTicks}}
             <div class="calendar-hour">{{this}}</div>
@@ -374,7 +371,6 @@ const calendarTemplate = compileTemplate("calendar", `
                         </span>
                       </button>
                     {{/unless}}
-                    <div class="event-time">{{timeRange}}</div>
                     <div class="event-title">
                       {{seriesTitle}}
                       {{#if hasBirthdayList}}
@@ -383,11 +379,8 @@ const calendarTemplate = compileTemplate("calendar", `
                         </span>
                       {{/if}}
                     </div>
-                    <div class="event-meta">{{roomName}}</div>
+                    <div class="event-meta">{{roomSummary}}</div>
                     <div class="event-meta">{{instructorName}}</div>
-                    <div class="event-meta event-meta-compact">
-                      <span>{{registeredSummary}}</span>
-                    </div>
                     {{#if seriesIcon}}<span class="event-icon-corner" aria-hidden="true">{{seriesIcon}}</span>{{/if}}
                   </div>
                 {{/each}}
@@ -415,7 +408,6 @@ const calendarTemplate = compileTemplate("calendar", `
                   <div class="calendar-month-events">
                     {{#each eventsPreview}}
                       <div class="calendar-event mini {{#if isCancelled}}cancelled{{/if}} {{#if isPast}}past{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
-                        <span class="event-time">{{time}}</span>
                         <span class="event-title">
                           {{title}}
                           {{#if hasBirthdayList}}
@@ -9263,8 +9255,8 @@ function buildCalendarView(items, options) {
         ? `${t("calendar.weekNumber", "Week")} ${String(getWeekNumber(weekStart)).padStart(2, "0")}`
         : "";
     const hebrewDateLabel = formatHebrewDate(focus);
-    const hourTicks = Array.from({ length: 17 }, (_, index) => {
-        const hour = String(6 + index).padStart(2, "0");
+    const hourTicks = Array.from({ length: 16 }, (_, index) => {
+        const hour = String(7 + index).padStart(2, "0");
         return `${hour}:00`;
     });
 
@@ -9275,6 +9267,7 @@ function buildCalendarView(items, options) {
         weekNumberLabel,
         hebrewDateLabel,
         hourTicks,
+        hourCount: hourTicks.length,
         isDay: view === "day",
         isWeek: view === "week",
         isMonth: view === "month",
@@ -9535,7 +9528,9 @@ function buildEventMap(items, timeZone) {
             : `${birthdayIcon} ${t("calendar.birthday", "Birthday")}`;
         const seriesTitle = isBirthday ? birthdayTitle : item.seriesTitle;
         const seriesIcon = isBirthday ? "" : item.seriesIcon;
-        const eventStyle = item.seriesColor ? `--series-color: ${item.seriesColor};` : "";
+        const durationFallback = end ? Math.max(15, Math.round((end.getTime() - start.getTime()) / 60000)) : 60;
+        const durationMinutes = Number(item.durationMinutes || durationFallback || 60);
+        const eventStyle = `${item.seriesColor ? `--series-color: ${item.seriesColor};` : ""}--event-duration: ${durationMinutes};`;
         const booked = Number(item.booked || 0);
         const capacity = Number(item.capacity || 0);
         const remoteBooked = Number(item.remoteBooked || 0);
@@ -9579,6 +9574,7 @@ function buildEventMap(items, timeZone) {
                     isPast: false,
                     seriesTitle,
                     seriesIcon: "",
+                    roomSummary: "",
                     registeredSummary: "",
                     remoteSummary: "",
                     price: "",
@@ -9597,6 +9593,8 @@ function buildEventMap(items, timeZone) {
             return;
         }
 
+        const summaryValue = isHoliday ? "" : `${booked}/${capacity}`;
+        const roomSummary = [item.roomName, summaryValue].filter(Boolean).join(" · ");
         const event = {
             ...item,
             dateKey,
@@ -9612,6 +9610,7 @@ function buildEventMap(items, timeZone) {
             suppressActions: isHoliday || isBirthday || isAllDay,
             seriesTitle,
             seriesIcon,
+            roomSummary,
             registeredSummary: isHoliday ? "" : `${booked}/${capacity}`,
             remoteSummary: remoteCapacity > 0 && !isHoliday ? `${remoteBooked}/${remoteCapacity}` : "",
             price: formatPlainPrice(item.priceCents),

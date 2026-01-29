@@ -1707,6 +1707,10 @@ button .icon svg {
   );
 }
 
+.calendar-time-grid .calendar-event {
+  min-height: calc(var(--hour-row-height) * (var(--event-duration, 60) / 60));
+}
+
 .calendar-week {
   display: grid;
   grid-template-columns: 72px repeat(7, minmax(160px, 1fr));
