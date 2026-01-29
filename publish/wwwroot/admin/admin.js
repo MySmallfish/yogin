@@ -4,11 +4,12 @@ import { apiGet, apiPost, apiPut, apiDelete } from "../shared/api.js";
 import { login, logout, getSession, loadSessionHint, consumeForceLogout } from "../shared/auth.js";
 import { setLocale, t, resolveLocale, getStoredLocale } from "../shared/i18n.js";
 import { compileTemplate } from "../shared/templates.js";
-import { formatMoney, getQueryParam, toDateInputValue } from "../shared/utils.js";
+import { formatMoney, formatDateTime, getQueryParam, toDateInputValue } from "../shared/utils.js";
 
 const root = document.getElementById("app");
 const sessionHint = loadSessionHint();
 Handlebars.registerHelper("t", (key, fallback) => t(key, fallback));
+Handlebars.registerHelper("eq", (a, b) => a === b);
 const debugEnabled = new URLSearchParams(window.location.search).has("debug")
     || localStorage.getItem("letmein.debug") === "1";
 function debugLog(...args) {
@@ -30,6 +31,13 @@ const ICON_OPTIONS = [
     "\u{1F3AF}",
     "\u{1F9E0}",
     "\u{2764}\u{FE0F}"
+];
+
+const TAG_COLOR_PALETTE = [
+    "#F87171", "#FB923C", "#FBBF24", "#FACC15", "#A3E635", "#4ADE80", "#34D399", "#2DD4BF",
+    "#22D3EE", "#38BDF8", "#60A5FA", "#818CF8", "#A78BFA", "#C084FC", "#E879F9", "#F472B6",
+    "#FB7185", "#F97316", "#F59E0B", "#EAB308", "#84CC16", "#22C55E", "#10B981", "#14B8A6",
+    "#06B6D4", "#0EA5E9", "#3B82F6", "#6366F1", "#8B5CF6", "#A855F7", "#D946EF", "#EC4899"
 ];
 
 const layoutTemplate = compileTemplate("layout", `
@@ -58,7 +66,7 @@ const layoutTemplate = compileTemplate("layout", `
       </div>
       <nav class="nav">
         <div class="nav-section">
-          <a href="#/calendar" data-route="calendar" class="nav-group nav-item">
+          <a href="#/calendar" data-route="calendar" class="nav-group nav-header">
             <span class="nav-short" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 6H4v10h16V8z"/></svg>
             </span>
@@ -78,7 +86,7 @@ const layoutTemplate = compileTemplate("layout", `
           </a>
         </div>
         <div class="nav-section">
-          <a href="#/customers" data-route="customers" class="nav-group nav-item">
+          <a href="#/customers" data-route="customers" class="nav-group nav-header">
             <span class="nav-short" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-3.3 0-8 1.67-8 5v3h16v-3c0-3.33-4.7-5-8-5z"/></svg>
             </span>
@@ -86,7 +94,12 @@ const layoutTemplate = compileTemplate("layout", `
           </a>
         </div>
         <div class="nav-section">
-          <div class="nav-group">{{t "nav.section.admin" "Admin"}}</div>
+          <div class="nav-group nav-header nav-header-static">
+            <span class="nav-short" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 9.7-8 10-4.5-.3-8-5-8-10V6l8-4z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            </span>
+            <span class="nav-label">{{t "nav.section.admin" "Admin"}}</span>
+          </div>
           <a href="#/reports" data-route="reports" class="nav-item">
             <span class="nav-short" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M4 20h16M6 16h2V8H6v8zm5 0h2V4h-2v12zm5 0h2v-6h-2v6z"/></svg>
@@ -140,7 +153,15 @@ const layoutTemplate = compileTemplate("layout", `
             <div class="user-email">{{userEmail}}</div>
           </div>
         </div>
-        <button class="secondary" id="logout-btn">{{t "nav.logout" "Log out"}}</button>
+        <button class="icon-button logout-btn" id="logout-btn" aria-label="{{t "nav.logout" "Log out"}}">
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M10 17l5-5-5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M15 12H3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </span>
+        </button>
         <div class="tag">{{t "nav.demo" "Demo mode enabled"}}</div>
       </footer>
     </aside>
@@ -190,33 +211,42 @@ const loginTemplate = compileTemplate("login", `
 const calendarTemplate = compileTemplate("calendar", `
   <div class="calendar-toolbar">
     <div class="calendar-grid">
-      <div class="calendar-actions-col">
-        <div class="calendar-actions-row">
-          <div class="calendar-actions-main">
-            <input type="search" id="calendar-search" placeholder="{{t "calendar.search" "Search sessions"}}" value="{{search}}" />
-            <div class="calendar-export" aria-label="{{t "calendar.export" "Export"}}">
-            <button class="icon-button export-btn" data-export="outlook" title="{{t "calendar.exportOutlook" "Outlook (.ics)"}}" aria-label="{{t "calendar.exportOutlook" "Outlook (.ics)"}}">
-              <span class="icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 8H4v10h16V10z"/></svg>
-              </span>
-              <span class="sr-only">{{t "calendar.exportOutlook" "Outlook (.ics)"}}</span>
-            </button>
-            <button class="icon-button export-btn" data-export="excel" title="{{t "calendar.exportExcel" "Excel (.csv)"}}" aria-label="{{t "calendar.exportExcel" "Excel (.csv)"}}">
-              <span class="icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M4 3h12l4 4v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm11 1v4h4M7 9l2 3-2 3h2l1-2 1 2h2l-2-3 2-3h-2l-1 2-1-2H7z"/></svg>
-              </span>
-              <span class="sr-only">{{t "calendar.exportExcel" "Excel (.csv)"}}</span>
-            </button>
-            </div>
-            <button id="add-session">
-              <span class="icon" aria-hidden="true">+</span>
-              {{t "calendar.addSession" "Add session"}}
-            </button>
+      <div class="calendar-actions-row">
+        <div class="calendar-actions-main">
+          <input type="search" id="calendar-search" placeholder="{{t "calendar.search" "Search sessions"}}" value="{{search}}" />
+          <div class="calendar-export" aria-label="{{t "calendar.export" "Export"}}">
+          <button class="icon-button export-btn" data-export="outlook" title="{{t "calendar.exportOutlook" "Outlook (.ics)"}}" aria-label="{{t "calendar.exportOutlook" "Outlook (.ics)"}}">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3V2zm13 8H4v10h16V10z"/></svg>
+            </span>
+            <span class="sr-only">{{t "calendar.exportOutlook" "Outlook (.ics)"}}</span>
+          </button>
+          <button class="icon-button export-btn" data-export="excel" title="{{t "calendar.exportExcel" "Excel (.csv)"}}" aria-label="{{t "calendar.exportExcel" "Excel (.csv)"}}">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 3h12l4 4v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm11 1v4h4M7 9l2 3-2 3h2l1-2 1 2h2l-2-3 2-3h-2l-1 2-1-2H7z"/></svg>
+            </span>
+            <span class="sr-only">{{t "calendar.exportExcel" "Excel (.csv)"}}</span>
+          </button>
           </div>
+          <button id="add-session">
+            <span class="icon" aria-hidden="true">+</span>
+            {{t "calendar.addSession" "Add session"}}
+          </button>
         </div>
-      </div>
-      <div class="calendar-nav-col">
-        <div class="calendar-nav-row">
+        <div class="calendar-nav">
+          <button class="icon-button nav-arrow" data-nav="prev" aria-label="{{t "calendar.prev" "Prev"}}">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
+            </span>
+          </button>
+          <input type="date" class="date-input" id="calendar-date" value="{{focusDateValue}}" />
+          <button class="icon-button nav-arrow" data-nav="next" aria-label="{{t "calendar.next" "Next"}}">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+            </span>
+          </button>
+          <button class="secondary" id="calendar-today">{{t "calendar.today" "Today"}}</button>
+        </div>
           <div class="calendar-views-stack">
             <div class="calendar-views">
               <button class="secondary view-btn {{#if isDay}}active{{/if}}" data-view="day">
@@ -225,18 +255,18 @@ const calendarTemplate = compileTemplate("calendar", `
                 </span>
                 {{t "calendar.day" "Day"}}
               </button>
-              <button class="secondary view-btn {{#if isWeek}}active{{/if}}" data-view="week">
-                <span class="icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M3 5h18a2 2 0 0 1 2 2v2H1V7a2 2 0 0 1 2-2zm-2 6h22v6a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-6zm4 2v2h4v-2H5zm6 0v2h4v-2h-4zm6 0v2h2v-2h-2z"/></svg>
-                </span>
-                {{t "calendar.week" "Week"}}
-              </button>
-              <button class="secondary view-btn {{#if isMonth}}active{{/if}}" data-view="month">
-                <span class="icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v3H2V6a2 2 0 0 1 2-2h3V2zm15 9H2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-9z"/></svg>
-                </span>
-                {{t "calendar.month" "Month"}}
-              </button>
+            <button class="secondary view-btn {{#if isWeek}}active{{/if}}" data-view="week">
+              <span class="icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M3 5h18a2 2 0 0 1 2 2v2H1V7a2 2 0 0 1 2-2zm-2 6h22v6a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-6zm4 2v2h4v-2H5zm6 0v2h4v-2h-4zm6 0v2h2v-2h-2z"/></svg>
+              </span>
+              {{t "calendar.week" "Week"}}
+            </button>
+            <button class="secondary view-btn {{#if isMonth}}active{{/if}}" data-view="month">
+              <span class="icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h3a2 2 0 0 1 2 2v3H2V6a2 2 0 0 1 2-2h3V2zm15 9H2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-9z"/></svg>
+              </span>
+              {{t "calendar.month" "Month"}}
+            </button>
               <button class="secondary view-btn {{#if isList}}active{{/if}}" data-view="list">
                 <span class="icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><path d="M4 6h3v3H4V6zm5 1h11v1H9V7zm-5 6h3v3H4v-3zm5 1h11v1H9v-1zm-5 6h3v3H4v-3zm5 1h11v1H9v-1z"/></svg>
@@ -249,78 +279,75 @@ const calendarTemplate = compileTemplate("calendar", `
               <span>{{rangeLabel}}</span>
             </div>
           </div>
-          <div class="calendar-nav">
-            <button class="icon-button nav-arrow" data-nav="prev" aria-label="{{t "calendar.prev" "Prev"}}">
-              <span class="icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
-              </span>
-            </button>
-            <input type="text" class="date-input" id="calendar-date" value="{{focusDateDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
-            <button class="icon-button nav-arrow" data-nav="next" aria-label="{{t "calendar.next" "Next"}}">
-              <span class="icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
-              </span>
-            </button>
-            <button class="secondary" id="calendar-today">{{t "calendar.today" "Today"}}</button>
-          </div>
-        </div>
       </div>
     </div>
   </div>
   <div class="calendar-body">
     {{#if isDay}}
-      <div class="calendar-day calendar-dropzone" data-date="{{day.dateKey}}">
-        <div class="calendar-day-header">{{day.label}}</div>
-        {{#if day.hasEvents}}
-          <div class="calendar-events">
-            {{#each day.events}}
-              <div class="calendar-event {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
-                {{#unless suppressActions}}
-                  <button class="event-actions" type="button" aria-label="{{t "calendar.actions" "Actions"}}">
-                    <span class="icon" aria-hidden="true">
-                      <svg viewBox="0 0 24 24">
-                        <circle cx="5" cy="12" r="2"></circle>
-                        <circle cx="12" cy="12" r="2"></circle>
-                        <circle cx="19" cy="12" r="2"></circle>
-                      </svg>
-                    </span>
-                  </button>
-                  <button class="event-share" type="button" aria-label="{{t "calendar.actionShare" "Share"}}">
-                    <span class="icon" aria-hidden="true">
-                      <svg viewBox="0 0 24 24"><path d="M18 8a3 3 0 1 0-2.83-4H15a3 3 0 0 0 .17 1l-7.1 4.13a3 3 0 0 0-2.17-1 3 3 0 1 0 2.17 5l7.1 4.13A3 3 0 1 0 15 16a3 3 0 0 0 .17 1l-7.1-4.13a3 3 0 0 0 0-2.74l7.1-4.13A3 3 0 0 0 18 8z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-                    </span>
-                  </button>
-                {{/unless}}
-                <div class="event-time">{{timeRange}}</div>
-                <div class="event-title">
-                  {{seriesTitle}}
-                  {{#if hasBirthdayList}}
-                    <span class="birthday-chevron" aria-hidden="true">
-                      <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg>
-                    </span>
+      <div class="calendar-day-view calendar-time-grid" style="--hour-count: {{hourTicks.length}}">
+        <div class="calendar-hours">
+          {{#each hourTicks}}
+            <div class="calendar-hour">{{this}}</div>
+          {{/each}}
+        </div>
+        <div class="calendar-day calendar-dropzone" data-date="{{day.dateKey}}">
+          <div class="calendar-day-header">{{day.label}}</div>
+          {{#if day.hasEvents}}
+            <div class="calendar-events">
+              {{#each day.events}}
+                <div class="calendar-event {{#if isCancelled}}cancelled{{/if}} {{#if isPast}}past{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
+                  {{#unless suppressActions}}
+                    <button class="event-actions" type="button" aria-label="{{t "calendar.actions" "Actions"}}">
+                      <span class="icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                          <circle cx="5" cy="12" r="2"></circle>
+                          <circle cx="12" cy="12" r="2"></circle>
+                          <circle cx="19" cy="12" r="2"></circle>
+                        </svg>
+                      </span>
+                    </button>
+                    <button class="event-share" type="button" aria-label="{{t "calendar.actionShare" "Share"}}">
+                      <span class="icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M18 8a3 3 0 1 0-2.83-4H15a3 3 0 0 0 .17 1l-7.1 4.13a3 3 0 0 0-2.17-1 3 3 0 1 0 2.17 5l7.1 4.13A3 3 0 1 0 15 16a3 3 0 0 0 .17 1l-7.1-4.13a3 3 0 0 0 0-2.74l7.1-4.13A3 3 0 0 0 18 8z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                      </span>
+                    </button>
+                  {{/unless}}
+                  <div class="event-time">{{timeRange}}</div>
+                  <div class="event-title">
+                    {{seriesTitle}}
+                    {{#if hasBirthdayList}}
+                      <span class="birthday-chevron" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg>
+                      </span>
+                    {{/if}}
+                  </div>
+                  <div class="event-meta">{{roomName}} - {{instructorName}}</div>
+                  <div class="event-meta event-meta-compact">
+                    <span>{{registeredSummary}}</span>
+                  </div>
+                  {{#if seriesIcon}}<span class="event-icon-corner" aria-hidden="true">{{seriesIcon}}</span>{{/if}}
+                  {{#if isCancelled}}
+                    <div class="event-meta">{{t "calendar.cancelled" "Cancelled"}}</div>
+                  {{/if}}
+                  {{#if isBirthday}}
+                    <div class="event-meta">{{t "calendar.birthday" "Birthday"}}</div>
                   {{/if}}
                 </div>
-                <div class="event-meta">{{roomName}} - {{instructorName}}</div>
-                <div class="event-meta event-meta-compact">
-                  <span>{{registeredSummary}}</span>
-                </div>
-                {{#if seriesIcon}}<span class="event-icon-corner" aria-hidden="true">{{seriesIcon}}</span>{{/if}}
-                {{#if isCancelled}}
-                  <div class="event-meta">{{t "calendar.cancelled" "Cancelled"}}</div>
-                {{/if}}
-                {{#if isBirthday}}
-                  <div class="event-meta">{{t "calendar.birthday" "Birthday"}}</div>
-                {{/if}}
-              </div>
-            {{/each}}
-          </div>
-        {{else}}
-          <div class="empty-state">{{t "calendar.empty.day" "No classes scheduled."}}</div>
-        {{/if}}
+              {{/each}}
+            </div>
+          {{else}}
+            <div class="empty-state">{{t "calendar.empty.day" "No classes scheduled."}}</div>
+          {{/if}}
+        </div>
       </div>
     {{/if}}
     {{#if isWeek}}
-      <div class="calendar-week">
+      <div class="calendar-week calendar-time-grid" style="--hour-count: {{hourTicks.length}}">
+        <div class="calendar-hours">
+          {{#each hourTicks}}
+            <div class="calendar-hour">{{this}}</div>
+          {{/each}}
+        </div>
         {{#each week.days}}
           <div class="calendar-day-column calendar-dropzone {{#if isToday}}today{{/if}}" data-date="{{dateKey}}">
             <div class="calendar-day-label">
@@ -330,7 +357,7 @@ const calendarTemplate = compileTemplate("calendar", `
             {{#if hasEvents}}
               <div class="calendar-day-events">
                 {{#each events}}
-                  <div class="calendar-event compact {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
+                  <div class="calendar-event compact {{#if isCancelled}}cancelled{{/if}} {{#if isPast}}past{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
                     {{#unless suppressActions}}
                       <button class="event-actions" type="button" aria-label="{{t "calendar.actions" "Actions"}}">
                         <span class="icon" aria-hidden="true">
@@ -387,7 +414,7 @@ const calendarTemplate = compileTemplate("calendar", `
                 {{#if hasEvents}}
                   <div class="calendar-month-events">
                     {{#each eventsPreview}}
-                      <div class="calendar-event mini {{#if isCancelled}}cancelled{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
+                      <div class="calendar-event mini {{#if isCancelled}}cancelled{{/if}} {{#if isPast}}past{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
                         <span class="event-time">{{time}}</span>
                         <span class="event-title">
                           {{title}}
@@ -477,18 +504,8 @@ const rosterTemplate = compileTemplate("roster", `
       {{t "roster.selectAll" "Select all"}}
     </label>
     <div class="roster-actions-buttons">
-      <button class="secondary btn-icon" id="roster-email">
-        <span class="icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 7l9 6 9-6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-        </span>
-        {{t "roster.emailAll" "Send mail to all"}}
-      </button>
-      <button class="secondary btn-icon" id="roster-sms">
-        <span class="icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-        </span>
-        {{t "roster.smsSelected" "Send SMS"}}
-      </button>
+      <button class="secondary" id="roster-email">{{t "roster.emailShort" "Send Email"}}</button>
+      <button class="secondary" id="roster-sms">{{t "roster.smsShort" "Send SMS"}}</button>
     </div>
   </div>
   {{#if roster.length}}
@@ -714,10 +731,10 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
             <div>
               <label>{{t "session.icon" "Icon"}}</label>
               <div class="icon-field">
-                <span class="icon-preview" data-icon-preview>{{instanceIcon}}</span>
-                <input name="icon" value="{{instanceIcon}}" placeholder="{{seriesIcon}}" />
-                <button type="button" class="icon-button icon-picker-trigger" data-icon-picker data-icon-target="[name=&quot;icon&quot;]" aria-label="{{t "session.pickIcon" "Pick icon"}}">
-                  <span class="icon" aria-hidden="true">
+                <input type="hidden" name="icon" value="{{instanceIcon}}" />
+                <button type="button" class="icon-button icon-picker-trigger icon-picker-button" data-icon-picker data-icon-target="[name=&quot;icon&quot;]" aria-label="{{t "session.pickIcon" "Pick icon"}}">
+                  <span class="icon-preview" data-icon-preview>{{instanceIcon}}</span>
+                  <span class="icon-fallback" aria-hidden="true">
                     <svg viewBox="0 0 24 24"><path d="M4 5h6v6H4V5zm10 0h6v6h-6V5zM4 13h6v6H4v-6zm10 0h6v6h-6v-6z"/></svg>
                   </span>
                 </button>
@@ -728,13 +745,6 @@ const calendarModalTemplate = compileTemplate("calendar-modal", `
               <label>{{t "session.color" "Color"}}</label>
               <div class="color-field" data-series-color="{{seriesColor}}">
                 <input class="color-input" name="color" type="color" value="{{colorValue}}" />
-                <div class="color-chip" style="background: {{colorValue}}"></div>
-                <input class="color-text" type="text" value="{{colorValue}}" placeholder="{{seriesColor}}" data-color-text />
-                <button type="button" class="icon-button color-reset" data-color-reset aria-label="{{t "session.useSeriesColor" "Use series color"}}">
-                  <span class="icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><path d="M5 12a7 7 0 1 0 7-7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 5v4h4" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-                  </span>
-                </button>
               </div>
               <div class="meta">{{t "session.colorHint" "Leave blank to use the series color."}}</div>
             </div>
@@ -873,6 +883,36 @@ const sessionRegistrationsModalTemplate = compileTemplate("session-registrations
         {{#if hasSessionDescription}}
           <div class="session-description">{{sessionDescription}}</div>
         {{/if}}
+        <div class="registration-form">
+          <h4 class="registration-title">{{t "session.registrationTitle" "Registration"}}</h4>
+          <div class="form-grid">
+            <div class="span-2">
+              <div class="registration-lookup-row">
+                <input name="customerLookup" list="customer-list" placeholder="{{t "session.findCustomerPlaceholder" "Start typing a name or email"}}" autocomplete="off" />
+                <select name="attendanceType" class="attendance-select" aria-label="{{t "session.attendance" "Attendance"}}">
+                  <option value="in-person">{{t "session.attendance.inPerson" "In-studio"}}</option>
+                  {{#if hasRemoteCapacity}}
+                    <option value="remote">{{t "session.attendance.remote" "Remote (Zoom)"}}</option>
+                  {{/if}}
+                </select>
+              </div>
+              <input type="hidden" name="customerId" />
+              <datalist id="customer-list">
+                {{#each customers}}
+                  <option value="{{lookupLabel}}" data-customer-id="{{id}}"></option>
+                {{/each}}
+                {{#if addCustomerOption}}
+                  <option value="{{addCustomerOption}}" data-add="true"></option>
+                {{/if}}
+              </datalist>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <div class="modal-actions">
+              <button id="register-customer">{{t "session.registerCustomer" "Register customer"}}</button>
+            </div>
+          </div>
+        </div>
         <div class="registrations-header">
           <div>
             <h4>{{t "session.participantsTitle" "Participants list"}}</h4>
@@ -887,39 +927,6 @@ const sessionRegistrationsModalTemplate = compileTemplate("session-registrations
         </div>
         <div class="roster" data-roster-panel>
           {{{rosterHtml}}}
-        </div>
-        <div class="registration-form">
-          <h4 class="registration-title">{{t "session.registrationTitle" "Registration"}}</h4>
-          <div class="meta registration-hint">{{t "session.addCustomerHint" "Select an existing customer or add a new one."}}</div>
-          <div class="form-grid">
-            <div class="span-2">
-              <label>{{t "session.findCustomer" "Find existing customer"}}</label>
-              <div class="registration-lookup-row">
-                <input name="customerLookup" list="customer-list" placeholder="{{t "session.findCustomerPlaceholder" "Start typing a name or email"}}" autocomplete="off" />
-                <select name="attendanceType" class="attendance-select" aria-label="{{t "session.attendance" "Attendance"}}">
-                  <option value="in-person">{{t "session.attendance.inPerson" "In-studio"}}</option>
-                  {{#if hasRemoteCapacity}}
-                    <option value="remote">{{t "session.attendance.remote" "Remote (Zoom)"}}</option>
-                  {{/if}}
-                </select>
-                <button class="icon-button add-inline" type="button" id="add-customer-modal" aria-label="{{t "customer.addTitle" "Add customer"}}">
-                  <span class="icon" aria-hidden="true">+</span>
-                  <span class="add-label">{{t "common.add" "Add"}}</span>
-                </button>
-              </div>
-              <input type="hidden" name="customerId" />
-              <datalist id="customer-list">
-                {{#each customers}}
-                  <option value="{{lookupLabel}}" data-customer-id="{{id}}"></option>
-                {{/each}}
-              </datalist>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <div class="modal-actions">
-              <button id="register-customer">{{t "session.registerCustomer" "Register customer"}}</button>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -1342,33 +1349,29 @@ const sessionModalTemplate = compileTemplate("session-modal", `
       <div class="form-grid session-one-time">
         <div>
           <label>{{t "session.date" "Date"}}</label>
-          <input type="text" class="date-input" name="date" value="{{focusDateDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
+          <input type="date" class="date-input" name="date" value="{{focusDateValue}}" />
         </div>
       </div>
       <div class="form-grid session-recurring hidden">
         <div>
           <label>{{t "session.startDate" "Start date"}}</label>
-          <input type="text" class="date-input" name="startDate" value="{{focusDateDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
+          <input type="date" class="date-input" name="startDate" value="{{focusDateValue}}" />
+        </div>
+        <div>
+          <label>{{t "session.generateUntil" "Generate until"}}</label>
+          <input type="date" class="date-input" name="generateUntil" value="{{generateUntilValue}}" />
         </div>
         <div class="span-2">
           <label>{{t "session.daysOfWeek" "Days of week"}}</label>
           <div class="weekday-pills">
-            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="1" />{{t "weekday.monday" "Monday"}}</label>
-            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="2" />{{t "weekday.tuesday" "Tuesday"}}</label>
-            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="3" />{{t "weekday.wednesday" "Wednesday"}}</label>
-            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="4" />{{t "weekday.thursday" "Thursday"}}</label>
-            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="5" />{{t "weekday.friday" "Friday"}}</label>
-            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="6" />{{t "weekday.saturday" "Saturday"}}</label>
-            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="0" />{{t "weekday.sunday" "Sunday"}}</label>
+            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="0" /><span>{{t "weekday.sunday" "Sunday"}}</span></label>
+            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="1" /><span>{{t "weekday.monday" "Monday"}}</span></label>
+            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="2" /><span>{{t "weekday.tuesday" "Tuesday"}}</span></label>
+            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="3" /><span>{{t "weekday.wednesday" "Wednesday"}}</span></label>
+            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="4" /><span>{{t "weekday.thursday" "Thursday"}}</span></label>
+            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="5" /><span>{{t "weekday.friday" "Friday"}}</span></label>
+            <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="6" /><span>{{t "weekday.saturday" "Saturday"}}</span></label>
           </div>
-        </div>
-        <div>
-          <label>{{t "session.recurrence" "Recurrence (weeks)"}}</label>
-          <input type="number" name="recurrenceIntervalWeeks" value="1" />
-        </div>
-        <div>
-          <label>{{t "session.generateWeeks" "Generate weeks"}}</label>
-          <input type="number" name="generateWeeks" value="8" />
         </div>
       </div>
       <div class="modal-footer">
@@ -1415,10 +1418,10 @@ const seriesModalTemplate = compileTemplate("series-modal", `
           <div>
             <label>{{t "series.icon" "Icon"}}</label>
             <div class="icon-field">
-              <span class="icon-preview" data-icon-preview>{{icon}}</span>
-              <input name="icon" value="{{icon}}" placeholder="flow" />
-              <button type="button" class="icon-button icon-picker-trigger" data-icon-picker data-icon-target="[name=&quot;icon&quot;]" aria-label="{{t "session.pickIcon" "Pick icon"}}">
-                <span class="icon" aria-hidden="true">
+              <input type="hidden" name="icon" value="{{icon}}" />
+              <button type="button" class="icon-button icon-picker-trigger icon-picker-button" data-icon-picker data-icon-target="[name=&quot;icon&quot;]" aria-label="{{t "session.pickIcon" "Pick icon"}}">
+                <span class="icon-preview" data-icon-preview>{{icon}}</span>
+                <span class="icon-fallback" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><path d="M4 5h6v6H4V5zm10 0h6v6h-6V5zM4 13h6v6H4v-6zm10 0h6v6h-6v-6z"/></svg>
                 </span>
               </button>
@@ -1428,8 +1431,6 @@ const seriesModalTemplate = compileTemplate("series-modal", `
             <label>{{t "series.color" "Color"}}</label>
             <div class="color-field">
               <input class="color-input" name="color" type="color" value="{{color}}" />
-              <div class="color-chip" style="background: {{color}}"></div>
-              <input class="color-text" type="text" value="{{color}}" placeholder="#f1c232" data-color-text />
             </div>
           </div>
         <div class="span-2">
@@ -1438,7 +1439,7 @@ const seriesModalTemplate = compileTemplate("series-modal", `
             {{#each dayOptions}}
               <label class="weekday-pill">
                 <input type="checkbox" name="seriesDays" value="{{value}}" {{#if selected}}checked{{/if}} />
-                {{label}}
+                <span>{{label}}</span>
               </label>
             {{/each}}
           </div>
@@ -1495,18 +1496,10 @@ const seriesModalTemplate = compileTemplate("series-modal", `
             <label>{{t "series.description" "Description"}}</label>
             <textarea name="description" rows="4" placeholder="{{t "series.descriptionHintPlain" "Add description"}}">{{description}}</textarea>
           </div>
-          <div>
-            <label>{{t "series.recurrence" "Recurrence (weeks)"}}</label>
-            <input type="number" name="recurrenceIntervalWeeks" value="{{recurrenceIntervalWeeks}}" />
-          </div>
-          <div>
-            <label>{{t "series.generateWeeks" "Generate (weeks)"}}</label>
-            <input type="number" name="generateWeeks" value="{{generateWeeks}}" min="1" />
-          </div>
-          <div>
-            <label>{{t "series.generateUntil" "Generate until"}}</label>
-          <input type="text" class="date-input" name="generateUntil" value="{{generateUntilDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
-          </div>
+        <div>
+          <label>{{t "series.generateUntil" "Generate until"}}</label>
+          <input type="date" class="date-input" name="generateUntil" value="{{generateUntilValue}}" />
+        </div>
           <div>
             <label>{{t "series.cancellationWindow" "Cancellation window (hours)"}}</label>
             <input type="number" name="cancellationWindowHours" value="{{cancellationWindowHours}}" />
@@ -1582,15 +1575,18 @@ const customerModalTemplate = compileTemplate("customer-modal", `
         </div>
         <div>
           <label>{{t "customer.sex" "Sex"}}</label>
-          <select name="gender">
+          <div class="sex-pills">
             {{#each genderOptions}}
-              <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+              <label class="sex-pill">
+                <input type="radio" name="gender" value="{{value}}" {{#if selected}}checked{{/if}} />
+                <span>{{label}}</span>
+              </label>
             {{/each}}
-          </select>
+          </div>
         </div>
         <div>
           <label>{{t "customer.dateOfBirth" "Date of birth"}}</label>
-          <input name="dateOfBirth" type="text" class="date-input" value="{{dateOfBirthDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
+          <input name="dateOfBirth" type="date" class="date-input" value="{{dateOfBirthValue}}" />
         </div>
         <div class="span-2 address-row">
           <div>
@@ -1840,7 +1836,7 @@ const userModalTemplate = compileTemplate("user-modal", `
         </div>
         <div>
           <label>{{t "user.dateOfBirth" "Date of birth"}}</label>
-          <input name="dateOfBirth" type="text" class="date-input" value="{{dateOfBirthDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
+          <input name="dateOfBirth" type="date" class="date-input" value="{{dateOfBirthValue}}" />
         </div>
         <div>
           <label>{{t "user.idNumber" "ID number"}}</label>
@@ -2090,6 +2086,75 @@ const planModalTemplate = compileTemplate("plan-modal", `
   </div>
 `);
 
+const customerTagModalTemplate = compileTemplate("customer-tag-modal", `
+  <div class="modal-overlay" id="customer-tag-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h3>{{t "customerTags.title" "Customer tags"}}</h3>
+          <div class="muted">{{t "customerTags.subtitle" "Create tags to help segment customers."}}</div>
+        </div>
+        <button class="modal-close" id="close-tags" type="button" aria-label="{{t "common.close" "Close"}}"></button>
+      </div>
+      <input type="hidden" name="tagOriginal" value="{{tagOriginal}}" />
+        <div class="form-grid status-form">
+          <div>
+            <label>{{t "customerTags.name" "Tag name"}}</label>
+            <input name="tagName" value="{{tagName}}" />
+          </div>
+          <div>
+            <label>{{t "customerTags.color" "Color"}}</label>
+            <div class="color-field">
+              <input class="color-input" type="color" name="tagColor" value="{{tagColor}}" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-actions" style="margin-top:12px;">
+          <button id="save-tag">{{saveLabel}}</button>
+          <button class="secondary" id="reset-tag">{{t "customerTags.new" "New tag"}}</button>
+        </div>
+        <div style="margin-top:20px;">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>{{t "customerTags.name" "Tag name"}}</th>
+                <th>{{t "customerTags.color" "Color"}}</th>
+                <th>{{t "customerTags.actions" "Actions"}}</th>
+              </tr>
+            </thead>
+            <tbody id="customer-tag-rows">
+              {{#each tags}}
+              <tr>
+                <td>{{name}}</td>
+                <td><span class="color-dot" style="background: {{color}};"></span></td>
+                <td>
+                  <button class="secondary btn-edit" data-tag-edit="{{name}}">
+                  <span class="icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+                  </span>
+                  {{t "common.edit" "Edit"}}
+                </button>
+                <button class="secondary btn-danger" data-tag-delete="{{name}}">
+                  <span class="icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      <path d="M8 6V4h8v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      <path d="M19 6l-1 14H6L5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      <path d="M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </span>
+                  {{t "customerTags.delete" "Delete"}}
+                </button>
+              </td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+`);
+
 const planCategoryModalTemplate = compileTemplate("plan-category-modal", `
   <div class="modal-overlay" id="plan-category-modal">
     <div class="modal">
@@ -2191,7 +2256,10 @@ const bulkRegistrationTemplate = compileTemplate("bulk-registration", `
 const eventsTemplate = compileTemplate("events", `
   <div class="notice">{{t "events.notice" "Create weekly series and auto-generate classes."}}</div>
   <div class="toolbar">
-    <button id="add-series">{{t "events.addSeries" "Add series"}}</button>
+    <button id="add-series">
+      <span class="icon" aria-hidden="true">+</span>
+      {{t "events.addSeries" "Add series"}}
+    </button>
   </div>
   {{#if hasSeries}}
     <table class="table">
@@ -2220,13 +2288,12 @@ const eventsTemplate = compileTemplate("events", `
           <td>{{remoteCapacity}}</td>
           <td>{{activeLabel}}</td>
           <td>
-            <button class="secondary btn-edit" data-edit="{{id}}">
+            <button class="secondary btn-edit icon-only" data-edit="{{id}}" aria-label="{{t "common.edit" "Edit"}}" title="{{t "common.edit" "Edit"}}">
               <span class="icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
               </span>
-              {{t "common.edit" "Edit"}}
             </button>
-            <button class="secondary btn-danger" data-delete-series="{{id}}">
+            <button class="secondary btn-danger icon-only" data-delete-series="{{id}}" aria-label="{{t "events.delete" "Delete"}}" title="{{t "events.delete" "Delete"}}">
               <span class="icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24">
                   <path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -2235,7 +2302,6 @@ const eventsTemplate = compileTemplate("events", `
                   <path d="M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                 </svg>
               </span>
-              {{t "events.delete" "Delete"}}
             </button>
           </td>
         </tr>
@@ -2250,7 +2316,10 @@ const eventsTemplate = compileTemplate("events", `
 const plansTemplate = compileTemplate("plans", `
   <div class="notice">{{t "plans.notice" "Manage membership pricing, limits, and availability."}}</div>
   <div class="toolbar">
-    <button id="add-plan">{{t "plans.add" "Add plan"}}</button>
+    <button id="add-plan">
+      <span class="icon" aria-hidden="true">+</span>
+      {{t "plans.add" "Add plan"}}
+    </button>
     <button class="secondary" id="manage-plan-categories">{{t "plans.manageCategories" "Manage categories"}}</button>
   </div>
   <div style="margin-top:24px;">
@@ -2296,6 +2365,7 @@ const customersTemplate = compileTemplate("customers", `
       {{t "customers.add" "Add customer"}}
     </button>
     <button class="secondary" id="manage-statuses">{{t "customers.manageStatuses" "Manage statuses"}}</button>
+    <button class="secondary" id="manage-tags">{{t "customers.manageTags" "Manage tags"}}</button>
     <button class="secondary" id="export-customers">{{t "customers.export" "Export CSV"}}</button>
     <label class="import-card" id="import-customers-zone">
       <input type="file" id="import-customers" accept=".csv,.xlsx" />
@@ -2309,6 +2379,12 @@ const customersTemplate = compileTemplate("customers", `
       <option value="">{{t "customers.statusAll" "All statuses"}}</option>
       {{#each statusOptions}}
         <option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>
+      {{/each}}
+    </select>
+    <select name="tagFilter">
+      <option value="">{{t "customers.tagAll" "All tags"}}</option>
+      {{#each tagOptions}}
+        <option value="{{value}}" {{#if selected}}selected{{/if}}>{{value}}</option>
       {{/each}}
     </select>
     <label class="checkbox">
@@ -2330,10 +2406,11 @@ const customersTemplate = compileTemplate("customers", `
     <thead>
       <tr>
         <th></th>
-        <th>{{t "customers.name" "Name"}}</th>
-        <th>{{t "customers.email" "Email"}}</th>
-        <th>{{t "customers.phone" "Phone"}}</th>
-        <th>{{t "customers.status" "Status"}}</th>
+        <th class="sortable {{#if (eq sortKey "name")}}sorted {{sortDir}}{{/if}}" data-sort="name">{{t "customers.name" "Name"}}</th>
+        <th class="sortable {{#if (eq sortKey "email")}}sorted {{sortDir}}{{/if}}" data-sort="email">{{t "customers.email" "Email"}}</th>
+        <th class="sortable {{#if (eq sortKey "phone")}}sorted {{sortDir}}{{/if}}" data-sort="phone">{{t "customers.phone" "Phone"}}</th>
+        <th class="sortable {{#if (eq sortKey "status")}}sorted {{sortDir}}{{/if}}" data-sort="status">{{t "customers.status" "Status"}}</th>
+        <th>{{t "customer.tags" "Tags"}}</th>
         <th>{{t "customers.actions" "Actions"}}</th>
       </tr>
     </thead>
@@ -2341,21 +2418,21 @@ const customersTemplate = compileTemplate("customers", `
       {{#each customers}}
       <tr class="{{#if isArchived}}row-muted{{/if}}">
         <td><input type="checkbox" data-customer-select="{{id}}" /></td>
-        <td>{{fullName}}</td>
+        <td><a href="#/customer/{{id}}" class="link-button">{{fullName}}</a></td>
         <td><a href="mailto:{{email}}">{{email}}</a></td>
         <td>
           <a href="tel:{{phone}}">{{phone}}</a>
           <a href="sms:{{phone}}" class="link-muted">{{t "customers.sms" "SMS"}}</a>
         </td>
         <td>{{statusLabel}}</td>
+        <td>{{{tagsHtml}}}</td>
         <td>
-          <button class="secondary btn-edit" data-edit="{{id}}">
+          <button class="secondary btn-edit icon-only" data-edit="{{id}}" aria-label="{{t "common.edit" "Edit"}}" title="{{t "common.edit" "Edit"}}">
             <span class="icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
             </span>
-            {{t "common.edit" "Edit"}}
           </button>
-          <button class="secondary btn-danger" data-archive="{{id}}">
+          <button class="secondary btn-danger icon-only" data-archive="{{id}}" aria-label="{{archiveLabel}}" title="{{archiveLabel}}">
             <span class="icon" aria-hidden="true">
               <svg viewBox="0 0 24 24">
                 <path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -2364,13 +2441,193 @@ const customersTemplate = compileTemplate("customers", `
                 <path d="M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
               </svg>
             </span>
-            {{archiveLabel}}
           </button>
         </td>
       </tr>
       {{/each}}
     </tbody>
   </table>
+`);
+
+const customerDetailsTemplate = compileTemplate("customer-details", `
+  <div class="customer-details">
+    <div class="details-header">
+      <div class="details-title">
+        <h2>{{fullName}}</h2>
+        <div class="muted">{{email}}{{#if phone}} · {{phone}}{{/if}}</div>
+        <div class="meta">{{statusLabel}}</div>
+      </div>
+      <div class="details-actions">
+        <button class="secondary btn-edit" id="edit-customer">
+        <span class="icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+        </span>
+        {{t "common.edit" "Edit"}}
+        </button>
+      </div>
+    </div>
+    <div class="details-columns">
+      <div class="details-main">
+        <section class="details-section">
+          <h3>{{t "customer.details.info" "Information"}}</h3>
+          <div class="details-list">
+            <div><span class="label">{{t "customers.name" "Name"}}</span><span>{{fullName}}</span></div>
+            <div><span class="label">{{t "customers.email" "Email"}}</span><span>{{email}}</span></div>
+            <div><span class="label">{{t "customers.phone" "Phone"}}</span><span>{{phone}}</span></div>
+            <div><span class="label">{{t "customer.idNumber" "ID number"}}</span><span>{{idNumber}}</span></div>
+            <div><span class="label">{{t "customer.sex" "Sex"}}</span><span>{{gender}}</span></div>
+            <div><span class="label">{{t "customer.dateOfBirth" "Date of birth"}}</span><span>{{dateOfBirth}}</span></div>
+            <div><span class="label">{{t "customer.city" "City"}}</span><span>{{city}}</span></div>
+            <div><span class="label">{{t "customer.address" "Address"}}</span><span>{{address}}</span></div>
+            <div><span class="label">{{t "customer.tags" "Tags"}}</span><span class="tags-inline">{{{tagsHtml}}}</span></div>
+            <div><span class="label">{{t "customer.signedHealth" "Signed health waiver"}}</span><span>{{signedHealthLabel}}</span></div>
+          </div>
+        </section>
+        <section class="details-section">
+          <h3>{{t "customer.details.signedForms" "Signed forms"}}</h3>
+          {{#if healthDeclarations.length}}
+            <table class="table details-table">
+              <thead>
+                <tr>
+                  <th>{{t "customer.details.submittedAt" "Submitted"}}</th>
+                  <th>{{t "customer.details.signature" "Signature"}}</th>
+                  <th>{{t "customer.details.signatureType" "Type"}}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{#each healthDeclarations}}
+                <tr>
+                  <td>{{submittedLabel}}</td>
+                  <td>{{signatureName}}</td>
+                  <td>{{signatureType}}</td>
+                </tr>
+                {{/each}}
+              </tbody>
+            </table>
+          {{else}}
+            <div class="empty-state">{{t "customer.details.noForms" "No signed forms yet."}}</div>
+          {{/if}}
+        </section>
+        <section class="details-section">
+          <div class="details-section-header">
+            <h3>{{t "customer.details.attachments" "Attachments"}}</h3>
+            <label class="secondary btn-icon">
+              <span class="icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </span>
+              {{t "customer.details.upload" "Upload"}}
+              <input type="file" id="customer-attachment-input" hidden />
+            </label>
+          </div>
+          {{#if attachments.length}}
+            <div class="attachments-list">
+              {{#each attachments}}
+                <div class="attachment-row">
+                  <div>
+                    <div class="attachment-name">{{fileName}}</div>
+                    <div class="meta">{{uploadedLabel}}</div>
+                  </div>
+                  <div class="attachment-actions">
+                    <a class="secondary" href="{{downloadUrl}}" target="_blank" rel="noreferrer">{{t "customer.download" "Download"}}</a>
+                  </div>
+                </div>
+              {{/each}}
+            </div>
+          {{else}}
+            <div class="empty-state">{{t "customer.details.noAttachments" "No attachments uploaded."}}</div>
+          {{/if}}
+        </section>
+        <section class="details-section">
+          <div class="details-section-header">
+            <h3>{{t "customer.details.recentRegistrations" "Recent registrations"}}</h3>
+            <button class="secondary" id="view-all-registrations">{{t "customer.details.viewAll" "View all"}}</button>
+          </div>
+          {{#if recentRegistrations.length}}
+            <table class="table details-table">
+              <thead>
+                <tr>
+                  <th>{{t "calendar.list.date" "Date"}}</th>
+                  <th>{{t "calendar.list.time" "Time"}}</th>
+                  <th>{{t "calendar.list.class" "Class"}}</th>
+                  <th>{{t "calendar.list.room" "Room"}}</th>
+                  <th>{{t "calendar.list.instructor" "Instructor"}}</th>
+                  <th>{{t "roster.booking" "Booking"}}</th>
+                  <th>{{t "roster.attendance" "Attendance"}}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{#each recentRegistrations}}
+                <tr>
+                  <td>{{dateLabel}}</td>
+                  <td>{{timeLabel}}</td>
+                  <td>{{seriesTitle}}</td>
+                  <td>{{roomName}}</td>
+                  <td>{{instructorName}}</td>
+                  <td>{{bookingStatusLabel}}</td>
+                  <td>{{attendanceLabel}}</td>
+                </tr>
+                {{/each}}
+              </tbody>
+            </table>
+          {{else}}
+            <div class="empty-state">{{t "customer.details.noRegistrations" "No registrations yet."}}</div>
+          {{/if}}
+        </section>
+        <section class="details-section">
+          <div class="details-section-header">
+            <h3>{{t "customer.details.recentInvoices" "Recent invoices"}}</h3>
+            <button class="secondary" id="view-billing">{{t "customer.details.viewBilling" "View billing"}}</button>
+          </div>
+          <div class="empty-state">{{t "customer.details.noBilling" "No billing activity yet."}}</div>
+        </section>
+      </div>
+      <div class="details-activity">
+        <section class="details-section">
+          <h3>{{t "customer.details.activity" "Activity log"}}</h3>
+          <form id="activity-form" class="activity-form">
+            <label>{{t "customer.details.activityAddTitle" "Log activity"}}</label>
+            <textarea name="activityNote" rows="3" placeholder="{{t "customer.details.activityPlaceholder" "Write a note about the customer."}}"></textarea>
+            <div class="activity-actions">
+              <label class="secondary btn-icon">
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                </span>
+                {{t "customer.details.activityFile" "Add photo"}}
+                <input type="file" name="activityFile" accept="image/*" hidden />
+              </label>
+              <button type="submit" id="save-activity">{{t "customer.details.activityAdd" "Add note"}}</button>
+            </div>
+          </form>
+        </section>
+        <section class="details-section">
+          {{#if auditLogs.length}}
+            <table class="table details-table">
+              <thead>
+                <tr>
+                  <th>{{t "audit.time" "Time"}}</th>
+                  <th>{{t "audit.actor" "Actor"}}</th>
+                  <th>{{t "audit.action" "Action"}}</th>
+                  <th>{{t "audit.summary" "Summary"}}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{#each auditLogs}}
+                <tr>
+                  <td>{{timeLabel}}</td>
+                  <td>{{actorLabel}}</td>
+                  <td>{{actionLabel}}</td>
+                  <td>{{summary}}</td>
+                </tr>
+                {{/each}}
+              </tbody>
+            </table>
+          {{else}}
+            <div class="empty-state">{{t "customer.details.noActivity" "No activity yet."}}</div>
+          {{/if}}
+        </section>
+      </div>
+    </div>
+  </div>
 `);
 
 const usersTemplate = compileTemplate("users", `
@@ -2416,17 +2673,15 @@ const usersTemplate = compileTemplate("users", `
         <td>{{statusLabel}}</td>
         <td>{{instructorLabel}}</td>
         <td>
-          <button class="secondary btn-edit" data-user-edit="{{id}}">
+          <button class="secondary btn-edit icon-only" data-user-edit="{{id}}" aria-label="{{t "common.edit" "Edit"}}" title="{{t "common.edit" "Edit"}}">
             <span class="icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
             </span>
-            {{t "common.edit" "Edit"}}
           </button>
-          <button class="secondary btn-icon" data-user-invite="{{id}}">
+          <button class="secondary btn-icon icon-only" data-user-invite="{{id}}" aria-label="{{t "users.invite" "Invite"}}" title="{{t "users.invite" "Invite"}}">
             <span class="icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 7l9 6 9-6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
             </span>
-            {{t "users.invite" "Invite"}}
           </button>
         </td>
       </tr>
@@ -2472,11 +2727,10 @@ const guestDirectoryTemplate = compileTemplate("guest-directory", `
         <td>{{statusLabel}}</td>
         <td>{{createdLabel}}</td>
         <td>
-          <button class="secondary btn-icon" data-guest-invite="{{id}}">
+          <button class="secondary btn-icon icon-only" data-guest-invite="{{id}}" aria-label="{{t "guests.invite" "Invite"}}" title="{{t "guests.invite" "Invite"}}">
             <span class="icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 7l9 6 9-6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
             </span>
-            {{t "guests.invite" "Invite"}}
           </button>
         </td>
       </tr>
@@ -2488,7 +2742,10 @@ const guestDirectoryTemplate = compileTemplate("guest-directory", `
 const roomsTemplate = compileTemplate("rooms", `
   <div class="notice">{{t "rooms.notice" "Manage studio rooms and spaces."}}</div>
   <div class="toolbar">
-    <button id="add-room">{{t "rooms.add" "Add room"}}</button>
+    <button id="add-room">
+      <span class="icon" aria-hidden="true">+</span>
+      {{t "rooms.add" "Add room"}}
+    </button>
   </div>
   <table class="table">
     <thead>
@@ -2502,13 +2759,12 @@ const roomsTemplate = compileTemplate("rooms", `
       <tr>
         <td>{{name}}</td>
         <td>
-          <button class="secondary btn-edit" data-room-edit="{{id}}">
+          <button class="secondary btn-edit icon-only" data-room-edit="{{id}}" aria-label="{{t "common.edit" "Edit"}}" title="{{t "common.edit" "Edit"}}">
             <span class="icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
             </span>
-            {{t "common.edit" "Edit"}}
           </button>
-          <button class="secondary btn-danger" data-room-delete="{{id}}">
+          <button class="secondary btn-danger icon-only" data-room-delete="{{id}}" aria-label="{{t "common.delete" "Delete"}}" title="{{t "common.delete" "Delete"}}">
             <span class="icon" aria-hidden="true">
               <svg viewBox="0 0 24 24">
                 <path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -2517,7 +2773,6 @@ const roomsTemplate = compileTemplate("rooms", `
                 <path d="M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
               </svg>
             </span>
-            {{t "common.delete" "Delete"}}
           </button>
         </td>
       </tr>
@@ -2557,11 +2812,11 @@ const payrollTemplate = compileTemplate("payroll", `
     </select>
     <div>
       <label>{{t "payroll.from" "From"}}</label>
-      <input type="text" class="date-input" name="payrollFrom" value="{{fromDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
+      <input type="date" class="date-input" name="payrollFrom" value="{{fromValue}}" />
     </div>
     <div>
       <label>{{t "payroll.to" "To"}}</label>
-      <input type="text" class="date-input" name="payrollTo" value="{{toDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
+      <input type="date" class="date-input" name="payrollTo" value="{{toValue}}" />
     </div>
     <button class="secondary" id="apply-payroll">{{t "common.apply" "Apply"}}</button>
   </div>
@@ -2621,11 +2876,11 @@ const auditTemplate = compileTemplate("audit", `
   <div class="audit-controls">
     <div>
       <label>{{t "audit.from" "From"}}</label>
-      <input type="text" class="date-input" name="auditFrom" value="{{fromDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
+      <input type="date" class="date-input" name="auditFrom" value="{{fromValue}}" />
     </div>
     <div>
       <label>{{t "audit.to" "To"}}</label>
-      <input type="text" class="date-input" name="auditTo" value="{{toDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
+      <input type="date" class="date-input" name="auditTo" value="{{toValue}}" />
     </div>
     <div>
       <label>{{t "audit.search" "Search"}}</label>
@@ -2644,7 +2899,7 @@ const auditTemplate = compileTemplate("audit", `
   <div class="audit-controls audit-clear">
     <div>
       <label>{{t "audit.clearBefore" "Clear before"}}</label>
-      <input type="text" class="date-input" name="auditClearBefore" value="{{clearBeforeDisplay}}" inputmode="numeric" placeholder="DD/MM/YYYY" />
+      <input type="date" class="date-input" name="auditClearBefore" value="{{clearBeforeValue}}" />
     </div>
     <div class="audit-actions">
       <button class="secondary" id="clear-audit">{{t "audit.clear" "Clear logs"}}</button>
@@ -2705,7 +2960,8 @@ const settingsTemplate = compileTemplate("settings", `
     </div>
     <div>
       <label>{{t "settings.weekStartsOn" "Week starts on"}}</label>
-      <input name="weekStartsOn" type="number" value="{{weekStartsOn}}" />
+      <div class="static-value">{{t "settings.weekStartsOnSunday" "Sunday"}}</div>
+      <input name="weekStartsOn" type="hidden" value="0" />
     </div>
     <div>
       <label>{{t "settings.defaultLocale" "Default language"}}</label>
@@ -2748,32 +3004,24 @@ const settingsTemplate = compileTemplate("settings", `
           <label>{{t "settings.primary" "Primary"}}</label>
           <div class="color-field">
             <input class="color-input" name="themePrimary" type="color" value="{{themePrimary}}" />
-            <div class="color-chip" style="background: {{themePrimary}}"></div>
-            <input class="color-text" type="text" value="{{themePrimary}}" placeholder="#f1c232" data-color-text />
           </div>
         </div>
         <div>
           <label>{{t "settings.secondary" "Secondary"}}</label>
           <div class="color-field">
             <input class="color-input" name="themeSecondary" type="color" value="{{themeSecondary}}" />
-            <div class="color-chip" style="background: {{themeSecondary}}"></div>
-            <input class="color-text" type="text" value="{{themeSecondary}}" placeholder="#f6d88a" data-color-text />
           </div>
         </div>
         <div>
           <label>{{t "settings.accent" "Accent"}}</label>
           <div class="color-field">
             <input class="color-input" name="themeAccent" type="color" value="{{themeAccent}}" />
-            <div class="color-chip" style="background: {{themeAccent}}"></div>
-            <input class="color-text" type="text" value="{{themeAccent}}" placeholder="#f9e7b7" data-color-text />
           </div>
         </div>
         <div>
           <label>{{t "settings.background" "Background"}}</label>
           <div class="color-field">
             <input class="color-input" name="themeBackground" type="color" value="{{themeBackground}}" />
-            <div class="color-chip" style="background: {{themeBackground}}"></div>
-            <input class="color-text" type="text" value="{{themeBackground}}" placeholder="#fff7de" data-color-text />
           </div>
         </div>
       </div>
@@ -3025,16 +3273,17 @@ const adminMachine = createMachine({
                 case "calendar": {
                     const view = input.calendarView || "week";
                     const focusDate = input.calendarDate || toDateInputValue(new Date());
-                    const range = getCalendarRange(view, focusDate, studio.weekStartsOn ?? 0);
-                    const [items, rooms, instructors, customers, plans, planCategories] = await Promise.all([
+                    const range = getCalendarRange(view, focusDate, 0);
+                    const [items, rooms, instructors, customers, plans, planCategories, customerTags] = await Promise.all([
                         apiGet(`/api/admin/calendar?from=${range.from}&to=${range.to}`),
                         apiGet("/api/admin/rooms"),
                         apiGet("/api/admin/instructors"),
                         apiGet("/api/admin/customers"),
                         apiGet("/api/admin/plans"),
-                        apiGet("/api/admin/plan-categories")
+                        apiGet("/api/admin/plan-categories"),
+                        apiGet("/api/admin/customer-tags")
                     ]);
-                    return { studio, items, rooms, instructors, customers, plans, planCategories, calendar: { view, focusDate, studio, range } };
+                    return { studio, items, rooms, instructors, customers, plans, planCategories, customerTags, calendar: { view, focusDate, studio, range } };
                 }
                 case "events": {
                     const [series, rooms, instructors, plans, planCategories] = await Promise.all([
@@ -3079,16 +3328,32 @@ const adminMachine = createMachine({
                     const search = getQueryParam("search") || "";
                     const includeArchived = getQueryParam("archived") === "1";
                     const statusId = getQueryParam("statusId") || "";
+                    const tag = getQueryParam("tag") || "";
+                    const sort = getQueryParam("sort") || "";
+                    const dir = getQueryParam("dir") || "";
                     const query = new URLSearchParams();
                     if (search) query.set("search", search);
                     if (includeArchived) query.set("includeArchived", "true");
                     if (statusId) query.set("statusId", statusId);
+                    if (tag) query.set("tag", tag);
+                    if (sort) query.set("sort", sort);
+                    if (dir) query.set("dir", dir);
                     const qs = query.toString();
-                    const [customers, customerStatuses] = await Promise.all([
+                    const [customers, customerStatuses, customerTags] = await Promise.all([
                         apiGet(`/api/admin/customers${qs ? `?${qs}` : ""}`),
-                        apiGet("/api/admin/customer-statuses")
+                        apiGet("/api/admin/customer-statuses"),
+                        apiGet("/api/admin/customer-tags")
                     ]);
-                    return { studio, customers, customerStatuses, customerFilters: { search, includeArchived, statusId } };
+                    return { studio, customers, customerStatuses, customerTags, customerFilters: { search, includeArchived, statusId, tag, sort, dir } };
+                }
+                case "customer": {
+                    const id = getRouteParam("customer");
+                    if (!id) {
+                        return { studio, customerDetails: null };
+                    }
+                    const customerDetails = await apiGet(`/api/admin/customers/${id}/details`);
+                    const customerTags = await apiGet("/api/admin/customer-tags");
+                    return { studio, customerDetails, customerTags };
                 }
                 case "users": {
                     const role = getQueryParam("role") || "";
@@ -3151,6 +3416,7 @@ function render(state) {
         rooms: t("page.rooms.title", "Rooms"),
         plans: t("page.plans.title", "Membership plans"),
         customers: t("page.customers.title", "Customer roster"),
+        customer: t("page.customer.title", "Customer details"),
         users: t("page.users.title", "Team access"),
         guests: t("page.guests.title", "Guest directory"),
         reports: t("page.reports.title", "Performance pulse"),
@@ -3165,6 +3431,7 @@ function render(state) {
         rooms: t("page.rooms.subtitle", "Spaces and rooms in the studio."),
         plans: t("page.plans.subtitle", "Sell weekly limits or unlimited passes."),
         customers: t("page.customers.subtitle", "Top-level view of active clients."),
+        customer: t("page.customer.subtitle", "Customer profile and history."),
         users: t("page.users.subtitle", "Manage roles and instructor profiles."),
         guests: t("page.guests.subtitle", "Read-only viewers with schedule access."),
         reports: t("page.reports.subtitle", "Revenue and occupancy at a glance."),
@@ -3186,7 +3453,7 @@ function render(state) {
         const focusDate = calendarMeta.focusDate || state.context.calendarDate || toDateInputValue(new Date());
         const studio = calendarMeta.studio || {};
         const timeZone = getLocalTimeZone();
-        const weekStartsOn = studio.weekStartsOn ?? 0;
+        const weekStartsOn = 0;
         const search = state.context.calendarSearch || "";
         const viewState = buildCalendarView(data.items || [], {
             view,
@@ -3197,6 +3464,7 @@ function render(state) {
             customers: data.customers || []
         });
         viewState.focusDateDisplay = formatDateDisplay(focusDate);
+        viewState.focusDateValue = normalizeDateInputValue(focusDate);
         const subtitleMapView = {
             day: t("calendar.subtitle.day", "Daily schedule focus."),
             week: t("calendar.subtitle.week", "Weekly schedule overview."),
@@ -3245,12 +3513,17 @@ function render(state) {
     }
 
     if (route === "customers") {
-        const customers = (data.customers || []).map(c => ({
+        const tagColorMap = buildTagColorMap(data.customerTags || []);
+        const customers = (data.customers || []).map(c => {
+            const tagsValue = c.tags || formatTags(c.tagsJson);
+            return {
             ...c,
             statusLabel: formatCustomerStatus(c.isArchived ? "Archived" : (c.statusName || "Active")),
-            archiveLabel: c.isArchived ? t("customers.restore", "Restore") : t("customers.archive", "Archive")
-        }));
-        const filters = data.customerFilters || { search: "", includeArchived: false, statusId: "" };
+            archiveLabel: c.isArchived ? t("customers.restore", "Restore") : t("customers.archive", "Archive"),
+            tagsHtml: renderTagChips(tagsValue, tagColorMap)
+        };
+        });
+        const filters = data.customerFilters || { search: "", includeArchived: false, statusId: "", tag: "", sort: "", dir: "" };
         const statusOptions = (data.customerStatuses || [])
             .filter(status => status.isActive !== false)
             .map(status => ({
@@ -3258,12 +3531,65 @@ function render(state) {
                 name: formatCustomerStatus(status.name),
                 selected: String(status.id) === String(filters.statusId || "")
             }));
+        const tagOptions = collectTagSuggestions(data.customers || [], data.customerTags || []).map(tagValue => ({
+            value: tagValue,
+            selected: String(tagValue) === String(filters.tag || "")
+        }));
+        const sortKey = (filters.sort || "").toLowerCase();
+        const sortDir = (filters.dir || "asc").toLowerCase() === "desc" ? "desc" : "asc";
         content = customersTemplate({
             customers,
             search: filters.search || "",
             includeArchived: filters.includeArchived,
-            statusOptions
+            statusOptions,
+            tagOptions,
+            sortKey,
+            sortDir
         });
+    }
+
+    if (route === "customer") {
+        const details = data.customerDetails || {};
+        const customer = details.customer || {};
+        if (!customer.id) {
+            content = `<div class="empty-state">${t("customer.details.notFound", "Customer not found.")}</div>`;
+        } else {
+        const tagColorMap = buildTagColorMap(data.customerTags || []);
+        const statusLabel = formatCustomerStatus(customer.isArchived ? "Archived" : (customer.statusName || "Active"));
+        const signedHealthLabel = customer.signedHealthView ? t("common.yes", "Yes") : t("common.no", "No");
+        const registrations = formatCustomerRegistrations(details.registrations || []);
+        const recentRegistrations = registrations.slice(0, 5);
+        const attachments = (details.attachments || []).map(item => ({
+            ...item,
+            uploadedLabel: formatDateTime(item.uploadedAtUtc),
+            downloadUrl: `/api/admin/customers/${customer.id}/attachments/${item.id}`
+        }));
+        const healthDeclarations = (details.healthDeclarations || []).map(item => ({
+            ...item,
+            submittedLabel: formatDateTime(item.submittedAtUtc),
+            signatureName: item.signatureName || "",
+            signatureType: item.signatureType || ""
+        }));
+        const auditLogs = (details.auditLogs || []).map(log => ({
+            ...log,
+            timeLabel: formatDateTime(log.createdAtUtc),
+            actorLabel: log.actorName || log.actorRole || "-",
+            actionLabel: formatAuditAction(log.action || "")
+        }));
+        const tagsHtml = renderTagChips(customer.tags || formatTags(customer.tagsJson), tagColorMap);
+        content = customerDetailsTemplate({
+            ...customer,
+            statusLabel,
+            signedHealthLabel,
+            dateOfBirth: customer.dateOfBirth ? formatDateDisplay(customer.dateOfBirth) : "",
+            tagsHtml,
+            registrations,
+            recentRegistrations,
+            attachments,
+            healthDeclarations,
+            auditLogs
+        });
+        }
     }
 
     if (route === "users") {
@@ -3356,8 +3682,8 @@ function render(state) {
             selected: String(instructor.id) === String(data.payrollFilters?.instructorId || "")
         }));
         const filters = data.payrollFilters || {};
-        const fromDisplay = filters.from ? formatDateDisplay(filters.from) : "";
-        const toDisplay = filters.to ? formatDateDisplay(filters.to) : "";
+        const fromValue = filters.from ? normalizeDateInputValue(filters.from) : "";
+        const toValue = filters.to ? normalizeDateInputValue(filters.to) : "";
         content = payrollTemplate({
             logs,
             hasLogs: logs.length > 0,
@@ -3366,8 +3692,8 @@ function render(state) {
             instructorOptions,
             from: filters.from || "",
             to: filters.to || "",
-            fromDisplay,
-            toDisplay,
+            fromValue,
+            toValue,
             errorMessage: data.payrollError || ""
         });
     }
@@ -3386,20 +3712,20 @@ function render(state) {
             };
         });
         const filters = data.audit?.filters || {};
-        const fromDisplay = filters.from ? formatDateDisplay(filters.from) : "";
-        const toDisplay = filters.to ? formatDateDisplay(filters.to) : "";
+        const fromValue = filters.from ? normalizeDateInputValue(filters.from) : "";
+        const toValue = filters.to ? normalizeDateInputValue(filters.to) : "";
         const clearBeforeValue = filters.to || "";
-        const clearBeforeDisplay = clearBeforeValue ? formatDateDisplay(clearBeforeValue) : "";
+        const clearBeforeDisplay = clearBeforeValue ? normalizeDateInputValue(clearBeforeValue) : "";
         content = auditTemplate({
             logs,
             hasLogs: logs.length > 0,
             from: filters.from || "",
             to: filters.to || "",
-            fromDisplay,
-            toDisplay,
+            fromValue,
+            toValue,
             search: filters.search || "",
             clearBefore: clearBeforeValue,
-            clearBeforeDisplay,
+            clearBeforeValue: clearBeforeDisplay,
             errorMessage: data.auditError || ""
         });
     }
@@ -3719,7 +4045,7 @@ function bindRouteActions(route, data, state) {
                 const type = button.getAttribute("data-export");
                 if (!type) return;
                 const studioMeta = calendarMeta.studio || data.studio || {};
-                const range = calendarMeta.range || getCalendarRange(currentView, currentDate, studioMeta.weekStartsOn ?? 0);
+                const range = calendarMeta.range || getCalendarRange(currentView, currentDate, 0);
                 const params = new URLSearchParams();
                 if (range?.from) params.set("from", range.from);
                 if (range?.to) params.set("to", range.to);
@@ -3907,6 +4233,7 @@ function bindRouteActions(route, data, state) {
     if (route === "customers") {
         const addBtn = document.getElementById("add-customer");
         const manageStatusesBtn = document.getElementById("manage-statuses");
+        const manageTagsBtn = document.getElementById("manage-tags");
         const exportBtn = document.getElementById("export-customers");
         const importInput = document.getElementById("import-customers");
         const importZone = document.getElementById("import-customers-zone");
@@ -3926,6 +4253,12 @@ function bindRouteActions(route, data, state) {
         if (manageStatusesBtn) {
             manageStatusesBtn.addEventListener("click", () => {
                 openCustomerStatusModal(data.customerStatuses || []);
+            });
+        }
+
+        if (manageTagsBtn) {
+            manageTagsBtn.addEventListener("click", () => {
+                openCustomerTagModal(data.customerTags || []);
             });
         }
 
@@ -3987,9 +4320,11 @@ function bindRouteActions(route, data, state) {
                 const searchInput = document.querySelector("[name=\"search\"]");
                 const includeArchivedInput = document.querySelector("[name=\"includeArchived\"]");
                 const statusInput = document.querySelector("[name=\"statusFilter\"]");
+                const tagInput = document.querySelector("[name=\"tagFilter\"]");
                 const searchValue = searchInput?.value || "";
                 const includeArchived = includeArchivedInput?.checked;
                 const statusValue = statusInput?.value || "";
+                const tagValue = tagInput?.value || "";
                 const params = new URLSearchParams();
                 if (searchValue) {
                     params.set("search", searchValue);
@@ -4000,10 +4335,51 @@ function bindRouteActions(route, data, state) {
                 if (statusValue) {
                     params.set("statusId", statusValue);
                 }
+                if (tagValue) {
+                    params.set("tag", tagValue);
+                }
+                const sortKey = data.customerFilters?.sort || "";
+                const sortDir = data.customerFilters?.dir || "";
+                if (sortKey) {
+                    params.set("sort", sortKey);
+                }
+                if (sortDir) {
+                    params.set("dir", sortDir);
+                }
                 const query = params.toString();
                 window.location.hash = `#/customers${query ? `?${query}` : ""}`;
             });
         }
+
+        document.querySelectorAll("th[data-sort]").forEach(header => {
+            header.addEventListener("click", () => {
+                const sortKey = header.getAttribute("data-sort") || "";
+                if (!sortKey) return;
+                const currentSort = data.customerFilters?.sort || "";
+                const currentDir = data.customerFilters?.dir || "asc";
+                let nextDir = "asc";
+                if (currentSort === sortKey) {
+                    nextDir = currentDir === "asc" ? "desc" : "asc";
+                }
+                const params = new URLSearchParams();
+                const searchInput = document.querySelector("[name=\"search\"]");
+                const includeArchivedInput = document.querySelector("[name=\"includeArchived\"]");
+                const statusInput = document.querySelector("[name=\"statusFilter\"]");
+                const tagInput = document.querySelector("[name=\"tagFilter\"]");
+                const searchValue = searchInput?.value || "";
+                const includeArchived = includeArchivedInput?.checked;
+                const statusValue = statusInput?.value || "";
+                const tagValue = tagInput?.value || "";
+                if (searchValue) params.set("search", searchValue);
+                if (includeArchived) params.set("archived", "1");
+                if (statusValue) params.set("statusId", statusValue);
+                if (tagValue) params.set("tag", tagValue);
+                params.set("sort", sortKey);
+                params.set("dir", nextDir);
+                const query = params.toString();
+                window.location.hash = `#/customers${query ? `?${query}` : ""}`;
+            });
+        });
 
         document.querySelectorAll("button[data-edit]").forEach(btn => {
             btn.addEventListener("click", () => {
@@ -4102,6 +4478,94 @@ function bindRouteActions(route, data, state) {
                     return;
                 }
                 await openBulkRegistrationModal(selected, data);
+            });
+        }
+    }
+
+    if (route === "customer") {
+        const editBtn = document.getElementById("edit-customer");
+        const viewAllBtn = document.getElementById("view-all-registrations");
+        const billingBtn = document.getElementById("view-billing");
+        const attachmentInput = document.getElementById("customer-attachment-input");
+        const activityForm = document.getElementById("activity-form");
+        if (editBtn) {
+            editBtn.addEventListener("click", async () => {
+                const details = data.customerDetails || {};
+                const customer = details.customer;
+                if (!customer?.id) return;
+                const [customerStatuses, customerTags] = await Promise.all([
+                    apiGet("/api/admin/customer-statuses"),
+                    apiGet("/api/admin/customer-tags")
+                ]);
+                openCustomerModal(customer, {
+                    customerStatuses,
+                    customerTags,
+                    customers: []
+                });
+            });
+        }
+        if (viewAllBtn) {
+            viewAllBtn.addEventListener("click", () => {
+                const details = data.customerDetails || {};
+                const registrations = formatCustomerRegistrations(details.registrations || []);
+                openCustomerRegistrationsModal(registrations);
+            });
+        }
+        if (billingBtn) {
+            billingBtn.addEventListener("click", () => {
+                openBillingModal();
+            });
+        }
+        if (attachmentInput) {
+            attachmentInput.addEventListener("change", async () => {
+                const details = data.customerDetails || {};
+                const customer = details.customer;
+                if (!customer?.id) return;
+                const file = attachmentInput.files?.[0];
+                if (!file) return;
+                const formData = new FormData();
+                formData.append("file", file);
+                try {
+                    await apiFetch(`/api/admin/customers/${customer.id}/attachments`, {
+                        method: "POST",
+                        body: formData
+                    });
+                    showToast(t("customer.details.uploadSuccess", "Attachment uploaded."), "success");
+                    attachmentInput.value = "";
+                    actor.send({ type: "REFRESH" });
+                } catch (error) {
+                    showToast(error.message || t("customer.details.uploadError", "Unable to upload attachment."), "error");
+                }
+            });
+        }
+        if (activityForm) {
+            activityForm.addEventListener("submit", async (event) => {
+                event.preventDefault();
+                const details = data.customerDetails || {};
+                const customer = details.customer;
+                if (!customer?.id) return;
+                const noteInput = activityForm.querySelector("[name=\"activityNote\"]");
+                const fileInput = activityForm.querySelector("[name=\"activityFile\"]");
+                const note = noteInput?.value?.trim() || "";
+                const file = fileInput?.files?.[0];
+                if (!note && !file) {
+                    showToast(t("customer.details.activityRequired", "Add a note or photo first."), "error");
+                    return;
+                }
+                const formData = new FormData();
+                if (note) formData.append("note", note);
+                if (file) formData.append("file", file);
+                try {
+                    await apiFetch(`/api/admin/customers/${customer.id}/activity`, {
+                        method: "POST",
+                        body: formData
+                    });
+                    showToast(t("customer.details.activitySaved", "Activity saved."), "success");
+                    activityForm.reset();
+                    actor.send({ type: "REFRESH" });
+                } catch (error) {
+                    showToast(error.message || t("customer.details.activityError", "Unable to save activity."), "error");
+                }
             });
         }
     }
@@ -4350,7 +4814,6 @@ function bindRouteActions(route, data, state) {
             button.addEventListener("click", async () => {
                 const formValues = readFormValues([
                     "name",
-                    "weekStartsOn",
                     "themeJson",
                     "logoUrl",
                     "faviconUrl",
@@ -4392,7 +4855,7 @@ function bindRouteActions(route, data, state) {
                 await apiPut("/api/admin/studio", {
                     name: formValues.name,
                     timezone: getLocalTimeZone(),
-                    weekStartsOn: Number(formValues.weekStartsOn),
+                    weekStartsOn: 0,
                     themeJson: JSON.stringify(theme, null, 2),
                     defaultLocale,
                     holidayCalendarsJson,
@@ -4422,6 +4885,11 @@ function bindRouteActions(route, data, state) {
 function readFormValues(fields) {
     const values = {};
     fields.forEach((field) => {
+        const checked = document.querySelector(`[name="${field}"]:checked`);
+        if (checked) {
+            values[field] = checked.value;
+            return;
+        }
         const element = document.querySelector(`[name="${field}"]`);
         values[field] = element ? element.value : "";
     });
@@ -4433,6 +4901,53 @@ function parseTagList(value) {
         .split(",")
         .map((tag) => tag.trim())
         .filter(Boolean);
+}
+
+function normalizeTagCatalog(tagCatalog) {
+    if (!Array.isArray(tagCatalog)) return [];
+    return tagCatalog.map((item, index) => {
+        if (typeof item === "string") {
+            return { name: item, color: TAG_COLOR_PALETTE[index % TAG_COLOR_PALETTE.length] };
+        }
+        const name = item?.name || item?.Name || "";
+        const color = item?.color || item?.Color || TAG_COLOR_PALETTE[index % TAG_COLOR_PALETTE.length];
+        return { name, color };
+    }).filter(item => item.name);
+}
+
+function buildTagColorMap(tagCatalog) {
+    const map = new Map();
+    normalizeTagCatalog(tagCatalog).forEach(item => {
+        map.set(item.name.toLowerCase(), item.color);
+    });
+    return map;
+}
+
+function nextTagColor(tagCatalog) {
+    const count = normalizeTagCatalog(tagCatalog).length;
+    return TAG_COLOR_PALETTE[count % TAG_COLOR_PALETTE.length];
+}
+
+function tagTextColor(hex) {
+    const clean = String(hex || "").replace("#", "");
+    if (clean.length !== 6) return "#111827";
+    const r = parseInt(clean.slice(0, 2), 16);
+    const g = parseInt(clean.slice(2, 4), 16);
+    const b = parseInt(clean.slice(4, 6), 16);
+    const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    return luminance > 0.6 ? "#111827" : "#ffffff";
+}
+
+function renderTagChips(tags, colorMap) {
+    const list = Array.isArray(tags) ? tags : parseTagList(tags);
+    if (!list.length) return "";
+    const chips = list.map(tag => {
+        const color = colorMap?.get(tag.toLowerCase()) || TAG_COLOR_PALETTE[0];
+        const textColor = tagTextColor(color);
+        const safe = escapeHtml(tag);
+        return `<span class="tag-chip" style="background:${color}; color:${textColor};">${safe}</span>`;
+    }).join("");
+    return `<span class="tag-chips">${chips}</span>`;
 }
 
 function serializeTags(value) {
@@ -4454,7 +4969,7 @@ function formatTags(tagsJson) {
     return tagsJson;
 }
 
-function setupTagInput(root) {
+function setupTagInput(root, colorMap) {
     const wrapper = root?.querySelector("[data-tag-input]");
     if (!wrapper) return;
     const chips = wrapper.querySelector(".tag-chips");
@@ -4469,6 +4984,13 @@ function setupTagInput(root) {
             const chip = document.createElement("span");
             chip.className = "tag-chip";
             chip.textContent = tag;
+            if (colorMap) {
+                const color = colorMap.get(tag.toLowerCase());
+                if (color) {
+                    chip.style.background = color;
+                    chip.style.color = tagTextColor(color);
+                }
+            }
             const remove = document.createElement("button");
             remove.type = "button";
             remove.className = "tag-remove";
@@ -4590,8 +5112,9 @@ function setupCustomerAddressAutocomplete(root, apiKey) {
     }).catch(() => {});
 }
 
-function collectTagSuggestions(customers) {
+function collectTagSuggestions(customers, tagCatalog = []) {
     const set = new Set();
+    normalizeTagCatalog(tagCatalog).forEach(tag => set.add(tag.name));
     (customers || []).forEach(customer => {
         const value = customer.tags || formatTags(customer.tagsJson);
         parseTagList(value).forEach(tag => set.add(tag));
@@ -4792,22 +5315,24 @@ function bindColorField(container) {
     if (!container) return;
     const colorInput = container.querySelector("input[type=\"color\"]");
     const textInput = container.querySelector("[data-color-text]");
-    if (!colorInput || !textInput) return;
+    if (!colorInput) return;
     const seriesColor = ensureHexColor(container.getAttribute("data-series-color") || "", "");
     colorInput.addEventListener("input", () => updateColorField(colorInput));
-    textInput.addEventListener("input", () => {
-        if (!textInput.value.trim()) {
-            if (seriesColor) {
-                colorInput.value = seriesColor;
-                updateColorField(colorInput);
+    if (textInput) {
+        textInput.addEventListener("input", () => {
+            if (!textInput.value.trim()) {
+                if (seriesColor) {
+                    colorInput.value = seriesColor;
+                    updateColorField(colorInput);
+                }
+                return;
             }
-            return;
-        }
-        const normalized = normalizeHexInput(textInput.value);
-        if (!normalized) return;
-        colorInput.value = normalized;
-        updateColorField(colorInput);
-    });
+            const normalized = normalizeHexInput(textInput.value);
+            if (!normalized) return;
+            colorInput.value = normalized;
+            updateColorField(colorInput);
+        });
+    }
     updateColorField(colorInput);
 }
 
@@ -4835,6 +5360,7 @@ function getInitials(value) {
 
 const sidebarStorageKey = "letmein.sidebar.collapsed";
 let activeModalKeyHandler = null;
+let globalEscapeHandlerAttached = false;
 let activeEventMenu = null;
 let activeEventMenuCleanup = null;
 let calendarSearchShouldFocus = false;
@@ -5001,6 +5527,25 @@ function bindModalEscape(closeModal) {
     };
 }
 
+function ensureGlobalEscapeHandler() {
+    if (globalEscapeHandlerAttached) return;
+    const handler = (event) => {
+        if (event.key !== "Escape") return;
+        if (activeModalKeyHandler) return;
+        const overlays = Array.from(document.querySelectorAll(".modal-overlay"));
+        const overlay = overlays[overlays.length - 1];
+        if (!overlay) return;
+        const closeBtn = overlay.querySelector(".modal-close");
+        if (closeBtn) {
+            closeBtn.click();
+        } else {
+            overlay.remove();
+        }
+    };
+    document.addEventListener("keydown", handler);
+    globalEscapeHandlerAttached = true;
+}
+
 function bindModalBackdrop(overlay) {
     if (!overlay) return;
     overlay.addEventListener("click", (event) => {
@@ -5024,7 +5569,7 @@ function fillCustomerForm(customer) {
     setFieldValue("phone", customer.phone);
     setFieldValue("idNumber", customer.idNumber);
     setFieldValue("gender", customer.gender);
-    setFieldValue("dateOfBirth", customer.dateOfBirth ? formatDateDisplay(customer.dateOfBirth) : "");
+    setFieldValue("dateOfBirth", customer.dateOfBirth ? normalizeDateInputValue(customer.dateOfBirth) : "");
     setFieldValue("city", customer.city);
     setFieldValue("address", customer.address);
     setFieldValue("occupation", customer.occupation);
@@ -5067,7 +5612,7 @@ function fillUserForm(userItem) {
     setFieldValue("address", userItem.address);
     setFieldValue("gender", userItem.gender);
     setFieldValue("idNumber", userItem.idNumber);
-    setFieldValue("dateOfBirth", userItem.dateOfBirth ? formatDateDisplay(userItem.dateOfBirth) : "");
+    setFieldValue("dateOfBirth", userItem.dateOfBirth ? normalizeDateInputValue(userItem.dateOfBirth) : "");
     setFieldValue("role", userItem.role || "Admin");
     setFieldValue("isActive", userItem.isActive ? "true" : "false");
     setFieldValue("instructorDisplayName", userItem.instructorName || "");
@@ -5656,6 +6201,7 @@ async function openSessionRegistrationsModal(item, data, options = {}) {
     const instructorDetails = (data.instructors || []).find(instructor => String(instructor.id) === String(item.instructorId));
     const sessionDescription = (item.seriesDescription || item.description || "").trim();
     const hasSessionDescription = sessionDescription.length > 0;
+    const addCustomerOption = t("session.addCustomerOption", "Add customer...");
 
     const modalMarkup = sessionRegistrationsModalTemplate({
         ...item,
@@ -5667,7 +6213,8 @@ async function openSessionRegistrationsModal(item, data, options = {}) {
         hasRemoteCapacity: remoteCapacityValue > 0,
         hasInstructorDetails: Boolean(instructorDetails),
         sessionDescription,
-        hasSessionDescription
+        hasSessionDescription,
+        addCustomerOption
     });
 
     const wrapper = document.createElement("div");
@@ -5879,6 +6426,7 @@ async function openSessionRegistrationsModal(item, data, options = {}) {
     const resolveCustomerId = (value) => {
         const trimmed = value.trim();
         if (!trimmed) return "";
+        if (trimmed === addCustomerOption) return "";
         const options = Array.from(overlay.querySelectorAll("#customer-list option"));
         const match = options.find(option => option.value === trimmed);
         if (match) {
@@ -5896,9 +6444,27 @@ async function openSessionRegistrationsModal(item, data, options = {}) {
         customerIdInput.value = resolveCustomerId(customerLookupInput.value);
     };
 
+    const openAddCustomerModal = (isRemote) => {
+        openCustomerModal(null, data, {
+            onSaved: async (savedCustomer) => {
+                upsertCustomerOption(savedCustomer);
+                await registerCustomer(savedCustomer?.id || "", isRemote);
+            }
+        });
+    };
+
     if (customerLookupInput && customerIdInput) {
         customerLookupInput.addEventListener("input", syncCustomerLookup);
-        customerLookupInput.addEventListener("change", syncCustomerLookup);
+        customerLookupInput.addEventListener("change", () => {
+            syncCustomerLookup();
+            if (customerLookupInput.value === addCustomerOption) {
+                const attendanceType = overlay.querySelector("[name=\"attendanceType\"]")?.value || "in-person";
+                const isRemote = attendanceType === "remote";
+                customerLookupInput.value = "";
+                customerIdInput.value = "";
+                openAddCustomerModal(isRemote);
+            }
+        });
     }
 
     if (options.focusRegistration && customerLookupInput) {
@@ -5910,7 +6476,6 @@ async function openSessionRegistrationsModal(item, data, options = {}) {
     }
 
     const registerBtn = overlay.querySelector("#register-customer");
-    const addCustomerBtn = overlay.querySelector("#add-customer-modal");
     const upsertCustomerOption = (customerEntry) => {
         if (!customerEntry?.id) return;
         if (customerList.some(entry => entry.id === customerEntry.id)) return;
@@ -5997,18 +6562,6 @@ async function openSessionRegistrationsModal(item, data, options = {}) {
         });
     }
 
-    if (addCustomerBtn) {
-        addCustomerBtn.addEventListener("click", () => {
-            const attendanceType = overlay.querySelector("[name=\"attendanceType\"]")?.value || "in-person";
-            const isRemote = attendanceType === "remote";
-            openCustomerModal(null, data, {
-                onSaved: async (savedCustomer) => {
-                    upsertCustomerOption(savedCustomer);
-                    await registerCustomer(savedCustomer?.id || "", isRemote);
-                }
-            });
-        });
-    }
 }
 
 async function duplicateSessionFromItem(item, data) {
@@ -6116,6 +6669,111 @@ function openDescriptionModal(title, description) {
     cleanupEscape = bindModalEscape(closeModal);
     bindModalBackdrop(overlay);
     const closeBtn = overlay.querySelector("#close-description");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", closeModal);
+    }
+}
+
+function openCustomerRegistrationsModal(registrations) {
+    const existing = document.getElementById("customer-registrations-modal");
+    if (existing) {
+        clearModalEscape();
+        existing.remove();
+    }
+
+    const rows = (registrations || []).map(reg => `
+      <tr>
+        <td>${escapeHtml(reg.dateLabel || "-")}</td>
+        <td>${escapeHtml(reg.timeLabel || "-")}</td>
+        <td>${escapeHtml(reg.seriesTitle || "")}</td>
+        <td>${escapeHtml(reg.roomName || "")}</td>
+        <td>${escapeHtml(reg.instructorName || "")}</td>
+        <td>${escapeHtml(reg.bookingStatusLabel || "")}</td>
+        <td>${escapeHtml(reg.attendanceLabel || "")}</td>
+      </tr>
+    `).join("");
+
+    const content = registrations.length
+        ? `<table class="table details-table">
+            <thead>
+              <tr>
+                <th>${t("calendar.list.date", "Date")}</th>
+                <th>${t("calendar.list.time", "Time")}</th>
+                <th>${t("calendar.list.class", "Class")}</th>
+                <th>${t("calendar.list.room", "Room")}</th>
+                <th>${t("calendar.list.instructor", "Instructor")}</th>
+                <th>${t("roster.booking", "Booking")}</th>
+                <th>${t("roster.attendance", "Attendance")}</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>`
+        : `<div class="empty-state">${t("customer.details.noRegistrations", "No registrations yet.")}</div>`;
+
+    const overlay = document.createElement("div");
+    overlay.id = "customer-registrations-modal";
+    overlay.className = "modal-overlay";
+    overlay.innerHTML = `
+      <div class="modal">
+        <div class="modal-header">
+          <div>
+            <h3>${t("customer.details.registrations", "Registrations")}</h3>
+            <div class="muted">${t("customer.details.recentRegistrations", "Recent registrations")}</div>
+          </div>
+          <button class="modal-close" type="button" aria-label="${t("common.close", "Close")}"></button>
+        </div>
+        ${content}
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+    let cleanupEscape = () => {};
+    const closeModal = () => {
+        cleanupEscape();
+        overlay.remove();
+    };
+    cleanupEscape = bindModalEscape(closeModal);
+    bindModalBackdrop(overlay);
+
+    const closeBtn = overlay.querySelector(".modal-close");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", closeModal);
+    }
+}
+
+function openBillingModal() {
+    const existing = document.getElementById("customer-billing-modal");
+    if (existing) {
+        clearModalEscape();
+        existing.remove();
+    }
+
+    const overlay = document.createElement("div");
+    overlay.id = "customer-billing-modal";
+    overlay.className = "modal-overlay";
+    overlay.innerHTML = `
+      <div class="modal">
+        <div class="modal-header">
+          <div>
+            <h3>${t("customer.details.billing", "Billing")}</h3>
+            <div class="muted">${t("customer.details.viewBilling", "View billing")}</div>
+          </div>
+          <button class="modal-close" type="button" aria-label="${t("common.close", "Close")}"></button>
+        </div>
+        <div class="empty-state">${t("customer.details.noBilling", "No billing activity yet.")}</div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+    let cleanupEscape = () => {};
+    const closeModal = () => {
+        cleanupEscape();
+        overlay.remove();
+    };
+    cleanupEscape = bindModalEscape(closeModal);
+    bindModalBackdrop(overlay);
+
+    const closeBtn = overlay.querySelector(".modal-close");
     if (closeBtn) {
         closeBtn.addEventListener("click", closeModal);
     }
@@ -6320,6 +6978,51 @@ function confirmWithModal(options) {
     });
 }
 
+function openTagReplaceModal(tagName, replacements) {
+    return new Promise(resolve => {
+        const overlay = document.createElement("div");
+        overlay.className = "modal-overlay";
+        overlay.innerHTML = `
+          <div class="modal modal-compact">
+            <div class="modal-header">
+              <div>
+                <h3>${t("customerTags.deleteTitle", "Delete tag")}</h3>
+                <div class="muted">${t("customerTags.deleteSubtitle", "Choose a replacement tag or remove it entirely.")}</div>
+              </div>
+              <button class="modal-close" id="close-tag-replace" type="button" aria-label="${t("common.close", "Close")}"></button>
+            </div>
+            <div class="modal-body">
+              <label>${t("customerTags.replaceLabel", "Replace with (optional)")}</label>
+              <select id="tag-replace-select">
+                <option value="">${t("customerTags.replaceNone", "No replacement")}</option>
+                ${(replacements || []).map(name => `<option value="${name}">${name}</option>`).join("")}
+              </select>
+              <div class="meta">${t("customerTags.deleteHint", "Customers with this tag will be updated.")}</div>
+            </div>
+            <div class="modal-actions" style="justify-content:flex-end;">
+              <button id="confirm-tag-delete">${t("customerTags.delete", "Delete")}</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+
+        let cleanupEscape = () => {};
+        const closeModal = (value) => {
+            cleanupEscape();
+            overlay.remove();
+            resolve(value);
+        };
+        cleanupEscape = bindModalEscape(() => closeModal(null));
+        bindModalBackdrop(overlay);
+
+        overlay.querySelector("#close-tag-replace")?.addEventListener("click", () => closeModal(null));
+        overlay.querySelector("#confirm-tag-delete")?.addEventListener("click", () => {
+            const replacement = overlay.querySelector("#tag-replace-select")?.value || "";
+            closeModal(replacement);
+        });
+    });
+}
+
 function bindIconPreview(container) {
     if (!container) return;
     container.querySelectorAll(".icon-field").forEach(field => {
@@ -6327,7 +7030,7 @@ function bindIconPreview(container) {
         const preview = field.querySelector("[data-icon-preview]");
         if (!input || !preview) return;
         const update = () => {
-            const value = input.value?.trim() || input.getAttribute("placeholder") || "";
+            const value = input.value?.trim() || "";
             preview.textContent = value;
             preview.classList.toggle("is-empty", !value);
         };
@@ -6633,6 +7336,7 @@ function openSessionModal(data, options = {}) {
     const calendarMeta = data.calendar || {};
     const focusDate = options.date || calendarMeta.focusDate || toDateInputValue(new Date());
     const focusDateDisplay = formatDateDisplay(focusDate);
+    const focusDateValue = normalizeDateInputValue(focusDate);
     const prefill = options.prefill || {};
     const allowedPlanSet = new Set((prefill.allowedPlanIds || []).map(id => String(id)));
     const defaultPlanCategoryId = (data.planCategories || []).find(category => category.isDefault && category.isActive)?.id || "";
@@ -6646,8 +7350,12 @@ function openSessionModal(data, options = {}) {
     }));
     const titleSuggestions = buildTitleSuggestions(data);
     const titleSuggestionId = createTitleSuggestionId("session-title");
+    const baseDate = parseDateInput(options.date || focusDate);
+    const defaultGenerateUntil = normalizeDateInputValue(addDays(baseDate, 365));
     const modalMarkup = sessionModalTemplate({
         focusDateDisplay,
+        focusDateValue,
+        generateUntilValue: defaultGenerateUntil,
         rooms: data.rooms || [],
         instructors: data.instructors || [],
         plans,
@@ -6683,12 +7391,16 @@ function openSessionModal(data, options = {}) {
     if (options.date) {
         const dateInput = overlay.querySelector("[name=\"date\"]");
         const startDateInput = overlay.querySelector("[name=\"startDate\"]");
-        if (dateInput) dateInput.value = formatDateDisplay(options.date);
-        if (startDateInput) startDateInput.value = formatDateDisplay(options.date);
+        const generateUntilInput = overlay.querySelector("[name=\"generateUntil\"]");
+        if (dateInput) dateInput.value = normalizeDateInputValue(options.date);
+        if (startDateInput) startDateInput.value = normalizeDateInputValue(options.date);
         const dateValue = parseDateInput(options.date);
         overlay.querySelectorAll("input[name=\"recurringDays\"]").forEach(input => {
             input.checked = Number(input.value) === dateValue.getDay();
         });
+        if (generateUntilInput) {
+            generateUntilInput.value = normalizeDateInputValue(addDays(dateValue, 365));
+        }
     }
 
     const setValue = (name, value) => {
@@ -6766,8 +7478,9 @@ function openSessionModal(data, options = {}) {
                     const selectedDays = Array.from(overlay.querySelectorAll("input[name=\"recurringDays\"]:checked"))
                         .map(input => Number(input.value))
                         .filter(value => Number.isFinite(value));
-                    const recurrenceIntervalWeeks = Number(getValue("recurrenceIntervalWeeks") || 1);
-                    const generateWeeks = Number(getValue("generateWeeks") || 8);
+                    const recurrenceIntervalWeeks = 1;
+                    const generateUntil = normalizeDateInputValue(getValue("generateUntil"))
+                        || normalizeDateInputValue(addDays(parseDateInput(startDate), 365));
 
                     if (!selectedDays.length) {
                         showToast(t("session.daysRequired", "Select at least one day of week."), "error");
@@ -6785,7 +7498,7 @@ function openSessionModal(data, options = {}) {
                         startTimeLocal: payload.startTimeLocal,
                         durationMinutes: payload.durationMinutes,
                         recurrenceIntervalWeeks,
-                        generateWeeks,
+                        generateUntil,
                         generateFrom: startDate,
                         defaultCapacity: payload.capacity,
                         remoteCapacity: payload.remoteCapacity,
@@ -7018,7 +7731,8 @@ function openCustomerModal(customer, data, options = {}) {
         { value: "Male", label: t("gender.male", "Male"), selected: genderValue === "Male" },
         { value: "Female", label: t("gender.female", "Female"), selected: genderValue === "Female" }
     ];
-    const tagSuggestions = collectTagSuggestions(data?.customers || []);
+    const tagSuggestions = collectTagSuggestions(data?.customers || [], data?.customerTags || []);
+    const tagColorMap = buildTagColorMap(data?.customerTags || []);
     const modalMarkup = customerModalTemplate({
         title: isEdit ? t("customer.editTitle", "Edit customer") : t("customer.addTitle", "Add customer"),
         subtitle: isEdit
@@ -7033,7 +7747,7 @@ function openCustomerModal(customer, data, options = {}) {
         phone: customer?.phone || "",
         idNumber: customer?.idNumber || "",
         genderOptions,
-        dateOfBirthDisplay: customer?.dateOfBirth ? formatDateDisplay(customer.dateOfBirth) : "",
+        dateOfBirthValue: customer?.dateOfBirth ? normalizeDateInputValue(customer.dateOfBirth) : "",
         city: customer?.city || "",
         address: customer?.address || "",
         occupation: customer?.occupation || "",
@@ -7059,7 +7773,7 @@ function openCustomerModal(customer, data, options = {}) {
     };
     cleanupEscape = bindModalEscape(closeModal);
     bindModalBackdrop(overlay);
-    setupTagInput(overlay);
+    setupTagInput(overlay, tagColorMap);
     setupCustomerAddressAutocomplete(overlay, data?.studio?.googlePlacesApiKey || "");
 
     const closeBtn = overlay.querySelector("#close-customer");
@@ -7348,6 +8062,169 @@ function openCustomerStatusModal(statuses) {
     }
 }
 
+function openCustomerTagModal(tags) {
+    const existing = document.getElementById("customer-tag-modal");
+    if (existing) {
+        clearModalEscape();
+        existing.remove();
+    }
+
+    let tagRows = normalizeTagCatalog(tags);
+    const modalMarkup = customerTagModalTemplate({
+        tags: tagRows,
+        tagOriginal: "",
+        tagName: "",
+        tagColor: nextTagColor(tagRows),
+        saveLabel: t("customerTags.add", "Add tag")
+    });
+
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = modalMarkup;
+    const overlay = wrapper.firstElementChild;
+    if (!overlay) return;
+
+    document.body.appendChild(overlay);
+
+    let cleanupEscape = () => {};
+    const closeModal = () => {
+        cleanupEscape();
+        overlay.remove();
+    };
+    cleanupEscape = bindModalEscape(closeModal);
+    bindModalBackdrop(overlay);
+
+    const closeBtn = overlay.querySelector("#close-tags");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", closeModal);
+    }
+
+    const saveBtn = overlay.querySelector("#save-tag");
+    const resetBtn = overlay.querySelector("#reset-tag");
+    const tagBody = overlay.querySelector("#customer-tag-rows");
+    const colorInput = overlay.querySelector("[name=\"tagColor\"]");
+    const setForm = (tagName, tagColor) => {
+        overlay.querySelector("[name=\"tagOriginal\"]").value = tagName || "";
+        overlay.querySelector("[name=\"tagName\"]").value = tagName || "";
+        if (colorInput) colorInput.value = tagColor || nextTagColor(tagRows);
+        if (saveBtn) {
+            saveBtn.textContent = tagName
+                ? t("customerTags.update", "Update tag")
+                : t("customerTags.add", "Add tag");
+        }
+    };
+
+    if (resetBtn) {
+        resetBtn.addEventListener("click", () => setForm("", nextTagColor(tagRows)));
+    }
+
+    if (colorInput) {
+        colorInput.addEventListener("input", () => {
+            colorInput.value = colorInput.value;
+        });
+    }
+
+    const renderTagRows = (nextTags) => {
+        tagRows = normalizeTagCatalog(nextTags);
+        if (!tagBody) return;
+        const rowsMarkup = tagRows.map(row => {
+            const safeName = escapeHtml(row.name);
+            const safeColor = escapeHtml(row.color || TAG_COLOR_PALETTE[0]);
+            const encoded = encodeURIComponent(row.name);
+            return `
+              <tr>
+                <td>${safeName}</td>
+                <td><span class="color-dot" style="background: ${safeColor};"></span></td>
+                <td>
+                  <button class="secondary btn-edit" data-tag-edit="${encoded}">
+                    <span class="icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+                    </span>
+                    ${t("common.edit", "Edit")}
+                  </button>
+                  <button class="secondary btn-danger" data-tag-delete="${encoded}">
+                    <span class="icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24">
+                        <path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M8 6V4h8v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M19 6l-1 14H6L5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      </svg>
+                    </span>
+                    ${t("customerTags.delete", "Delete")}
+                  </button>
+                </td>
+              </tr>
+            `;
+        }).join("");
+        tagBody.innerHTML = rowsMarkup;
+        bindTagRowActions();
+    };
+
+    const bindTagRowActions = () => {
+        overlay.querySelectorAll("[data-tag-edit]").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const encoded = btn.getAttribute("data-tag-edit") || "";
+                if (!encoded) return;
+                const name = decodeURIComponent(encoded);
+                const match = tagRows.find(item => item.name.toLowerCase() === name.toLowerCase());
+                setForm(name, match?.color || nextTagColor(tagRows));
+            });
+        });
+
+        overlay.querySelectorAll("[data-tag-delete]").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const encoded = btn.getAttribute("data-tag-delete") || "";
+                if (!encoded) return;
+                const name = decodeURIComponent(encoded);
+                const replacement = await openTagReplaceModal(name, tagRows.map(item => item.name).filter(tag => tag !== name));
+                if (replacement === null) return;
+                const params = new URLSearchParams({ name });
+                if (replacement) {
+                    params.set("replacement", replacement);
+                }
+                try {
+                    await apiDelete(`/api/admin/customer-tags?${params.toString()}`);
+                    const refreshed = await apiGet("/api/admin/customer-tags");
+                    renderTagRows(refreshed || []);
+                    actor.send({ type: "REFRESH" });
+                } catch (error) {
+                    showToast(error.message || t("customerTags.saveError", "Unable to save tag."), "error");
+                }
+            });
+        });
+    };
+
+    renderTagRows(tagRows);
+    setForm("", nextTagColor(tagRows));
+
+    if (saveBtn) {
+        saveBtn.addEventListener("click", async () => {
+            const original = overlay.querySelector("[name=\"tagOriginal\"]")?.value || "";
+            const name = overlay.querySelector("[name=\"tagName\"]")?.value?.trim() || "";
+            const color = overlay.querySelector("[name=\"tagColor\"]")?.value?.trim() || "";
+            if (!name) {
+                showToast(t("customerTags.nameRequired", "Tag name is required."), "error");
+                return;
+            }
+
+            try {
+                if (original) {
+                    await apiPut("/api/admin/customer-tags", { name: original, newName: name, color });
+                } else {
+                    await apiPost("/api/admin/customer-tags", { name, color });
+                }
+                const refreshed = await apiGet("/api/admin/customer-tags");
+                renderTagRows(refreshed || []);
+                setForm("", nextTagColor(tagRows));
+                showToast(t("customerTags.saveSuccess", "Tag saved."), "success");
+                actor.send({ type: "REFRESH" });
+            } catch (error) {
+                showToast(error.message || t("customerTags.saveError", "Unable to save tag."), "error");
+            }
+        });
+    }
+}
+
 function openPlanCategoryModal(categories) {
     const existing = document.getElementById("plan-category-modal");
     if (existing) {
@@ -7509,7 +8386,7 @@ function openUserModal(userItem) {
         city: userItem?.city || "",
         address: userItem?.address || "",
         idNumber: userItem?.idNumber || "",
-        dateOfBirthDisplay: userItem?.dateOfBirth ? formatDateDisplay(userItem.dateOfBirth) : "",
+        dateOfBirthValue: userItem?.dateOfBirth ? normalizeDateInputValue(userItem.dateOfBirth) : "",
         genderOptions,
         roleOptions,
         isActive: userItem?.isActive !== false,
@@ -8039,13 +8916,13 @@ function openSeriesModal(series, data) {
     const selectedDays = resolveSeriesDays(series);
     const safeDays = selectedDays.length ? selectedDays : [2];
     const dayOptions = [
+        { value: 0, label: dayNames[0] || t("weekday.sunday", "Sunday"), selected: safeDays.includes(0) },
         { value: 1, label: dayNames[1] || t("weekday.monday", "Monday"), selected: safeDays.includes(1) },
         { value: 2, label: dayNames[2] || t("weekday.tuesday", "Tuesday"), selected: safeDays.includes(2) },
         { value: 3, label: dayNames[3] || t("weekday.wednesday", "Wednesday"), selected: safeDays.includes(3) },
         { value: 4, label: dayNames[4] || t("weekday.thursday", "Thursday"), selected: safeDays.includes(4) },
         { value: 5, label: dayNames[5] || t("weekday.friday", "Friday"), selected: safeDays.includes(5) },
-        { value: 6, label: dayNames[6] || t("weekday.saturday", "Saturday"), selected: safeDays.includes(6) },
-        { value: 0, label: dayNames[0] || t("weekday.sunday", "Sunday"), selected: safeDays.includes(0) }
+        { value: 6, label: dayNames[6] || t("weekday.saturday", "Saturday"), selected: safeDays.includes(6) }
     ];
     const rooms = [
         { id: "", name: t("common.unassigned", "Unassigned"), selected: !series?.roomId },
@@ -8075,6 +8952,9 @@ function openSeriesModal(series, data) {
     }));
     const titleSuggestions = buildTitleSuggestions(data);
     const titleSuggestionId = createTitleSuggestionId("series-title");
+    const generateUntilValue = series?.generateUntil
+        ? normalizeDateInputValue(series.generateUntil)
+        : normalizeDateInputValue(addDays(new Date(), 365));
     const modalMarkup = seriesModalTemplate({
         modalTitle: isEdit ? t("series.editTitle", "Edit series") : t("series.newTitle", "New series"),
         subtitle: isEdit
@@ -8095,8 +8975,7 @@ function openSeriesModal(series, data) {
         remoteInviteUrl: series?.remoteInviteUrl || "",
         description: series?.description || "",
         recurrenceIntervalWeeks: series?.recurrenceIntervalWeeks ?? 1,
-        generateWeeks: series?.generateWeeks ?? 8,
-        generateUntilDisplay: series?.generateUntil ? formatDateDisplay(series.generateUntil) : "",
+        generateUntilValue,
         cancellationWindowHours: series?.cancellationWindowHours ?? 6,
         isActive: series?.isActive ?? true,
         rooms,
@@ -8174,8 +9053,7 @@ function openSeriesModal(series, data) {
                 daysOfWeekJson: JSON.stringify(selectedDays),
                 startTimeLocal,
                 durationMinutes: Number(getValue("durationMinutes")),
-                recurrenceIntervalWeeks: Number(getValue("recurrenceIntervalWeeks") || 1),
-                generateWeeks: Number(getValue("generateWeeks") || 8),
+                recurrenceIntervalWeeks: series?.recurrenceIntervalWeeks ?? 1,
                 generateUntil: normalizeDateInputValue(getValue("generateUntil")) || null,
                 defaultCapacity: Number(getValue("capacity") || 0),
                 remoteCapacity: Number(getValue("remoteCapacity") || 0),
@@ -8292,6 +9170,7 @@ function buildCalendarView(items, options) {
                 time: event.startTime,
                 title: event.seriesTitle,
                 isCancelled: event.isCancelled,
+                isPast: event.isPast,
                 isBirthday: event.isBirthday,
                 hasBirthdayList: event.hasBirthdayList,
                 birthdayNamesJson: event.birthdayNamesJson,
@@ -8384,6 +9263,10 @@ function buildCalendarView(items, options) {
         ? `${t("calendar.weekNumber", "Week")} ${String(getWeekNumber(weekStart)).padStart(2, "0")}`
         : "";
     const hebrewDateLabel = formatHebrewDate(focus);
+    const hourTicks = Array.from({ length: 17 }, (_, index) => {
+        const hour = String(6 + index).padStart(2, "0");
+        return `${hour}:00`;
+    });
 
     return {
         view,
@@ -8391,6 +9274,7 @@ function buildCalendarView(items, options) {
         rangeLabel,
         weekNumberLabel,
         hebrewDateLabel,
+        hourTicks,
         isDay: view === "day",
         isWeek: view === "week",
         isMonth: view === "month",
@@ -8487,6 +9371,28 @@ function formatCustomerStatus(value) {
     return value;
 }
 
+function formatCustomerRegistrations(registrations) {
+    return (registrations || []).map(reg => {
+        const start = reg.startUtc ? new Date(reg.startUtc) : null;
+        const end = reg.endUtc ? new Date(reg.endUtc) : null;
+        const dateLabel = start ? formatDateDisplay(start) : "-";
+        const timeLabel = start
+            ? `${formatTimeOnly(start)}${end ? ` - ${formatTimeOnly(end)}` : ""}`
+            : "-";
+        const bookingStatusLabel = normalizeBookingStatus(reg.status);
+        const attendanceLabel = reg.attendanceStatus ? normalizeAttendanceStatus(reg.attendanceStatus) : "-";
+        const seriesTitle = reg.seriesTitle || t("session.sessionFallback", "Session");
+        return {
+            ...reg,
+            dateLabel,
+            timeLabel,
+            bookingStatusLabel,
+            attendanceLabel,
+            seriesTitle
+        };
+    });
+}
+
 function formatAuditAction(value) {
     const normalized = String(value || "").trim().toLowerCase();
     if (normalized === "create") return t("audit.action.create", "Created");
@@ -8500,6 +9406,7 @@ function formatAuditAction(value) {
     if (normalized === "generate") return t("audit.action.generate", "Generated");
     if (normalized === "invite") return t("audit.action.invite", "Invited");
     if (normalized === "import") return t("audit.action.import", "Imported");
+    if (normalized === "activity") return t("audit.action.activity", "Activity");
     return value;
 }
 
@@ -8606,6 +9513,7 @@ function normalizeAttendanceStatus(value) {
 
 function buildEventMap(items, timeZone) {
     const map = new Map();
+    const now = new Date();
     items.forEach(item => {
         const start = new Date(item.startUtc);
         const end = item.endUtc ? new Date(item.endUtc) : null;
@@ -8613,6 +9521,8 @@ function buildEventMap(items, timeZone) {
         const isHoliday = Boolean(item.isHoliday);
         const isBirthday = Boolean(item.isBirthday);
         const isAllDay = isHoliday || isBirthday;
+        const pastCheck = end ?? start;
+        const isPast = !isAllDay && pastCheck < now;
         const startTime = isAllDay ? "" : formatTimeOnly(start, timeZone);
         const endTime = isAllDay || !end ? "" : formatTimeOnly(end, timeZone);
         const timeRange = endTime ? `${startTime} - ${endTime}` : startTime;
@@ -8666,6 +9576,7 @@ function buildEventMap(items, timeZone) {
                     isBirthdayGroup: true,
                     isLocked: true,
                     suppressActions: true,
+                    isPast: false,
                     seriesTitle,
                     seriesIcon: "",
                     registeredSummary: "",
@@ -8696,6 +9607,7 @@ function buildEventMap(items, timeZone) {
             isCancelled,
             isHoliday,
             isBirthday,
+            isPast,
             isLocked: isAllDay,
             suppressActions: isHoliday || isBirthday || isAllDay,
             seriesTitle,
@@ -9062,14 +9974,22 @@ async function moveEventInstance(item, dateKey) {
     const end = item.endUtc ? new Date(item.endUtc) : null;
     const durationMs = end ? end.getTime() - start.getTime() : null;
     const targetDate = parseDateInput(dateKey);
-    start.setFullYear(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+    const movedStart = new Date(
+        targetDate.getFullYear(),
+        targetDate.getMonth(),
+        targetDate.getDate(),
+        start.getHours(),
+        start.getMinutes(),
+        start.getSeconds(),
+        start.getMilliseconds()
+    );
     const payload = {
-        startUtc: start.toISOString(),
+        startUtc: movedStart.toISOString(),
         instructorId: item.instructorId || null,
         roomId: item.roomId || null
     };
     if (durationMs !== null) {
-        payload.endUtc = new Date(start.getTime() + durationMs).toISOString();
+        payload.endUtc = new Date(movedStart.getTime() + durationMs).toISOString();
     }
     await apiPut(`/api/admin/event-instances/${item.id}`, payload);
 }
@@ -9162,9 +10082,19 @@ actor.subscribe((state) => {
     render(state);
 });
 
+ensureGlobalEscapeHandler();
 actor.start();
 
-const adminRoutes = new Set(["calendar", "events", "rooms", "plans", "customers", "users", "guests", "reports", "payroll", "audit", "settings"]);
+const adminRoutes = new Set(["calendar", "events", "rooms", "plans", "customers", "customer", "users", "guests", "reports", "payroll", "audit", "settings"]);
+
+function getRouteParam(route, index = 1) {
+    const hash = window.location.hash || `#/${route}`;
+    const cleaned = hash.replace(/^#\/?/, "");
+    const [path] = cleaned.split("?");
+    const parts = path.split("/");
+    if (parts[0] !== route) return "";
+    return parts[index] || "";
+}
 
 function resolveRouteFromHash(defaultRoute) {
     const hash = window.location.hash || `#/${defaultRoute}`;

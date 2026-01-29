@@ -34,3 +34,4 @@
 2026-01-29 00:02  Align menu groups/indentation, center collapsed nav, enforce date pickers, and style sex pills + icon/color controls.
 2026-01-29 00:22  Set nav group/item indentation and font sizes per spec (group 0 indent, items 3em).
 2026-01-29 00:30  Increase menu font sizes and update hover color to primary.
+2026-01-29 02:23  Added calendar hour tick column + grid lines for day/week views and locked recurring series to generate-until date with weekly interval default.

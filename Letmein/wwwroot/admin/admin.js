@@ -284,58 +284,70 @@ const calendarTemplate = compileTemplate("calendar", `
   </div>
   <div class="calendar-body">
     {{#if isDay}}
-      <div class="calendar-day calendar-dropzone" data-date="{{day.dateKey}}">
-        <div class="calendar-day-header">{{day.label}}</div>
-        {{#if day.hasEvents}}
-          <div class="calendar-events">
-            {{#each day.events}}
-              <div class="calendar-event {{#if isCancelled}}cancelled{{/if}} {{#if isPast}}past{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
-                {{#unless suppressActions}}
-                  <button class="event-actions" type="button" aria-label="{{t "calendar.actions" "Actions"}}">
-                    <span class="icon" aria-hidden="true">
-                      <svg viewBox="0 0 24 24">
-                        <circle cx="5" cy="12" r="2"></circle>
-                        <circle cx="12" cy="12" r="2"></circle>
-                        <circle cx="19" cy="12" r="2"></circle>
-                      </svg>
-                    </span>
-                  </button>
-                  <button class="event-share" type="button" aria-label="{{t "calendar.actionShare" "Share"}}">
-                    <span class="icon" aria-hidden="true">
-                      <svg viewBox="0 0 24 24"><path d="M18 8a3 3 0 1 0-2.83-4H15a3 3 0 0 0 .17 1l-7.1 4.13a3 3 0 0 0-2.17-1 3 3 0 1 0 2.17 5l7.1 4.13A3 3 0 1 0 15 16a3 3 0 0 0 .17 1l-7.1-4.13a3 3 0 0 0 0-2.74l7.1-4.13A3 3 0 0 0 18 8z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-                    </span>
-                  </button>
-                {{/unless}}
-                <div class="event-time">{{timeRange}}</div>
-                <div class="event-title">
-                  {{seriesTitle}}
-                  {{#if hasBirthdayList}}
-                    <span class="birthday-chevron" aria-hidden="true">
-                      <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg>
-                    </span>
+      <div class="calendar-day-view calendar-time-grid" style="--hour-count: {{hourTicks.length}}">
+        <div class="calendar-hours">
+          {{#each hourTicks}}
+            <div class="calendar-hour">{{this}}</div>
+          {{/each}}
+        </div>
+        <div class="calendar-day calendar-dropzone" data-date="{{day.dateKey}}">
+          <div class="calendar-day-header">{{day.label}}</div>
+          {{#if day.hasEvents}}
+            <div class="calendar-events">
+              {{#each day.events}}
+                <div class="calendar-event {{#if isCancelled}}cancelled{{/if}} {{#if isPast}}past{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
+                  {{#unless suppressActions}}
+                    <button class="event-actions" type="button" aria-label="{{t "calendar.actions" "Actions"}}">
+                      <span class="icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                          <circle cx="5" cy="12" r="2"></circle>
+                          <circle cx="12" cy="12" r="2"></circle>
+                          <circle cx="19" cy="12" r="2"></circle>
+                        </svg>
+                      </span>
+                    </button>
+                    <button class="event-share" type="button" aria-label="{{t "calendar.actionShare" "Share"}}">
+                      <span class="icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M18 8a3 3 0 1 0-2.83-4H15a3 3 0 0 0 .17 1l-7.1 4.13a3 3 0 0 0-2.17-1 3 3 0 1 0 2.17 5l7.1 4.13A3 3 0 1 0 15 16a3 3 0 0 0 .17 1l-7.1-4.13a3 3 0 0 0 0-2.74l7.1-4.13A3 3 0 0 0 18 8z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                      </span>
+                    </button>
+                  {{/unless}}
+                  <div class="event-time">{{timeRange}}</div>
+                  <div class="event-title">
+                    {{seriesTitle}}
+                    {{#if hasBirthdayList}}
+                      <span class="birthday-chevron" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg>
+                      </span>
+                    {{/if}}
+                  </div>
+                  <div class="event-meta">{{roomName}} - {{instructorName}}</div>
+                  <div class="event-meta event-meta-compact">
+                    <span>{{registeredSummary}}</span>
+                  </div>
+                  {{#if seriesIcon}}<span class="event-icon-corner" aria-hidden="true">{{seriesIcon}}</span>{{/if}}
+                  {{#if isCancelled}}
+                    <div class="event-meta">{{t "calendar.cancelled" "Cancelled"}}</div>
+                  {{/if}}
+                  {{#if isBirthday}}
+                    <div class="event-meta">{{t "calendar.birthday" "Birthday"}}</div>
                   {{/if}}
                 </div>
-                <div class="event-meta">{{roomName}} - {{instructorName}}</div>
-                <div class="event-meta event-meta-compact">
-                  <span>{{registeredSummary}}</span>
-                </div>
-                {{#if seriesIcon}}<span class="event-icon-corner" aria-hidden="true">{{seriesIcon}}</span>{{/if}}
-                {{#if isCancelled}}
-                  <div class="event-meta">{{t "calendar.cancelled" "Cancelled"}}</div>
-                {{/if}}
-                {{#if isBirthday}}
-                  <div class="event-meta">{{t "calendar.birthday" "Birthday"}}</div>
-                {{/if}}
-              </div>
-            {{/each}}
-          </div>
-        {{else}}
-          <div class="empty-state">{{t "calendar.empty.day" "No classes scheduled."}}</div>
-        {{/if}}
+              {{/each}}
+            </div>
+          {{else}}
+            <div class="empty-state">{{t "calendar.empty.day" "No classes scheduled."}}</div>
+          {{/if}}
+        </div>
       </div>
     {{/if}}
     {{#if isWeek}}
-      <div class="calendar-week">
+      <div class="calendar-week calendar-time-grid" style="--hour-count: {{hourTicks.length}}">
+        <div class="calendar-hours">
+          {{#each hourTicks}}
+            <div class="calendar-hour">{{this}}</div>
+          {{/each}}
+        </div>
         {{#each week.days}}
           <div class="calendar-day-column calendar-dropzone {{#if isToday}}today{{/if}}" data-date="{{dateKey}}">
             <div class="calendar-day-label">
@@ -1361,10 +1373,6 @@ const sessionModalTemplate = compileTemplate("session-modal", `
             <label class="weekday-pill"><input type="checkbox" name="recurringDays" value="6" /><span>{{t "weekday.saturday" "Saturday"}}</span></label>
           </div>
         </div>
-        <div>
-          <label>{{t "session.recurrence" "Recurrence (weeks)"}}</label>
-          <input type="number" name="recurrenceIntervalWeeks" value="1" />
-        </div>
       </div>
       <div class="modal-footer">
         <div class="meta">{{t "session.addHint" "Sessions appear on the calendar immediately."}}</div>
@@ -1488,10 +1496,6 @@ const seriesModalTemplate = compileTemplate("series-modal", `
             <label>{{t "series.description" "Description"}}</label>
             <textarea name="description" rows="4" placeholder="{{t "series.descriptionHintPlain" "Add description"}}">{{description}}</textarea>
           </div>
-        <div>
-          <label>{{t "series.recurrence" "Recurrence (weeks)"}}</label>
-          <input type="number" name="recurrenceIntervalWeeks" value="{{recurrenceIntervalWeeks}}" />
-        </div>
         <div>
           <label>{{t "series.generateUntil" "Generate until"}}</label>
           <input type="date" class="date-input" name="generateUntil" value="{{generateUntilValue}}" />
@@ -2252,7 +2256,10 @@ const bulkRegistrationTemplate = compileTemplate("bulk-registration", `
 const eventsTemplate = compileTemplate("events", `
   <div class="notice">{{t "events.notice" "Create weekly series and auto-generate classes."}}</div>
   <div class="toolbar">
-    <button id="add-series">{{t "events.addSeries" "Add series"}}</button>
+    <button id="add-series">
+      <span class="icon" aria-hidden="true">+</span>
+      {{t "events.addSeries" "Add series"}}
+    </button>
   </div>
   {{#if hasSeries}}
     <table class="table">
@@ -2281,13 +2288,12 @@ const eventsTemplate = compileTemplate("events", `
           <td>{{remoteCapacity}}</td>
           <td>{{activeLabel}}</td>
           <td>
-            <button class="secondary btn-edit" data-edit="{{id}}">
+            <button class="secondary btn-edit icon-only" data-edit="{{id}}" aria-label="{{t "common.edit" "Edit"}}" title="{{t "common.edit" "Edit"}}">
               <span class="icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
               </span>
-              {{t "common.edit" "Edit"}}
             </button>
-            <button class="secondary btn-danger" data-delete-series="{{id}}">
+            <button class="secondary btn-danger icon-only" data-delete-series="{{id}}" aria-label="{{t "events.delete" "Delete"}}" title="{{t "events.delete" "Delete"}}">
               <span class="icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24">
                   <path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -2296,7 +2302,6 @@ const eventsTemplate = compileTemplate("events", `
                   <path d="M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                 </svg>
               </span>
-              {{t "events.delete" "Delete"}}
             </button>
           </td>
         </tr>
@@ -2311,7 +2316,10 @@ const eventsTemplate = compileTemplate("events", `
 const plansTemplate = compileTemplate("plans", `
   <div class="notice">{{t "plans.notice" "Manage membership pricing, limits, and availability."}}</div>
   <div class="toolbar">
-    <button id="add-plan">{{t "plans.add" "Add plan"}}</button>
+    <button id="add-plan">
+      <span class="icon" aria-hidden="true">+</span>
+      {{t "plans.add" "Add plan"}}
+    </button>
     <button class="secondary" id="manage-plan-categories">{{t "plans.manageCategories" "Manage categories"}}</button>
   </div>
   <div style="margin-top:24px;">
@@ -2419,13 +2427,12 @@ const customersTemplate = compileTemplate("customers", `
         <td>{{statusLabel}}</td>
         <td>{{{tagsHtml}}}</td>
         <td>
-          <button class="secondary btn-edit" data-edit="{{id}}">
+          <button class="secondary btn-edit icon-only" data-edit="{{id}}" aria-label="{{t "common.edit" "Edit"}}" title="{{t "common.edit" "Edit"}}">
             <span class="icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
             </span>
-            {{t "common.edit" "Edit"}}
           </button>
-          <button class="secondary btn-danger" data-archive="{{id}}">
+          <button class="secondary btn-danger icon-only" data-archive="{{id}}" aria-label="{{archiveLabel}}" title="{{archiveLabel}}">
             <span class="icon" aria-hidden="true">
               <svg viewBox="0 0 24 24">
                 <path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -2434,7 +2441,6 @@ const customersTemplate = compileTemplate("customers", `
                 <path d="M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
               </svg>
             </span>
-            {{archiveLabel}}
           </button>
         </td>
       </tr>
@@ -2667,17 +2673,15 @@ const usersTemplate = compileTemplate("users", `
         <td>{{statusLabel}}</td>
         <td>{{instructorLabel}}</td>
         <td>
-          <button class="secondary btn-edit" data-user-edit="{{id}}">
+          <button class="secondary btn-edit icon-only" data-user-edit="{{id}}" aria-label="{{t "common.edit" "Edit"}}" title="{{t "common.edit" "Edit"}}">
             <span class="icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
             </span>
-            {{t "common.edit" "Edit"}}
           </button>
-          <button class="secondary btn-icon" data-user-invite="{{id}}">
+          <button class="secondary btn-icon icon-only" data-user-invite="{{id}}" aria-label="{{t "users.invite" "Invite"}}" title="{{t "users.invite" "Invite"}}">
             <span class="icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 7l9 6 9-6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
             </span>
-            {{t "users.invite" "Invite"}}
           </button>
         </td>
       </tr>
@@ -2723,11 +2727,10 @@ const guestDirectoryTemplate = compileTemplate("guest-directory", `
         <td>{{statusLabel}}</td>
         <td>{{createdLabel}}</td>
         <td>
-          <button class="secondary btn-icon" data-guest-invite="{{id}}">
+          <button class="secondary btn-icon icon-only" data-guest-invite="{{id}}" aria-label="{{t "guests.invite" "Invite"}}" title="{{t "guests.invite" "Invite"}}">
             <span class="icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 7l9 6 9-6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
             </span>
-            {{t "guests.invite" "Invite"}}
           </button>
         </td>
       </tr>
@@ -2739,7 +2742,10 @@ const guestDirectoryTemplate = compileTemplate("guest-directory", `
 const roomsTemplate = compileTemplate("rooms", `
   <div class="notice">{{t "rooms.notice" "Manage studio rooms and spaces."}}</div>
   <div class="toolbar">
-    <button id="add-room">{{t "rooms.add" "Add room"}}</button>
+    <button id="add-room">
+      <span class="icon" aria-hidden="true">+</span>
+      {{t "rooms.add" "Add room"}}
+    </button>
   </div>
   <table class="table">
     <thead>
@@ -2753,13 +2759,12 @@ const roomsTemplate = compileTemplate("rooms", `
       <tr>
         <td>{{name}}</td>
         <td>
-          <button class="secondary btn-edit" data-room-edit="{{id}}">
+          <button class="secondary btn-edit icon-only" data-room-edit="{{id}}" aria-label="{{t "common.edit" "Edit"}}" title="{{t "common.edit" "Edit"}}">
             <span class="icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
             </span>
-            {{t "common.edit" "Edit"}}
           </button>
-          <button class="secondary btn-danger" data-room-delete="{{id}}">
+          <button class="secondary btn-danger icon-only" data-room-delete="{{id}}" aria-label="{{t "common.delete" "Delete"}}" title="{{t "common.delete" "Delete"}}">
             <span class="icon" aria-hidden="true">
               <svg viewBox="0 0 24 24">
                 <path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -2768,7 +2773,6 @@ const roomsTemplate = compileTemplate("rooms", `
                 <path d="M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
               </svg>
             </span>
-            {{t "common.delete" "Delete"}}
           </button>
         </td>
       </tr>
@@ -7347,7 +7351,7 @@ function openSessionModal(data, options = {}) {
     const titleSuggestions = buildTitleSuggestions(data);
     const titleSuggestionId = createTitleSuggestionId("session-title");
     const baseDate = parseDateInput(options.date || focusDate);
-    const defaultGenerateUntil = normalizeDateInputValue(addDays(baseDate, 56));
+    const defaultGenerateUntil = normalizeDateInputValue(addDays(baseDate, 365));
     const modalMarkup = sessionModalTemplate({
         focusDateDisplay,
         focusDateValue,
@@ -7395,7 +7399,7 @@ function openSessionModal(data, options = {}) {
             input.checked = Number(input.value) === dateValue.getDay();
         });
         if (generateUntilInput) {
-            generateUntilInput.value = normalizeDateInputValue(addDays(dateValue, 56));
+            generateUntilInput.value = normalizeDateInputValue(addDays(dateValue, 365));
         }
     }
 
@@ -7474,9 +7478,9 @@ function openSessionModal(data, options = {}) {
                     const selectedDays = Array.from(overlay.querySelectorAll("input[name=\"recurringDays\"]:checked"))
                         .map(input => Number(input.value))
                         .filter(value => Number.isFinite(value));
-                    const recurrenceIntervalWeeks = Number(getValue("recurrenceIntervalWeeks") || 1);
+                    const recurrenceIntervalWeeks = 1;
                     const generateUntil = normalizeDateInputValue(getValue("generateUntil"))
-                        || formatDateKeyLocal(addDays(parseDateInput(startDate), 56));
+                        || normalizeDateInputValue(addDays(parseDateInput(startDate), 365));
 
                     if (!selectedDays.length) {
                         showToast(t("session.daysRequired", "Select at least one day of week."), "error");
@@ -8950,7 +8954,7 @@ function openSeriesModal(series, data) {
     const titleSuggestionId = createTitleSuggestionId("series-title");
     const generateUntilValue = series?.generateUntil
         ? normalizeDateInputValue(series.generateUntil)
-        : normalizeDateInputValue(addDays(new Date(), 56));
+        : normalizeDateInputValue(addDays(new Date(), 365));
     const modalMarkup = seriesModalTemplate({
         modalTitle: isEdit ? t("series.editTitle", "Edit series") : t("series.newTitle", "New series"),
         subtitle: isEdit
@@ -9049,7 +9053,7 @@ function openSeriesModal(series, data) {
                 daysOfWeekJson: JSON.stringify(selectedDays),
                 startTimeLocal,
                 durationMinutes: Number(getValue("durationMinutes")),
-                recurrenceIntervalWeeks: Number(getValue("recurrenceIntervalWeeks") || 1),
+                recurrenceIntervalWeeks: series?.recurrenceIntervalWeeks ?? 1,
                 generateUntil: normalizeDateInputValue(getValue("generateUntil")) || null,
                 defaultCapacity: Number(getValue("capacity") || 0),
                 remoteCapacity: Number(getValue("remoteCapacity") || 0),
@@ -9259,6 +9263,10 @@ function buildCalendarView(items, options) {
         ? `${t("calendar.weekNumber", "Week")} ${String(getWeekNumber(weekStart)).padStart(2, "0")}`
         : "";
     const hebrewDateLabel = formatHebrewDate(focus);
+    const hourTicks = Array.from({ length: 17 }, (_, index) => {
+        const hour = String(6 + index).padStart(2, "0");
+        return `${hour}:00`;
+    });
 
     return {
         view,
@@ -9266,6 +9274,7 @@ function buildCalendarView(items, options) {
         rangeLabel,
         weekNumberLabel,
         hebrewDateLabel,
+        hourTicks,
         isDay: view === "day",
         isWeek: view === "week",
         isMonth: view === "month",
@@ -9965,14 +9974,22 @@ async function moveEventInstance(item, dateKey) {
     const end = item.endUtc ? new Date(item.endUtc) : null;
     const durationMs = end ? end.getTime() - start.getTime() : null;
     const targetDate = parseDateInput(dateKey);
-    start.setFullYear(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+    const movedStart = new Date(
+        targetDate.getFullYear(),
+        targetDate.getMonth(),
+        targetDate.getDate(),
+        start.getHours(),
+        start.getMinutes(),
+        start.getSeconds(),
+        start.getMilliseconds()
+    );
     const payload = {
-        startUtc: start.toISOString(),
+        startUtc: movedStart.toISOString(),
         instructorId: item.instructorId || null,
         roomId: item.roomId || null
     };
     if (durationMs !== null) {
-        payload.endUtc = new Date(start.getTime() + durationMs).toISOString();
+        payload.endUtc = new Date(movedStart.getTime() + durationMs).toISOString();
     }
     await apiPut(`/api/admin/event-instances/${item.id}`, payload);
 }

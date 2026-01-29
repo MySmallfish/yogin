@@ -225,6 +225,20 @@ html[lang^="he"] .section-title {
   color: var(--accent);
 }
 
+.icon-only {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-only .icon {
+  margin: 0;
+}
+
 .app-shell.collapsed .nav-title {
   display: none;
 }
@@ -1648,9 +1662,54 @@ button .icon svg {
   font-size: 10px;
 }
 
+.calendar-time-grid {
+  --hour-row-height: 48px;
+  --hour-count: 17;
+}
+
+.calendar-day-view {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.calendar-hours {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding-top: 28px;
+  color: var(--muted);
+  font-size: 12px;
+  gap: 0;
+}
+
+[dir="rtl"] .calendar-hours {
+  align-items: flex-start;
+}
+
+.calendar-hour {
+  height: var(--hour-row-height);
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+
+.calendar-time-grid .calendar-day-events,
+.calendar-time-grid .calendar-events {
+  min-height: calc(var(--hour-row-height) * var(--hour-count));
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent calc(var(--hour-row-height) - 1px),
+    rgba(15, 23, 42, 0.08) calc(var(--hour-row-height) - 1px),
+    rgba(15, 23, 42, 0.08) var(--hour-row-height)
+  );
+}
+
 .calendar-week {
   display: grid;
-  grid-template-columns: repeat(7, minmax(160px, 1fr));
+  grid-template-columns: 72px repeat(7, minmax(160px, 1fr));
   gap: 12px;
   overflow-x: auto;
   flex: 1;
