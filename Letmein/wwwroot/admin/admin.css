@@ -1512,7 +1512,7 @@ button .icon svg {
   top: auto;
   right: auto;
   width: 32px;
-  height: 32px;
+  height: 26px;
   border-radius: 10px;
   border: 1px solid transparent;
   background: rgba(255, 255, 255, 0.9);
@@ -1783,6 +1783,7 @@ button .icon svg {
   padding: 6px 0;
   padding-inline-start: 4px;
   overflow: hidden;
+  background: #fff;
 }
 
 .calendar-time-grid .calendar-event.has-rail {
