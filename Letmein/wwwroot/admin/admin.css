@@ -1724,7 +1724,7 @@ button .icon svg {
 }
 
 .calendar-time-grid {
-  --hour-row-height: 60px;
+  --hour-row-height: 72px;
   --hour-count: 17;
 }
 
@@ -1781,6 +1781,7 @@ button .icon svg {
   align-items: flex-start;
   gap: 2px;
   padding: 6px 0;
+  padding-inline-start: 4px;
   overflow: hidden;
 }
 
