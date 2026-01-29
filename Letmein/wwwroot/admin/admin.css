@@ -1526,7 +1526,7 @@ button .icon svg {
   top: auto;
   right: auto;
   width: 32px;
-  height: 26px;
+  height: 24px;
   border-radius: 10px;
   border: 1px solid transparent;
   background: rgba(255, 255, 255, 0.9);
@@ -1751,7 +1751,7 @@ button .icon svg {
 .calendar-time-grid {
   --hour-row-height: 64px;
   --hour-count: 17;
-  --hour-top-gap: 24px;
+  --hour-top-gap: 48px;
 }
 
 .calendar-day-view {
@@ -1787,6 +1787,7 @@ button .icon svg {
   min-height: calc(var(--hour-row-height) * var(--hour-count) + var(--hour-top-gap));
   padding-top: var(--hour-top-gap);
   gap: 0;
+  position: relative;
   background-image: repeating-linear-gradient(
     to bottom,
     transparent,
@@ -1814,9 +1815,26 @@ button .icon svg {
   background: #fff;
 }
 
+.calendar-time-grid .calendar-event.timed {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--hour-top-gap) + (var(--event-start, 0) * var(--hour-row-height) / 60));
+  z-index: 1;
+}
+
 .calendar-time-grid .calendar-event.birthday,
 .calendar-time-grid .calendar-event.holiday {
   min-height: 48px;
+}
+
+.calendar-time-grid .calendar-event.all-day {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 48px;
+  z-index: 2;
 }
 
 .calendar-time-grid .calendar-event.has-rail {

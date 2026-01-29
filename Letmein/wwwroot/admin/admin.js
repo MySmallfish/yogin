@@ -295,7 +295,7 @@ const calendarTemplate = compileTemplate("calendar", `
           {{#if day.hasEvents}}
             <div class="calendar-events">
               {{#each day.events}}
-                <div class="calendar-event {{#if isCancelled}}cancelled{{/if}} {{#if isPast}}past{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}} {{#unless suppressActions}}has-rail{{/unless}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
+                <div class="calendar-event {{#if isAllDay}}all-day{{else}}timed{{/if}} {{#if isCancelled}}cancelled{{/if}} {{#if isPast}}past{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}} {{#unless suppressActions}}has-rail{{/unless}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
                   {{#unless suppressActions}}
                     <div class="event-actions-rail" aria-label="{{t "calendar.actions" "Actions"}}">
                       <button class="event-actions" type="button" aria-label="{{t "calendar.actions" "Actions"}}">
@@ -356,7 +356,7 @@ const calendarTemplate = compileTemplate("calendar", `
             {{#if hasEvents}}
               <div class="calendar-day-events">
                 {{#each events}}
-                  <div class="calendar-event compact {{#if isCancelled}}cancelled{{/if}} {{#if isPast}}past{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}} {{#unless suppressActions}}has-rail{{/unless}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
+                  <div class="calendar-event compact {{#if isAllDay}}all-day{{else}}timed{{/if}} {{#if isCancelled}}cancelled{{/if}} {{#if isPast}}past{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}} {{#unless suppressActions}}has-rail{{/unless}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
                     {{#unless suppressActions}}
                       <div class="event-actions-rail" aria-label="{{t "calendar.actions" "Actions"}}">
                         <button class="event-actions" type="button" aria-label="{{t "calendar.actions" "Actions"}}">
@@ -9535,7 +9535,10 @@ function buildEventMap(items, timeZone) {
         const seriesIcon = isBirthday ? "" : item.seriesIcon;
         const durationFallback = end ? Math.max(15, Math.round((end.getTime() - start.getTime()) / 60000)) : 60;
         const durationMinutes = Number(item.durationMinutes || durationFallback || 60);
-        const eventStyle = `${item.seriesColor ? `--series-color: ${item.seriesColor};` : ""}--event-duration: ${durationMinutes};`;
+        const dayStartMinutes = 7 * 60;
+        const startMinutes = (start.getHours() * 60) + start.getMinutes();
+        const eventStartMinutes = isAllDay ? 0 : Math.max(0, startMinutes - dayStartMinutes);
+        const eventStyle = `${item.seriesColor ? `--series-color: ${item.seriesColor};` : ""}--event-duration: ${durationMinutes};--event-start: ${eventStartMinutes};`;
         const booked = Number(item.booked || 0);
         const capacity = Number(item.capacity || 0);
         const remoteBooked = Number(item.remoteBooked || 0);
@@ -9620,6 +9623,7 @@ function buildEventMap(items, timeZone) {
             remoteSummary: remoteCapacity > 0 && !isHoliday ? `${remoteBooked}/${remoteCapacity}` : "",
             price: formatPlainPrice(item.priceCents),
             eventStyle,
+            isAllDay,
             birthdayNames: [],
             birthdayCount: 0,
             hasBirthdayList: false,
