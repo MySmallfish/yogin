@@ -1420,7 +1420,7 @@ button .icon svg {
   border-left-width: 1px;
   border-left-color: var(--line);
   border-radius: 14px;
-  padding: 10px 10px 10px 14px;
+  padding: 10px 8px;
   cursor: pointer;
   position: relative;
   font-size: 13px;
@@ -1756,7 +1756,7 @@ button .icon svg {
 
 .calendar-day-view {
   display: grid;
-  grid-template-columns: 72px 1fr;
+  grid-template-columns: 48px 1fr;
   gap: 12px;
   align-items: start;
 }
@@ -1767,7 +1767,7 @@ button .icon svg {
   align-items: flex-end;
   padding-top: var(--hour-top-gap);
   color: var(--muted);
-  font-size: 12px;
+  font-size: 10px;
   gap: 0;
 }
 
@@ -1809,8 +1809,7 @@ button .icon svg {
   justify-content: flex-start;
   align-items: flex-start;
   gap: 2px;
-  padding: 6px 0;
-  padding-inline-start: 10px;
+  padding: 6px 8px;
   overflow: hidden;
   background: #fff;
 }
@@ -1830,7 +1829,7 @@ button .icon svg {
 
 .calendar-week {
   display: grid;
-  grid-template-columns: 72px repeat(7, minmax(160px, 1fr));
+  grid-template-columns: 48px repeat(7, minmax(160px, 1fr));
   gap: 8px;
   overflow-x: auto;
   flex: 1;

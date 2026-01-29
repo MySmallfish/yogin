@@ -47,3 +47,4 @@
 2026-01-29 08:44  Add top gap to hour grid, center hour labels, darken grid lines, set 64px hour rows, and enforce 48px min height for all-day events.
 2026-01-29 08:50  Make past events fully opaque while dimming only the colored strip via pseudo-element.
 2026-01-29 08:56  Add left padding to keep text clear of the color strip and darken past-event text.
+2026-01-29 09:02  Set event horizontal padding to 8px, shrink hour label font, and reduce hour label column to 48px.
