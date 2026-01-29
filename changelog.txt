@@ -49,3 +49,4 @@
 2026-01-29 08:56  Add left padding to keep text clear of the color strip and darken past-event text.
 2026-01-29 09:02  Set event horizontal padding to 8px, shrink hour label font, and reduce hour label column to 48px.
 2026-01-29 09:08  Position timed events by start time in the hour grid and pin all-day events to a 48px top row with larger hour-top gap.
+2026-01-29 09:16  Set all-day row/top gap to 36px so all-day items sit above the grid with consistent spacing.

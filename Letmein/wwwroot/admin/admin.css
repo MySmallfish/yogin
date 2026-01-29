@@ -323,7 +323,7 @@ html[lang^="he"] .section-title {
 
 .main {
   grid-area: main;
-  padding: 36px 40px 56px;
+  padding: 9px 10px 14px;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -345,7 +345,7 @@ html[lang^="he"] .section-title {
 .surface {
   background: var(--surface);
   border-radius: var(--radius);
-  padding: 24px;
+  padding: 4px;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -1650,11 +1650,6 @@ button .icon svg {
   left: 8px;
 }
 
-[dir="rtl"] .calendar-event.has-rail {
-  padding-inline-end: 12px;
-  padding-inline-start: 44px;
-}
-
 [dir="rtl"] .event-actions-rail {
   right: auto;
   left: 8px;
@@ -1751,7 +1746,7 @@ button .icon svg {
 .calendar-time-grid {
   --hour-row-height: 64px;
   --hour-count: 17;
-  --hour-top-gap: 48px;
+  --hour-top-gap: 36px;
 }
 
 .calendar-day-view {
@@ -1825,7 +1820,7 @@ button .icon svg {
 
 .calendar-time-grid .calendar-event.birthday,
 .calendar-time-grid .calendar-event.holiday {
-  min-height: 48px;
+  min-height: 36px;
 }
 
 .calendar-time-grid .calendar-event.all-day {
@@ -1833,17 +1828,10 @@ button .icon svg {
   left: 0;
   right: 0;
   top: 0;
-  height: 48px;
+  height: 36px;
   z-index: 2;
 }
 
-.calendar-time-grid .calendar-event.has-rail {
-  padding-inline-end: 0;
-}
-
-[dir="rtl"] .calendar-time-grid .calendar-event.has-rail {
-  padding-inline-start: 0;
-}
 
 .calendar-week {
   display: grid;
