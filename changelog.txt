@@ -45,3 +45,4 @@
 2026-01-29 08:31  Set hour rows to 64px, center hour labels, and darken time-grid lines for better contrast.
 2026-01-29 08:38  Make time-grid session cards fully white and reduce action buttons to 26px height.
 2026-01-29 08:44  Add top gap to hour grid, center hour labels, darken grid lines, set 64px hour rows, and enforce 48px min height for all-day events.
+2026-01-29 08:50  Make past events fully opaque while dimming only the colored strip via pseudo-element.

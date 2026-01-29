@@ -1417,8 +1417,8 @@ button .icon svg {
 .calendar-event {
   background: white;
   border: 1px solid var(--line);
-  border-left-width: 4px;
-  border-left-color: var(--series-color, var(--line));
+  border-left-width: 1px;
+  border-left-color: var(--line);
   border-radius: 14px;
   padding: 10px;
   cursor: pointer;
@@ -1426,10 +1426,24 @@ button .icon svg {
   font-size: 13px;
 }
 
+.calendar-event::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 4px;
+  background: var(--series-color, var(--line));
+  border-radius: 14px 0 0 14px;
+}
+
 .calendar-event.holiday {
   background: rgba(254, 243, 199, 0.7);
-  border-left-color: var(--series-color, var(--accent));
   cursor: default;
+}
+
+.calendar-event.holiday::before {
+  background: var(--series-color, var(--accent));
 }
 
 .event-actions {
@@ -1572,7 +1586,11 @@ button .icon svg {
 }
 
 .calendar-event.past {
-  opacity: 0.7;
+  opacity: 1;
+}
+
+.calendar-event.past::before {
+  opacity: 0.45;
 }
 
 .calendar-event.compact {
@@ -1603,11 +1621,17 @@ button .icon svg {
 
 [dir="rtl"] .calendar-event {
   border-left: 1px solid var(--line);
-  border-right: 4px solid var(--series-color, var(--line));
+  border-right: 1px solid var(--line);
 }
 
 [dir="rtl"] .calendar-event.holiday {
-  border-right-color: var(--series-color, var(--accent));
+  border-right-color: var(--line);
+}
+
+[dir="rtl"] .calendar-event::before {
+  left: auto;
+  right: 0;
+  border-radius: 0 14px 14px 0;
 }
 
 [dir="rtl"] .calendar-event.mini {
