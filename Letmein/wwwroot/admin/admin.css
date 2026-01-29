@@ -1724,7 +1724,7 @@ button .icon svg {
 }
 
 .calendar-time-grid {
-  --hour-row-height: 48px;
+  --hour-row-height: 60px;
   --hour-count: 17;
 }
 
@@ -1780,23 +1780,22 @@ button .icon svg {
   justify-content: flex-start;
   align-items: flex-start;
   gap: 2px;
-  padding: 6px 8px;
+  padding: 6px 0;
   overflow: hidden;
 }
 
 .calendar-time-grid .calendar-event.has-rail {
-  padding-inline-end: 44px;
+  padding-inline-end: 0;
 }
 
 [dir="rtl"] .calendar-time-grid .calendar-event.has-rail {
-  padding-inline-end: 8px;
-  padding-inline-start: 44px;
+  padding-inline-start: 0;
 }
 
 .calendar-week {
   display: grid;
   grid-template-columns: 72px repeat(7, minmax(160px, 1fr));
-  gap: 12px;
+  gap: 8px;
   overflow-x: auto;
   flex: 1;
 }
@@ -1805,11 +1804,11 @@ button .icon svg {
   background: rgba(255, 255, 255, 0.7);
   border: 1px solid var(--line);
   border-radius: 14px;
-  padding: 12px;
+  padding: 8px;
   min-height: 220px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 
 .calendar-dropzone.drag-over {

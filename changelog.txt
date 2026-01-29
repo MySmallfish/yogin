@@ -40,3 +40,4 @@
 2026-01-29 07:49  Snap calendar events to hour grid (no gaps), render duration-based heights, move session icon inline with title, and stack action buttons in a full-height rail.
 2026-01-29 08:05  Tighten calendar event action rail to 32px top buttons and align time-grid event content to top with reduced padding.
 2026-01-29 08:12  Tighten calendar time-grid event padding/spacing so text aligns to top without indent and fits under 32px action buttons.
+2026-01-29 08:19  Increase hour row height to 60px, remove time-grid card inline padding, and tighten week column gaps/padding.
