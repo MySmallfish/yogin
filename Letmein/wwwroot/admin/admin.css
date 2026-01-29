@@ -1726,6 +1726,7 @@ button .icon svg {
 .calendar-time-grid {
   --hour-row-height: 64px;
   --hour-count: 17;
+  --hour-top-gap: 24px;
 }
 
 .calendar-day-view {
@@ -1739,7 +1740,7 @@ button .icon svg {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  padding-top: 28px;
+  padding-top: var(--hour-top-gap);
   color: var(--muted);
   font-size: 12px;
   gap: 0;
@@ -1758,15 +1759,18 @@ button .icon svg {
 
 .calendar-time-grid .calendar-day-events,
 .calendar-time-grid .calendar-events {
-  min-height: calc(var(--hour-row-height) * var(--hour-count));
+  min-height: calc(var(--hour-row-height) * var(--hour-count) + var(--hour-top-gap));
+  padding-top: var(--hour-top-gap);
   gap: 0;
   background-image: repeating-linear-gradient(
     to bottom,
     transparent,
     transparent calc(var(--hour-row-height) - 1px),
-    rgba(15, 23, 42, 0.14) calc(var(--hour-row-height) - 1px),
-    rgba(15, 23, 42, 0.14) var(--hour-row-height)
+    rgba(15, 23, 42, 0.18) calc(var(--hour-row-height) - 1px),
+    rgba(15, 23, 42, 0.18) var(--hour-row-height)
   );
+  background-position: 0 var(--hour-top-gap);
+  background-repeat: repeat;
 }
 
 .calendar-time-grid .calendar-event {
@@ -1784,6 +1788,11 @@ button .icon svg {
   padding-inline-start: 4px;
   overflow: hidden;
   background: #fff;
+}
+
+.calendar-time-grid .calendar-event.birthday,
+.calendar-time-grid .calendar-event.holiday {
+  min-height: 48px;
 }
 
 .calendar-time-grid .calendar-event.has-rail {
