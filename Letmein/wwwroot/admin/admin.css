@@ -1724,7 +1724,7 @@ button .icon svg {
 }
 
 .calendar-time-grid {
-  --hour-row-height: 72px;
+  --hour-row-height: 64px;
   --hour-count: 17;
 }
 
@@ -1752,7 +1752,7 @@ button .icon svg {
 .calendar-hour {
   height: var(--hour-row-height);
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: flex-end;
 }
 
@@ -1764,8 +1764,8 @@ button .icon svg {
     to bottom,
     transparent,
     transparent calc(var(--hour-row-height) - 1px),
-    rgba(15, 23, 42, 0.08) calc(var(--hour-row-height) - 1px),
-    rgba(15, 23, 42, 0.08) var(--hour-row-height)
+    rgba(15, 23, 42, 0.14) calc(var(--hour-row-height) - 1px),
+    rgba(15, 23, 42, 0.14) var(--hour-row-height)
   );
 }
 
