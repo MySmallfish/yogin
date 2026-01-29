@@ -1488,22 +1488,22 @@ button .icon svg {
 }
 
 .calendar-event.has-rail {
-  padding-inline-end: 46px;
+  padding-inline-end: 44px;
 }
 
 .event-actions-rail {
   position: absolute;
-  top: 0;
-  right: 0;
-  width: 34px;
-  height: 100%;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: auto;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  border-left: 1px solid rgba(15, 23, 42, 0.08);
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 0 12px 12px 0;
-  overflow: hidden;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  border-radius: 10px;
 }
 
 .event-actions-rail .event-actions,
@@ -1511,11 +1511,11 @@ button .icon svg {
   position: static;
   top: auto;
   right: auto;
-  width: 100%;
-  height: 50%;
-  border-radius: 0;
-  border: 0;
-  background: transparent;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.9);
   padding: 0;
   display: inline-flex;
   align-items: center;
@@ -1627,15 +1627,14 @@ button .icon svg {
 
 [dir="rtl"] .calendar-event.has-rail {
   padding-inline-end: 12px;
-  padding-inline-start: 46px;
+  padding-inline-start: 44px;
 }
 
 [dir="rtl"] .event-actions-rail {
   right: auto;
-  left: 0;
-  border-left: 0;
-  border-right: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 12px 0 0 12px;
+  left: 8px;
+  border: 0;
+  border-radius: 10px;
 }
 
 [dir="rtl"] .event-actions-menu button {
@@ -1778,7 +1777,8 @@ button .icon svg {
   border-radius: 12px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
+  align-items: flex-start;
 }
 
 .calendar-week {
