@@ -11,28 +11,6 @@ namespace Letmein.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "RemoteLink",
-                table: "CustomerStatuses");
-
-            migrationBuilder.DropColumn(
-                name: "SupportsRemote",
-                table: "CustomerStatuses");
-
-            migrationBuilder.AddColumn<string>(
-                name: "RemoteLink",
-                table: "Rooms",
-                type: "TEXT",
-                nullable: false,
-                defaultValue: "");
-
-            migrationBuilder.AddColumn<bool>(
-                name: "SupportsRemote",
-                table: "Rooms",
-                type: "INTEGER",
-                nullable: false,
-                defaultValue: false);
-
             migrationBuilder.CreateTable(
                 name: "BillableItems",
                 columns: table => new
@@ -172,28 +150,6 @@ namespace Letmein.Migrations
 
             migrationBuilder.DropTable(
                 name: "BillingSubscriptions");
-
-            migrationBuilder.DropColumn(
-                name: "RemoteLink",
-                table: "Rooms");
-
-            migrationBuilder.DropColumn(
-                name: "SupportsRemote",
-                table: "Rooms");
-
-            migrationBuilder.AddColumn<string>(
-                name: "RemoteLink",
-                table: "CustomerStatuses",
-                type: "TEXT",
-                nullable: false,
-                defaultValue: "");
-
-            migrationBuilder.AddColumn<bool>(
-                name: "SupportsRemote",
-                table: "CustomerStatuses",
-                type: "INTEGER",
-                nullable: false,
-                defaultValue: false);
         }
     }
 }
