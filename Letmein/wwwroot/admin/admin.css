@@ -1463,9 +1463,9 @@ button .icon svg {
   border-left-width: 1px;
   border-left-color: var(--line);
   border-radius: 14px;
-  padding: 8px;
-  padding-inline-start: 8px;
-  padding-inline-end: 8px;
+  padding: 6px;
+  padding-inline-start: 6px;
+  padding-inline-end: 6px;
   cursor: pointer;
   position: relative;
   font-size: 13px;
@@ -1777,8 +1777,8 @@ button .icon svg {
 }
 
 .event-time {
-  margin-top: 10px;
-  font-size: 12px;
+  margin-top: 8px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--ink);
 }
