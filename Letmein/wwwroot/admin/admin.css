@@ -1777,7 +1777,6 @@ button .icon svg {
 }
 
 .event-time {
-  margin-top: 8px;
   font-size: 11px;
   font-weight: 700;
   color: var(--ink);
@@ -1827,6 +1826,7 @@ button .icon svg {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  font-size: 11px;
 }
 
 .calendar-time-grid .calendar-day-events,

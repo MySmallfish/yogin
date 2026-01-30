@@ -56,3 +56,4 @@
 2026-01-30 10:48  Shrink sidebar width/padding and auto-collapse on small screens (<1500px).
 2026-01-30 11:16  Raise hour-row height, add bold time line under session titles, and clear stray modal overlays on route change (fix billing clicks).
 2026-01-30 12:22  Tighten calendar event padding and reduce time-line font size.
+2026-01-30 13:25  Reduce hour label size and add delegated billing click handlers to ensure controls respond.

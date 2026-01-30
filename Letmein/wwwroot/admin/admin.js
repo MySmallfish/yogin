@@ -6057,6 +6057,7 @@ let activeEventMenu = null;
 let activeEventMenuCleanup = null;
 let calendarSearchShouldFocus = false;
 let lastRenderedRoute = null;
+let billingHandlersBound = false;
 
 function getSidebarState() {
     const stored = localStorage.getItem(sidebarStorageKey);
@@ -11290,12 +11291,154 @@ function getWeekdayNames(weekStartsOn) {
     return names.slice(weekStartsOn).concat(names.slice(0, weekStartsOn));
 }
 
+function bindBillingDelegates() {
+    if (billingHandlersBound) return;
+    document.addEventListener("click", async (event) => {
+        const snapshot = actor.getSnapshot();
+        const route = snapshot?.context?.route;
+        if (route !== "billing") return;
+        const data = snapshot?.context?.data || {};
+        const runBtn = event.target.closest("#billing-run");
+        if (runBtn) {
+            event.preventDefault();
+            try {
+                await apiPost("/api/admin/billing/run", {});
+                showToast(t("billing.runSuccess", "Billing run complete."), "success");
+                actor.send({ type: "REFRESH" });
+            } catch (error) {
+                showToast(error.message || t("billing.runError", "Unable to run billing."), "error");
+            }
+            return;
+        }
+        const exportBtn = event.target.closest("#billing-export");
+        if (exportBtn) {
+            event.preventDefault();
+            const fromValue = document.querySelector("[name=\"billingFrom\"]")?.value || "";
+            const toValue = document.querySelector("[name=\"billingTo\"]")?.value || "";
+            const params = new URLSearchParams();
+            if (fromValue) params.set("from", fromValue);
+            if (toValue) params.set("to", toValue);
+            const qs = params.toString();
+            window.location.href = `/api/admin/billing/charges/export${qs ? `?${qs}` : ""}`;
+            return;
+        }
+        const newChargeBtn = event.target.closest("#billing-new-charge");
+        if (newChargeBtn) {
+            event.preventDefault();
+            openBillingChargeModal(data);
+            return;
+        }
+        const newSubscriptionBtn = event.target.closest("#billing-new-subscription");
+        if (newSubscriptionBtn) {
+            event.preventDefault();
+            openBillingSubscriptionModal(data);
+            return;
+        }
+        const newItemBtn = event.target.closest("#billing-new-item");
+        if (newItemBtn) {
+            event.preventDefault();
+            openBillingItemModal(null);
+            return;
+        }
+        const applyBtn = event.target.closest("#billing-apply");
+        if (applyBtn) {
+            event.preventDefault();
+            const fromRaw = document.querySelector("[name=\"billingFrom\"]")?.value || "";
+            const toRaw = document.querySelector("[name=\"billingTo\"]")?.value || "";
+            const statusValue = document.querySelector("[name=\"billingStatus\"]")?.value || "";
+            const customerValue = document.querySelector("[name=\"billingCustomer\"]")?.value || "";
+            const sourceValue = document.querySelector("[name=\"billingSource\"]")?.value || "";
+            const params = new URLSearchParams();
+            if (fromRaw) params.set("from", fromRaw);
+            if (toRaw) params.set("to", toRaw);
+            if (statusValue) params.set("status", statusValue);
+            if (customerValue) params.set("customerId", customerValue);
+            if (sourceValue) params.set("sourceType", sourceValue);
+            const query = params.toString();
+            window.location.hash = `#/billing${query ? `?${query}` : ""}`;
+            return;
+        }
+        const itemEditBtn = event.target.closest("[data-item-edit]");
+        if (itemEditBtn) {
+            event.preventDefault();
+            const id = itemEditBtn.getAttribute("data-item-edit");
+            const item = (data.items || []).find(entry => String(entry.id) === String(id));
+            if (item) {
+                openBillingItemModal(item);
+            }
+            return;
+        }
+        const adjustBtn = event.target.closest("[data-charge-adjust]");
+        if (adjustBtn) {
+            event.preventDefault();
+            const id = adjustBtn.getAttribute("data-charge-adjust");
+            if (id) openBillingAdjustModal(id);
+            return;
+        }
+        const voidBtn = event.target.closest("[data-charge-void]");
+        if (voidBtn) {
+            event.preventDefault();
+            const id = voidBtn.getAttribute("data-charge-void");
+            if (id) openBillingVoidModal(id);
+            return;
+        }
+        const pauseBtn = event.target.closest("[data-subscription-pause]");
+        if (pauseBtn) {
+            event.preventDefault();
+            const id = pauseBtn.getAttribute("data-subscription-pause");
+            if (!id) return;
+            try {
+                await apiPost(`/api/admin/billing/subscriptions/${id}/pause`, {});
+                actor.send({ type: "REFRESH" });
+            } catch (error) {
+                showToast(error.message || t("billing.pauseError", "Unable to pause subscription."), "error");
+            }
+            return;
+        }
+        const resumeBtn = event.target.closest("[data-subscription-resume]");
+        if (resumeBtn) {
+            event.preventDefault();
+            const id = resumeBtn.getAttribute("data-subscription-resume");
+            if (!id) return;
+            try {
+                await apiPost(`/api/admin/billing/subscriptions/${id}/resume`, {});
+                actor.send({ type: "REFRESH" });
+            } catch (error) {
+                showToast(error.message || t("billing.resumeError", "Unable to resume subscription."), "error");
+            }
+            return;
+        }
+        const cancelBtn = event.target.closest("[data-subscription-cancel]");
+        if (cancelBtn) {
+            event.preventDefault();
+            const id = cancelBtn.getAttribute("data-subscription-cancel");
+            if (!id) return;
+            openConfirmModal({
+                title: t("billing.cancelTitle", "Cancel subscription?"),
+                message: t("billing.cancelMessage", "This will stop future billing."),
+                confirmLabel: t("billing.cancel", "Cancel"),
+                cancelLabel: t("common.cancel", "Cancel"),
+                onConfirm: async () => {
+                    try {
+                        await apiPost(`/api/admin/billing/subscriptions/${id}/cancel`, {});
+                        actor.send({ type: "REFRESH" });
+                    } catch (error) {
+                        showToast(error.message || t("billing.cancelError", "Unable to cancel subscription."), "error");
+                    }
+                }
+            });
+        }
+    });
+    billingHandlersBound = true;
+}
+
 actor.subscribe((state) => {
     debugLog("state", { value: state.value, route: state.context.route });
     render(state);
 });
 
 ensureGlobalEscapeHandler();
+bindBillingDelegates();
 actor.start();
 
 const adminRoutes = new Set(["calendar", "events", "rooms", "plans", "customers", "customer", "users", "guests", "reports", "payroll", "billing", "audit", "settings"]);
