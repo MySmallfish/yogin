@@ -52,3 +52,4 @@
 2026-01-29 09:16  Set all-day row/top gap to 36px so all-day items sit above the grid with consistent spacing.
 2026-01-30 04:18  Fix calendar drag/drop snapping and time-grid positioning, default series generation to +1 year, harden public event route loading, and implement billing (models, APIs, UI, exports, charges on bookings/cancellations).
 2026-01-30 04:31  Adjust BillingModule migration to avoid re-adding existing Room remote columns so deploy/test server can migrate cleanly.
+2026-01-30 09:24  Add admin bootstrap script for safe admin creation/reset.

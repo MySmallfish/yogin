@@ -5789,6 +5789,16 @@ using (var scope = app.Services.CreateScope())
     await seed.SeedAsync(CancellationToken.None);
 }
 
+if (HasArg(args, "--add-admin"))
+{
+    var email = GetArgValue(args, "--email") ?? "admin@letmein.local";
+    var password = GetArgValue(args, "--password") ?? "admin123";
+    var studioSlug = GetArgValue(args, "--studio") ?? "demo";
+    var resetPassword = HasArg(args, "--reset-password");
+    var exitCode = await EnsureAdminUserAsync(app.Services, email, password, studioSlug, resetPassword);
+    Environment.Exit(exitCode);
+}
+
 app.Run();
 
 static Guid GetStudioId(ClaimsPrincipal user)
@@ -5899,6 +5909,76 @@ static void SetUserRoles(AppUser userRow, IReadOnlyList<UserRole> roles)
 static bool UserHasRole(AppUser userRow, UserRole role)
 {
     return GetUserRoles(userRow).Contains(role);
+}
+
+static bool HasArg(string[] args, string flag)
+{
+    return args.Any(arg => string.Equals(arg, flag, StringComparison.OrdinalIgnoreCase));
+}
+
+static string? GetArgValue(string[] args, string key)
+{
+    var prefix = $"{key}=";
+    var match = args.FirstOrDefault(arg => arg.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+    if (match != null)
+    {
+        return match.Substring(prefix.Length).Trim();
+    }
+    var index = Array.FindIndex(args, arg => string.Equals(arg, key, StringComparison.OrdinalIgnoreCase));
+    if (index >= 0 && index < args.Length - 1)
+    {
+        return args[index + 1];
+    }
+    return null;
+}
+
+static async Task<int> EnsureAdminUserAsync(IServiceProvider services, string email, string password, string studioSlug, bool resetPassword)
+{
+    using var scope = services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var studio = await db.Studios.FirstOrDefaultAsync(s => s.Slug == studioSlug);
+    if (studio == null)
+    {
+        Console.WriteLine($"Studio not found for slug '{studioSlug}'.");
+        return 1;
+    }
+
+    var normalizedEmail = email.Trim().ToLowerInvariant();
+    var user = await db.Users.FirstOrDefaultAsync(u => u.StudioId == studio.Id && u.Email == normalizedEmail);
+    var hasher = new PasswordHasher<AppUser>();
+    if (user == null)
+    {
+        user = new AppUser
+        {
+            Id = Guid.NewGuid(),
+            StudioId = studio.Id,
+            Email = normalizedEmail,
+            DisplayName = "Studio Admin",
+            IsActive = true
+        };
+        user.PasswordHash = hasher.HashPassword(user, password);
+        SetUserRoles(user, new[] { UserRole.Admin });
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+        Console.WriteLine($"Created admin user {normalizedEmail} for studio '{studioSlug}'.");
+        return 0;
+    }
+
+    var roles = GetUserRoles(user);
+    if (!roles.Contains(UserRole.Admin))
+    {
+        roles.Add(UserRole.Admin);
+        SetUserRoles(user, roles);
+    }
+    if (resetPassword)
+    {
+        user.PasswordHash = hasher.HashPassword(user, password);
+    }
+    user.IsActive = true;
+    db.Users.Update(user);
+    await db.SaveChangesAsync();
+    Console.WriteLine($"Updated admin user {normalizedEmail} for studio '{studioSlug}'.");
+    return 0;
 }
 
 static TimeZoneInfo ResolveTimeZone(string timeZoneId)
