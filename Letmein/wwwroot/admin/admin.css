@@ -50,18 +50,18 @@ html[lang^="he"] .section-title {
 
 .app-shell {
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: 220px 1fr;
   grid-template-areas: "sidebar main";
   min-height: 100vh;
 }
 
 .app-shell.collapsed {
-  grid-template-columns: 92px 1fr;
+  grid-template-columns: 80px 1fr;
 }
 
 .sidebar {
   grid-area: sidebar;
-  padding: 32px 24px;
+  padding: 16px;
   border-right: 1px solid var(--line);
   backdrop-filter: blur(12px);
   background: rgba(255, 255, 255, 0.5);

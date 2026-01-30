@@ -6046,7 +6046,11 @@ let activeEventMenuCleanup = null;
 let calendarSearchShouldFocus = false;
 
 function getSidebarState() {
-    return localStorage.getItem(sidebarStorageKey) === "1";
+    const stored = localStorage.getItem(sidebarStorageKey);
+    if (stored === null) {
+        return window.innerWidth < 1500;
+    }
+    return stored === "1";
 }
 
 function setSidebarState(value) {
