@@ -10673,16 +10673,23 @@ function buildEventMap(items, timeZone) {
     const map = new Map();
     const now = new Date();
     items.forEach(item => {
+        if (!item?.startUtc) {
+            return;
+        }
         const start = new Date(item.startUtc);
+        if (Number.isNaN(start.getTime())) {
+            return;
+        }
         const end = item.endUtc ? new Date(item.endUtc) : null;
+        const endSafe = end && !Number.isNaN(end.getTime()) ? end : null;
         const dateKey = getDateKeyInTimeZone(start, timeZone);
         const isHoliday = Boolean(item.isHoliday);
         const isBirthday = Boolean(item.isBirthday);
         const isAllDay = isHoliday || isBirthday;
-        const pastCheck = end ?? start;
+        const pastCheck = endSafe ?? start;
         const isPast = !isAllDay && pastCheck < now;
         const startTime = isAllDay ? "" : formatTimeOnly(start, timeZone);
-        const endTime = isAllDay || !end ? "" : formatTimeOnly(end, timeZone);
+        const endTime = isAllDay || !endSafe ? "" : formatTimeOnly(endSafe, timeZone);
         const timeRange = endTime ? `${startTime} - ${endTime}` : startTime;
         const statusLabel = normalizeStatus(item.status);
         const isCancelled = String(item.status) === "Cancelled" || item.status === 1;
@@ -10693,7 +10700,7 @@ function buildEventMap(items, timeZone) {
             : `${birthdayIcon} ${t("calendar.birthday", "Birthday")}`;
         const seriesTitle = isBirthday ? birthdayTitle : item.seriesTitle;
         const seriesIcon = isBirthday ? "" : item.seriesIcon;
-        const durationFallback = end ? Math.max(15, Math.round((end.getTime() - start.getTime()) / 60000)) : 60;
+        const durationFallback = endSafe ? Math.max(15, Math.round((endSafe.getTime() - start.getTime()) / 60000)) : 60;
         const durationMinutes = Number(item.durationMinutes || durationFallback || 60);
         const dayStartMinutes = 7 * 60;
         const startMinutes = (start.getHours() * 60) + start.getMinutes();
