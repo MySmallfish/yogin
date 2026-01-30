@@ -1120,6 +1120,49 @@ button .icon svg {
   margin-top: 8px;
 }
 
+.billing-toolbar {
+  margin: 16px 0 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.billing-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.billing-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  align-items: end;
+  flex: 1;
+}
+
+.billing-section {
+  margin-bottom: 24px;
+}
+
+.billing-section .section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.table-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: center;
+}
+
 .row-muted {
   opacity: 0.6;
 }
@@ -1420,7 +1463,9 @@ button .icon svg {
   border-left-width: 1px;
   border-left-color: var(--line);
   border-radius: 14px;
-  padding: 10px 8px;
+  padding: 8px;
+  padding-inline-start: 8px;
+  padding-inline-end: 8px;
   cursor: pointer;
   position: relative;
   font-size: 13px;
@@ -1783,6 +1828,7 @@ button .icon svg {
   padding-top: var(--hour-top-gap);
   gap: 0;
   position: relative;
+  display: block;
   background-image: repeating-linear-gradient(
     to bottom,
     transparent,
@@ -1805,15 +1851,17 @@ button .icon svg {
   justify-content: flex-start;
   align-items: flex-start;
   gap: 2px;
-  padding: 6px 8px;
+  padding: 8px;
+  padding-inline-start: 8px;
+  padding-inline-end: 8px;
   overflow: hidden;
   background: #fff;
-}
-
-.calendar-time-grid .calendar-event.timed {
   position: absolute;
   left: 0;
   right: 0;
+}
+
+.calendar-time-grid .calendar-event.timed {
   top: calc(var(--hour-top-gap) + (var(--event-start, 0) * var(--hour-row-height) / 60));
   z-index: 1;
 }

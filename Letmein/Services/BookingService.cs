@@ -173,6 +173,11 @@ public class BookingService
             _db.Bookings.Add(booking);
         }
 
+        if (membership == null && instance.PriceCents > 0)
+        {
+            await EnsureBookingChargeAsync(studio, customer, booking, instance, series, ct);
+        }
+
         await _db.SaveChangesAsync(ct);
         await tx.CommitAsync(ct);
 
@@ -216,8 +221,113 @@ public class BookingService
         }
 
         _db.Bookings.Update(booking);
+
+        var charge = await _db.BillingCharges
+            .FirstOrDefaultAsync(c => c.StudioId == studio.Id && c.SourceType == "session_registration" && c.SourceId == booking.Id, ct);
+        if (charge != null && charge.Status != BillingChargeStatus.Voided)
+        {
+            charge.Status = BillingChargeStatus.Voided;
+            charge.VoidReason = "Cancelled booking";
+            charge.VoidedAtUtc = DateTime.UtcNow;
+            charge.UpdatedAtUtc = DateTime.UtcNow;
+            _db.BillingCharges.Update(charge);
+        }
+
         await _db.SaveChangesAsync(ct);
         return (true, "");
+    }
+
+    private async Task EnsureBookingChargeAsync(
+        Studio studio,
+        Customer customer,
+        Booking booking,
+        EventInstance instance,
+        EventSeries? series,
+        CancellationToken ct)
+    {
+        var amount = Math.Max(0, instance.PriceCents);
+        if (amount <= 0)
+        {
+            return;
+        }
+
+        var description = $"{series?.Title ?? instance.Title ?? "Session"} - {instance.StartUtc:yyyy-MM-dd}";
+        var existingCharge = await _db.BillingCharges
+            .FirstOrDefaultAsync(c =>
+                c.StudioId == studio.Id &&
+                c.SourceType == "session_registration" &&
+                c.SourceId == booking.Id, ct);
+
+        if (existingCharge == null)
+        {
+            var charge = new BillingCharge
+            {
+                Id = Guid.NewGuid(),
+                StudioId = studio.Id,
+                CustomerId = customer.Id,
+                Status = BillingChargeStatus.Posted,
+                ChargeDate = DateTime.UtcNow.Date,
+                DueDate = DateTime.UtcNow.Date,
+                Currency = instance.Currency,
+                SubtotalCents = amount,
+                TaxCents = 0,
+                TotalCents = amount,
+                SourceType = "session_registration",
+                SourceId = booking.Id,
+                Note = "",
+                CreatedAtUtc = DateTime.UtcNow,
+                UpdatedAtUtc = DateTime.UtcNow
+            };
+            var lineItem = new BillingChargeLineItem
+            {
+                Id = Guid.NewGuid(),
+                ChargeId = charge.Id,
+                Description = description,
+                Quantity = 1,
+                UnitPriceCents = amount,
+                LineSubtotalCents = amount,
+                TaxCents = 0,
+                LineTotalCents = amount
+            };
+            _db.BillingCharges.Add(charge);
+            _db.BillingChargeLineItems.Add(lineItem);
+            return;
+        }
+
+        existingCharge.Status = BillingChargeStatus.Posted;
+        existingCharge.VoidReason = "";
+        existingCharge.VoidedAtUtc = null;
+        existingCharge.SubtotalCents = amount;
+        existingCharge.TotalCents = amount;
+        existingCharge.UpdatedAtUtc = DateTime.UtcNow;
+        existingCharge.ChargeDate = DateTime.UtcNow.Date;
+        existingCharge.DueDate = DateTime.UtcNow.Date;
+
+        var line = await _db.BillingChargeLineItems.FirstOrDefaultAsync(i => i.ChargeId == existingCharge.Id, ct);
+        if (line == null)
+        {
+            line = new BillingChargeLineItem
+            {
+                Id = Guid.NewGuid(),
+                ChargeId = existingCharge.Id,
+                Description = description,
+                Quantity = 1,
+                UnitPriceCents = amount,
+                LineSubtotalCents = amount,
+                TaxCents = 0,
+                LineTotalCents = amount
+            };
+            _db.BillingChargeLineItems.Add(line);
+        }
+        else
+        {
+            line.Description = description;
+            line.UnitPriceCents = amount;
+            line.LineSubtotalCents = amount;
+            line.LineTotalCents = amount;
+            _db.BillingChargeLineItems.Update(line);
+        }
+        _db.BillingCharges.Update(existingCharge);
     }
 
     private async Task<(bool ok, string error)> CheckMembershipEligibilityAsync(

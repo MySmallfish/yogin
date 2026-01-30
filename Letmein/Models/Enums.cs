@@ -73,3 +73,36 @@ public enum JobStatus
     Failed = 3
 }
 
+public enum BillableItemType
+{
+    Membership = 0,
+    ClassPass = 1,
+    DropIn = 2,
+    Workshop = 3,
+    Retail = 4,
+    Fee = 5,
+    Custom = 6
+}
+
+public enum BillingSubscriptionStatus
+{
+    Active = 0,
+    Paused = 1,
+    Cancelled = 2,
+    Ended = 3
+}
+
+public enum BillingInterval
+{
+    Monthly = 0,
+    Weekly = 1,
+    Custom = 2
+}
+
+public enum BillingChargeStatus
+{
+    Draft = 0,
+    Posted = 1,
+    Voided = 2
+}
+

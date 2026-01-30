@@ -1724,6 +1724,533 @@ adminApi.MapDelete("/plans/{id:guid}", async (ClaimsPrincipal user, Guid id, App
     return Results.NoContent();
 });
 
+adminApi.MapGet("/billing/items", async (ClaimsPrincipal user, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var items = await db.BillableItems.AsNoTracking()
+        .Where(i => i.StudioId == studioId)
+        .OrderBy(i => i.Name)
+        .ToListAsync();
+    return Results.Ok(items);
+});
+
+adminApi.MapPost("/billing/items", async (ClaimsPrincipal user, BillableItemRequest request, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var item = new BillableItem
+    {
+        Id = Guid.NewGuid(),
+        StudioId = studioId,
+        Name = request.Name.Trim(),
+        Type = request.Type,
+        DefaultPriceCents = request.DefaultPriceCents,
+        Currency = string.IsNullOrWhiteSpace(request.Currency) ? "ILS" : request.Currency.Trim(),
+        Active = request.Active,
+        UpdatedAtUtc = DateTime.UtcNow
+    };
+    db.BillableItems.Add(item);
+    await db.SaveChangesAsync();
+    await LogAuditAsync(db, user, "Create", "BillableItem", item.Id.ToString(), $"Created billable item {item.Name}");
+    return Results.Created($"/api/admin/billing/items/{item.Id}", item);
+});
+
+adminApi.MapPut("/billing/items/{id:guid}", async (ClaimsPrincipal user, Guid id, BillableItemRequest request, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var item = await db.BillableItems.FirstOrDefaultAsync(i => i.Id == id && i.StudioId == studioId);
+    if (item == null)
+    {
+        return Results.NotFound();
+    }
+
+    item.Name = request.Name.Trim();
+    item.Type = request.Type;
+    item.DefaultPriceCents = request.DefaultPriceCents;
+    item.Currency = string.IsNullOrWhiteSpace(request.Currency) ? item.Currency : request.Currency.Trim();
+    item.Active = request.Active;
+    item.UpdatedAtUtc = DateTime.UtcNow;
+    await db.SaveChangesAsync();
+    await LogAuditAsync(db, user, "Update", "BillableItem", item.Id.ToString(), $"Updated billable item {item.Name}");
+    return Results.Ok(item);
+});
+
+adminApi.MapGet("/billing/subscriptions", async (ClaimsPrincipal user, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var subscriptions = await db.BillingSubscriptions.AsNoTracking()
+        .Where(s => s.StudioId == studioId)
+        .OrderByDescending(s => s.CreatedAtUtc)
+        .ToListAsync();
+    var customerIds = subscriptions.Select(s => s.CustomerId).Distinct().ToList();
+    var itemIds = subscriptions.Select(s => s.BillableItemId).Distinct().ToList();
+    var customers = await db.Customers.AsNoTracking()
+        .Where(c => c.StudioId == studioId && customerIds.Contains(c.Id))
+        .ToDictionaryAsync(c => c.Id, c => c);
+    var users = await db.Users.AsNoTracking()
+        .Where(u => u.StudioId == studioId && customers.Values.Select(c => c.UserId).Contains(u.Id))
+        .ToDictionaryAsync(u => u.Id, u => u);
+    var items = await db.BillableItems.AsNoTracking()
+        .Where(i => i.StudioId == studioId && itemIds.Contains(i.Id))
+        .ToDictionaryAsync(i => i.Id, i => i);
+
+    var response = subscriptions.Select(sub =>
+    {
+        customers.TryGetValue(sub.CustomerId, out var customer);
+        AppUser? userRow = null;
+        if (customer != null)
+        {
+            users.TryGetValue(customer.UserId, out userRow);
+        }
+        items.TryGetValue(sub.BillableItemId, out var billableItem);
+        return (object)new
+        {
+            sub.Id,
+            sub.CustomerId,
+            customerName = customer?.FullName ?? userRow?.DisplayName ?? "",
+            sub.BillableItemId,
+            itemName = billableItem?.Name ?? "",
+            sub.Status,
+            sub.StartDate,
+            sub.EndDate,
+            sub.BillingInterval,
+            sub.BillingAnchorDay,
+            sub.NextChargeDate,
+            priceCents = sub.PriceOverrideCents ?? billableItem?.DefaultPriceCents ?? 0,
+            currency = billableItem?.Currency ?? "ILS"
+        };
+    });
+
+    return Results.Ok(response);
+});
+
+adminApi.MapPost("/billing/subscriptions", async (ClaimsPrincipal user, BillingSubscriptionRequest request, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var customer = await db.Customers.AsNoTracking().FirstOrDefaultAsync(c => c.Id == request.CustomerId && c.StudioId == studioId);
+    var item = await db.BillableItems.AsNoTracking().FirstOrDefaultAsync(i => i.Id == request.BillableItemId && i.StudioId == studioId);
+    if (customer == null || item == null)
+    {
+        return Results.NotFound();
+    }
+
+    var startDate = request.StartDate.ToDateTime(TimeOnly.MinValue);
+    var anchorDay = request.BillingAnchorDay;
+    if (anchorDay <= 0)
+    {
+        anchorDay = request.BillingInterval == BillingInterval.Weekly
+            ? (int)startDate.DayOfWeek
+            : startDate.Day;
+    }
+
+    var subscription = new BillingSubscription
+    {
+        Id = Guid.NewGuid(),
+        StudioId = studioId,
+        CustomerId = request.CustomerId,
+        BillableItemId = request.BillableItemId,
+        Status = BillingSubscriptionStatus.Active,
+        StartDate = startDate,
+        BillingInterval = request.BillingInterval,
+        BillingAnchorDay = anchorDay,
+        NextChargeDate = AlignBillingStartDate(startDate, request.BillingInterval, anchorDay),
+        PriceOverrideCents = request.PriceOverrideCents,
+        CreatedAtUtc = DateTime.UtcNow,
+        UpdatedAtUtc = DateTime.UtcNow
+    };
+    db.BillingSubscriptions.Add(subscription);
+    await db.SaveChangesAsync();
+    await LogAuditAsync(db, user, "Create", "BillingSubscription", subscription.Id.ToString(), $"Created billing subscription for {customer.FullName}");
+    return Results.Created($"/api/admin/billing/subscriptions/{subscription.Id}", subscription);
+});
+
+adminApi.MapPost("/billing/subscriptions/{id:guid}/pause", async (ClaimsPrincipal user, Guid id, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var subscription = await db.BillingSubscriptions.FirstOrDefaultAsync(s => s.Id == id && s.StudioId == studioId);
+    if (subscription == null)
+    {
+        return Results.NotFound();
+    }
+    subscription.Status = BillingSubscriptionStatus.Paused;
+    subscription.PausedAtUtc = DateTime.UtcNow;
+    subscription.UpdatedAtUtc = DateTime.UtcNow;
+    await db.SaveChangesAsync();
+    await LogAuditAsync(db, user, "Pause", "BillingSubscription", subscription.Id.ToString(), "Paused billing subscription");
+    return Results.Ok(subscription);
+});
+
+adminApi.MapPost("/billing/subscriptions/{id:guid}/resume", async (ClaimsPrincipal user, Guid id, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var subscription = await db.BillingSubscriptions.FirstOrDefaultAsync(s => s.Id == id && s.StudioId == studioId);
+    if (subscription == null)
+    {
+        return Results.NotFound();
+    }
+    subscription.Status = BillingSubscriptionStatus.Active;
+    subscription.ResumedAtUtc = DateTime.UtcNow;
+    subscription.UpdatedAtUtc = DateTime.UtcNow;
+    await db.SaveChangesAsync();
+    await LogAuditAsync(db, user, "Resume", "BillingSubscription", subscription.Id.ToString(), "Resumed billing subscription");
+    return Results.Ok(subscription);
+});
+
+adminApi.MapPost("/billing/subscriptions/{id:guid}/cancel", async (ClaimsPrincipal user, Guid id, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var subscription = await db.BillingSubscriptions.FirstOrDefaultAsync(s => s.Id == id && s.StudioId == studioId);
+    if (subscription == null)
+    {
+        return Results.NotFound();
+    }
+    subscription.Status = BillingSubscriptionStatus.Cancelled;
+    subscription.CanceledAtUtc = DateTime.UtcNow;
+    subscription.UpdatedAtUtc = DateTime.UtcNow;
+    await db.SaveChangesAsync();
+    await LogAuditAsync(db, user, "Cancel", "BillingSubscription", subscription.Id.ToString(), "Cancelled billing subscription");
+    return Results.Ok(subscription);
+});
+
+adminApi.MapGet("/billing/charges", async (ClaimsPrincipal user, string? from, string? to, string? status, Guid? customerId, string? sourceType, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var query = db.BillingCharges.AsNoTracking().Where(c => c.StudioId == studioId);
+    if (DateOnly.TryParse(from, out var fromDate))
+    {
+        var fromUtc = fromDate.ToDateTime(TimeOnly.MinValue);
+        query = query.Where(c => c.ChargeDate >= fromUtc);
+    }
+    if (DateOnly.TryParse(to, out var toDate))
+    {
+        var toUtc = toDate.ToDateTime(TimeOnly.MinValue).AddDays(1);
+        query = query.Where(c => c.ChargeDate < toUtc);
+    }
+    if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<BillingChargeStatus>(status, true, out var statusValue))
+    {
+        query = query.Where(c => c.Status == statusValue);
+    }
+    if (customerId.HasValue && customerId != Guid.Empty)
+    {
+        query = query.Where(c => c.CustomerId == customerId);
+    }
+    if (!string.IsNullOrWhiteSpace(sourceType))
+    {
+        query = query.Where(c => c.SourceType == sourceType);
+    }
+
+    var charges = await query.OrderByDescending(c => c.ChargeDate).Take(500).ToListAsync();
+    var chargeIds = charges.Select(c => c.Id).ToList();
+    var lineItems = await db.BillingChargeLineItems.AsNoTracking()
+        .Where(i => chargeIds.Contains(i.ChargeId))
+        .ToListAsync();
+    var lineMap = lineItems.GroupBy(i => i.ChargeId).ToDictionary(g => g.Key, g => g.ToList());
+    var customerIds = charges.Select(c => c.CustomerId).Distinct().ToList();
+    var customers = await db.Customers.AsNoTracking()
+        .Where(c => c.StudioId == studioId && customerIds.Contains(c.Id))
+        .ToDictionaryAsync(c => c.Id, c => c);
+    var users = await db.Users.AsNoTracking()
+        .Where(u => u.StudioId == studioId && customers.Values.Select(c => c.UserId).Contains(u.Id))
+        .ToDictionaryAsync(u => u.Id, u => u);
+
+    var response = charges.Select(c =>
+    {
+        customers.TryGetValue(c.CustomerId, out var customer);
+        AppUser? userRow = null;
+        if (customer != null)
+        {
+            users.TryGetValue(customer.UserId, out userRow);
+        }
+        lineMap.TryGetValue(c.Id, out var lines);
+        var description = lines?.FirstOrDefault()?.Description ?? "";
+        return (object)new
+        {
+            c.Id,
+            c.CustomerId,
+            customerName = customer?.FullName ?? userRow?.DisplayName ?? "",
+            c.Status,
+            c.ChargeDate,
+            c.SourceType,
+            c.SourceId,
+            c.TotalCents,
+            c.Currency,
+            description
+        };
+    });
+
+    return Results.Ok(response);
+});
+
+adminApi.MapPost("/billing/charges", async (ClaimsPrincipal user, BillingChargeRequest request, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var customer = await db.Customers.AsNoTracking().FirstOrDefaultAsync(c => c.Id == request.CustomerId && c.StudioId == studioId);
+    if (customer == null)
+    {
+        return Results.NotFound();
+    }
+    var amount = request.AmountCents;
+    if (amount == 0)
+    {
+        return Results.BadRequest(new { error = "Amount required" });
+    }
+
+    var chargeDate = request.ChargeDate.ToDateTime(TimeOnly.MinValue);
+    var charge = new BillingCharge
+    {
+        Id = Guid.NewGuid(),
+        StudioId = studioId,
+        CustomerId = request.CustomerId,
+        Status = BillingChargeStatus.Posted,
+        ChargeDate = chargeDate,
+        DueDate = chargeDate,
+        Currency = "ILS",
+        SubtotalCents = amount,
+        TaxCents = 0,
+        TotalCents = amount,
+        SourceType = string.IsNullOrWhiteSpace(request.SourceType) ? "manual" : request.SourceType.Trim(),
+        Note = "",
+        CreatedByUserId = GetUserId(user),
+        CreatedAtUtc = DateTime.UtcNow,
+        UpdatedAtUtc = DateTime.UtcNow
+    };
+    var lineItem = new BillingChargeLineItem
+    {
+        Id = Guid.NewGuid(),
+        ChargeId = charge.Id,
+        Description = request.Description.Trim(),
+        Quantity = 1,
+        UnitPriceCents = amount,
+        LineSubtotalCents = amount,
+        TaxCents = 0,
+        LineTotalCents = amount
+    };
+    db.BillingCharges.Add(charge);
+    db.BillingChargeLineItems.Add(lineItem);
+    await db.SaveChangesAsync();
+    await LogAuditAsync(db, user, "Create", "BillingCharge", charge.Id.ToString(), $"Created charge for {customer.FullName}");
+    return Results.Ok(charge);
+});
+
+adminApi.MapPost("/billing/charges/{id:guid}/void", async (ClaimsPrincipal user, Guid id, BillingChargeVoidRequest request, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var charge = await db.BillingCharges.FirstOrDefaultAsync(c => c.Id == id && c.StudioId == studioId);
+    if (charge == null)
+    {
+        return Results.NotFound();
+    }
+    if (charge.Status == BillingChargeStatus.Voided)
+    {
+        return Results.Ok(charge);
+    }
+    charge.Status = BillingChargeStatus.Voided;
+    charge.VoidReason = request.Reason ?? "";
+    charge.VoidedAtUtc = DateTime.UtcNow;
+    charge.UpdatedAtUtc = DateTime.UtcNow;
+    await db.SaveChangesAsync();
+    await LogAuditAsync(db, user, "Void", "BillingCharge", charge.Id.ToString(), "Voided charge");
+    return Results.Ok(charge);
+});
+
+adminApi.MapPost("/billing/charges/{id:guid}/adjust", async (ClaimsPrincipal user, Guid id, BillingChargeAdjustRequest request, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var charge = await db.BillingCharges.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id && c.StudioId == studioId);
+    if (charge == null)
+    {
+        return Results.NotFound();
+    }
+    var amount = request.AmountCents;
+    if (amount == 0)
+    {
+        return Results.BadRequest(new { error = "Amount required" });
+    }
+    var adjustmentAmount = -Math.Abs(amount);
+    var adjustment = new BillingCharge
+    {
+        Id = Guid.NewGuid(),
+        StudioId = studioId,
+        CustomerId = charge.CustomerId,
+        Status = BillingChargeStatus.Posted,
+        ChargeDate = DateTime.UtcNow.Date,
+        DueDate = DateTime.UtcNow.Date,
+        Currency = charge.Currency,
+        SubtotalCents = adjustmentAmount,
+        TaxCents = 0,
+        TotalCents = adjustmentAmount,
+        SourceType = "adjustment",
+        SourceId = charge.Id,
+        OriginalChargeId = charge.Id,
+        Note = request.Reason ?? "",
+        CreatedByUserId = GetUserId(user),
+        CreatedAtUtc = DateTime.UtcNow,
+        UpdatedAtUtc = DateTime.UtcNow
+    };
+    var lineItem = new BillingChargeLineItem
+    {
+        Id = Guid.NewGuid(),
+        ChargeId = adjustment.Id,
+        Description = string.IsNullOrWhiteSpace(request.Reason) ? "Adjustment" : request.Reason.Trim(),
+        Quantity = 1,
+        UnitPriceCents = adjustmentAmount,
+        LineSubtotalCents = adjustmentAmount,
+        TaxCents = 0,
+        LineTotalCents = adjustmentAmount
+    };
+    db.BillingCharges.Add(adjustment);
+    db.BillingChargeLineItems.Add(lineItem);
+    await db.SaveChangesAsync();
+    await LogAuditAsync(db, user, "Adjust", "BillingCharge", charge.Id.ToString(), "Adjusted charge");
+    return Results.Ok(adjustment);
+});
+
+adminApi.MapGet("/billing/charges/export", async (ClaimsPrincipal user, string? from, string? to, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var query = db.BillingCharges.AsNoTracking().Where(c => c.StudioId == studioId);
+    if (DateOnly.TryParse(from, out var fromDate))
+    {
+        var fromUtc = fromDate.ToDateTime(TimeOnly.MinValue);
+        query = query.Where(c => c.ChargeDate >= fromUtc);
+    }
+    if (DateOnly.TryParse(to, out var toDate))
+    {
+        var toUtc = toDate.ToDateTime(TimeOnly.MinValue).AddDays(1);
+        query = query.Where(c => c.ChargeDate < toUtc);
+    }
+    var charges = await query.OrderByDescending(c => c.ChargeDate).ToListAsync();
+    var chargeIds = charges.Select(c => c.Id).ToList();
+    var lineItems = await db.BillingChargeLineItems.AsNoTracking().Where(i => chargeIds.Contains(i.ChargeId)).ToListAsync();
+    var lineMap = lineItems.GroupBy(i => i.ChargeId).ToDictionary(g => g.Key, g => g.ToList());
+    var customerIds = charges.Select(c => c.CustomerId).Distinct().ToList();
+    var customers = await db.Customers.AsNoTracking()
+        .Where(c => c.StudioId == studioId && customerIds.Contains(c.Id))
+        .ToDictionaryAsync(c => c.Id, c => c);
+    var users = await db.Users.AsNoTracking()
+        .Where(u => u.StudioId == studioId && customers.Values.Select(c => c.UserId).Contains(u.Id))
+        .ToDictionaryAsync(u => u.Id, u => u);
+
+    var sb = new StringBuilder();
+    sb.AppendLine(string.Join(",", new[]
+    {
+        "ChargeDate",
+        "Customer",
+        "Amount",
+        "Currency",
+        "Status",
+        "SourceType",
+        "Description"
+    }));
+
+    foreach (var charge in charges)
+    {
+        customers.TryGetValue(charge.CustomerId, out var customer);
+        AppUser? userRow = null;
+        if (customer != null)
+        {
+            users.TryGetValue(customer.UserId, out userRow);
+        }
+        lineMap.TryGetValue(charge.Id, out var lines);
+        var description = lines?.FirstOrDefault()?.Description ?? "";
+        var row = string.Join(",", new[]
+        {
+            EscapeCsv(charge.ChargeDate.ToString("yyyy-MM-dd")),
+            EscapeCsv(customer?.FullName ?? userRow?.DisplayName ?? ""),
+            EscapeCsv((charge.TotalCents / 100.0m).ToString("0.00")),
+            EscapeCsv(charge.Currency),
+            EscapeCsv(charge.Status.ToString()),
+            EscapeCsv(charge.SourceType),
+            EscapeCsv(description)
+        });
+        sb.AppendLine(row);
+    }
+
+    var bom = Encoding.UTF8.GetPreamble();
+    var dataBytes = Encoding.UTF8.GetBytes(sb.ToString());
+    var payload = bom.Concat(dataBytes).ToArray();
+    return Results.File(payload, "text/csv", "billing-charges.csv");
+});
+
+adminApi.MapPost("/billing/run", async (ClaimsPrincipal user, string? date, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var runDate = DateOnly.TryParse(date, out var parsedDate)
+        ? parsedDate.ToDateTime(TimeOnly.MinValue)
+        : DateTime.UtcNow.Date;
+    var subscriptions = await db.BillingSubscriptions
+        .Where(s => s.StudioId == studioId && s.Status == BillingSubscriptionStatus.Active)
+        .ToListAsync();
+    var itemIds = subscriptions.Select(s => s.BillableItemId).Distinct().ToList();
+    var items = await db.BillableItems.AsNoTracking()
+        .Where(i => i.StudioId == studioId && itemIds.Contains(i.Id))
+        .ToDictionaryAsync(i => i.Id, i => i);
+    var created = 0;
+
+    foreach (var subscription in subscriptions)
+    {
+        if (!items.TryGetValue(subscription.BillableItemId, out var item))
+        {
+            continue;
+        }
+        var nextChargeDate = subscription.NextChargeDate.Date;
+        while (nextChargeDate <= runDate)
+        {
+            var periodStart = nextChargeDate.Date;
+            var periodEnd = ComputeNextBillingDate(periodStart, subscription.BillingInterval, subscription.BillingAnchorDay);
+            var exists = await db.BillingCharges.AnyAsync(c =>
+                c.StudioId == studioId &&
+                c.SourceType == "subscription" &&
+                c.SourceId == subscription.Id &&
+                c.BillingPeriodStart == periodStart);
+            if (!exists)
+            {
+                var amount = subscription.PriceOverrideCents ?? item.DefaultPriceCents;
+                var charge = new BillingCharge
+                {
+                    Id = Guid.NewGuid(),
+                    StudioId = studioId,
+                    CustomerId = subscription.CustomerId,
+                    Status = BillingChargeStatus.Posted,
+                    ChargeDate = periodStart,
+                    DueDate = periodStart,
+                    Currency = item.Currency,
+                    SubtotalCents = amount,
+                    TaxCents = 0,
+                    TotalCents = amount,
+                    SourceType = "subscription",
+                    SourceId = subscription.Id,
+                    BillingPeriodStart = periodStart,
+                    BillingPeriodEnd = periodEnd,
+                    CreatedAtUtc = DateTime.UtcNow,
+                    UpdatedAtUtc = DateTime.UtcNow
+                };
+                var lineItem = new BillingChargeLineItem
+                {
+                    Id = Guid.NewGuid(),
+                    ChargeId = charge.Id,
+                    BillableItemId = item.Id,
+                    Description = item.Name,
+                    Quantity = 1,
+                    UnitPriceCents = amount,
+                    LineSubtotalCents = amount,
+                    TaxCents = 0,
+                    LineTotalCents = amount
+                };
+                db.BillingCharges.Add(charge);
+                db.BillingChargeLineItems.Add(lineItem);
+                created += 1;
+            }
+            nextChargeDate = periodEnd.Date;
+        }
+        subscription.NextChargeDate = nextChargeDate;
+        subscription.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    await db.SaveChangesAsync();
+    await LogAuditAsync(db, user, "Run", "Billing", studioId.ToString(), $"Generated {created} charges");
+    return Results.Ok(new { created });
+});
+
 adminApi.MapGet("/coupons", async (ClaimsPrincipal user, AppDbContext db) =>
 {
     var studioId = GetStudioId(user);
@@ -6349,19 +6876,69 @@ static List<int> ResolveDaysOfWeek(string? json, int fallbackDay)
 static (DateOnly From, DateOnly To) ResolveGenerationWindow(DateOnly? from, DateOnly? until, int? weeks)
 {
     var start = from ?? DateOnly.FromDateTime(DateTime.UtcNow);
+    if (until.HasValue && until.Value.Year <= 1900)
+    {
+        until = null;
+    }
     if (until.HasValue)
     {
         var to = until.Value < start ? start : until.Value;
         return (start, to);
     }
 
-    var count = weeks.GetValueOrDefault(8);
-    if (count < 1)
+    return (start, start.AddYears(1));
+}
+
+static DateTime AlignBillingStartDate(DateTime startDate, BillingInterval interval, int anchorDay)
+{
+    var date = startDate.Date;
+    if (interval == BillingInterval.Weekly)
     {
-        count = 1;
+        var day = (DayOfWeek)Math.Clamp(anchorDay, 0, 6);
+        while (date.DayOfWeek != day)
+        {
+            date = date.AddDays(1);
+        }
+        return date;
     }
 
-    return (start, start.AddDays(count * 7));
+    if (interval == BillingInterval.Monthly)
+    {
+        var year = date.Year;
+        var month = date.Month;
+        var daysInMonth = DateTime.DaysInMonth(year, month);
+        var targetDay = Math.Clamp(anchorDay, 1, daysInMonth);
+        var candidate = new DateTime(year, month, targetDay);
+        if (candidate < date)
+        {
+            var next = candidate.AddMonths(1);
+            var nextDays = DateTime.DaysInMonth(next.Year, next.Month);
+            var nextDay = Math.Clamp(anchorDay, 1, nextDays);
+            candidate = new DateTime(next.Year, next.Month, nextDay);
+        }
+        return candidate;
+    }
+
+    return date;
+}
+
+static DateTime ComputeNextBillingDate(DateTime fromDate, BillingInterval interval, int anchorDay)
+{
+    var date = fromDate.Date;
+    if (interval == BillingInterval.Weekly)
+    {
+        return date.AddDays(7);
+    }
+
+    if (interval == BillingInterval.Monthly)
+    {
+        var next = date.AddMonths(1);
+        var daysInMonth = DateTime.DaysInMonth(next.Year, next.Month);
+        var targetDay = Math.Clamp(anchorDay, 1, daysInMonth);
+        return new DateTime(next.Year, next.Month, targetDay);
+    }
+
+    return date.AddMonths(1);
 }
 
 static async Task<string> ResolveRoomRemoteLinkAsync(AppDbContext db, Guid studioId, Guid? roomId, string? requested)

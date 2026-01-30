@@ -27,6 +27,10 @@ public class AppDbContext : DbContext
     public DbSet<Membership> Memberships => Set<Membership>();
     public DbSet<Booking> Bookings => Set<Booking>();
     public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<BillableItem> BillableItems => Set<BillableItem>();
+    public DbSet<BillingSubscription> BillingSubscriptions => Set<BillingSubscription>();
+    public DbSet<BillingCharge> BillingCharges => Set<BillingCharge>();
+    public DbSet<BillingChargeLineItem> BillingChargeLineItems => Set<BillingChargeLineItem>();
     public DbSet<HealthDeclaration> HealthDeclarations => Set<HealthDeclaration>();
     public DbSet<Attendance> Attendance => Set<Attendance>();
     public DbSet<Job> Jobs => Set<Job>();
@@ -50,6 +54,11 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Coupon>().HasIndex(c => new { c.StudioId, c.Code }).IsUnique();
         modelBuilder.Entity<Membership>().HasIndex(m => new { m.StudioId, m.CustomerId, m.Status });
         modelBuilder.Entity<Booking>().HasIndex(b => new { b.StudioId, b.CustomerId, b.EventInstanceId }).IsUnique();
+        modelBuilder.Entity<BillableItem>().HasIndex(i => new { i.StudioId, i.Name });
+        modelBuilder.Entity<BillingSubscription>().HasIndex(s => new { s.StudioId, s.CustomerId, s.Status });
+        modelBuilder.Entity<BillingCharge>().HasIndex(c => new { c.StudioId, c.ChargeDate });
+        modelBuilder.Entity<BillingCharge>().HasIndex(c => new { c.StudioId, c.SourceType, c.SourceId, c.BillingPeriodStart }).IsUnique();
+        modelBuilder.Entity<BillingChargeLineItem>().HasIndex(i => new { i.ChargeId });
     }
 }
 

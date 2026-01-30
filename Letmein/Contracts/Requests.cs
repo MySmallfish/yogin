@@ -246,3 +246,29 @@ public record AttendanceUpdateRequest(Guid CustomerId, AttendanceStatus Status);
 
 public record PayrollReportRequest(Guid EventInstanceId);
 
+public record BillableItemRequest(
+    string Name,
+    BillableItemType Type,
+    int DefaultPriceCents,
+    string Currency,
+    bool Active);
+
+public record BillingSubscriptionRequest(
+    Guid CustomerId,
+    Guid BillableItemId,
+    DateOnly StartDate,
+    BillingInterval BillingInterval,
+    int BillingAnchorDay,
+    int? PriceOverrideCents);
+
+public record BillingChargeRequest(
+    Guid CustomerId,
+    string Description,
+    int AmountCents,
+    DateOnly ChargeDate,
+    string SourceType);
+
+public record BillingChargeVoidRequest(string Reason);
+
+public record BillingChargeAdjustRequest(int AmountCents, string Reason);
+

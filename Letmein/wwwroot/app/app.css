@@ -400,15 +400,97 @@ html[dir="rtl"] .waiver-signature-grid .waiver-checkboxes {
 
 .event-layout {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 16px;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.9fr);
+  gap: 18px;
+  align-items: start;
+}
+
+@media (max-width: 840px) {
+  .event-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.event-card {
+  border-top: 3px solid var(--event-accent, var(--accent));
 }
 
 .event-header {
   display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.event-title-block h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.event-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.event-time {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.event-highlight {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 14px;
+  background: #fff8e1;
+  display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.event-availability {
+  font-weight: 600;
+  color: var(--slate);
+}
+
+.event-price {
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 18px;
+}
+
+.event-meta-grid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.event-meta-item {
+  display: grid;
+  gap: 4px;
+}
+
+.event-meta-label {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.event-meta-value {
+  font-weight: 600;
+}
+
+.event-description {
+  margin-top: 14px;
+  line-height: 1.6;
+  color: var(--muted);
+  background: rgba(15, 23, 42, 0.04);
+  padding: 12px;
+  border-radius: 12px;
 }
 
 .pill {
