@@ -54,3 +54,4 @@
 2026-01-30 04:31  Adjust BillingModule migration to avoid re-adding existing Room remote columns so deploy/test server can migrate cleanly.
 2026-01-30 09:24  Add admin bootstrap script for safe admin creation/reset.
 2026-01-30 10:48  Shrink sidebar width/padding and auto-collapse on small screens (<1500px).
+2026-01-30 11:16  Raise hour-row height, add bold time line under session titles, and clear stray modal overlays on route change (fix billing clicks).

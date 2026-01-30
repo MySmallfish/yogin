@@ -329,6 +329,9 @@ const calendarTemplate = compileTemplate("calendar", `
                     </span>
                   {{/if}}
                 </div>
+                {{#if timeRange}}
+                  <div class="event-time">{{timeRange}}</div>
+                {{/if}}
                 <div class="event-meta">{{roomSummary}}</div>
                 <div class="event-meta">{{instructorName}}</div>
                 {{#if isCancelled}}
@@ -390,6 +393,9 @@ const calendarTemplate = compileTemplate("calendar", `
                         </span>
                       {{/if}}
                     </div>
+                    {{#if timeRange}}
+                      <div class="event-time">{{timeRange}}</div>
+                    {{/if}}
                     <div class="event-meta">{{roomSummary}}</div>
                     <div class="event-meta">{{instructorName}}</div>
                   </div>
@@ -3880,6 +3886,12 @@ function render(state) {
     }
 
     const route = state.context.route;
+    if (lastRenderedRoute !== route) {
+        closeEventActionsMenu();
+        clearModalEscape();
+        document.querySelectorAll(".modal-overlay").forEach(overlay => overlay.remove());
+        lastRenderedRoute = route;
+    }
     debugLog("render", { route, state: state.value, hash: window.location.hash, path: window.location.pathname });
     const titleMap = {
         calendar: t("page.calendar.title", "Calendar"),
@@ -6044,6 +6056,7 @@ let globalEscapeHandlerAttached = false;
 let activeEventMenu = null;
 let activeEventMenuCleanup = null;
 let calendarSearchShouldFocus = false;
+let lastRenderedRoute = null;
 
 function getSidebarState() {
     const stored = localStorage.getItem(sidebarStorageKey);

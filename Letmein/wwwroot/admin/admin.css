@@ -1776,6 +1776,13 @@ button .icon svg {
   color: var(--muted);
 }
 
+.event-time {
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
 .event-meta-compact {
   display: flex;
   gap: 8px;
@@ -1789,7 +1796,7 @@ button .icon svg {
 }
 
 .calendar-time-grid {
-  --hour-row-height: 64px;
+  --hour-row-height: 72px;
   --hour-count: 17;
   --hour-top-gap: 36px;
 }
