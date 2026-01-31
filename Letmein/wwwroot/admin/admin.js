@@ -11488,9 +11488,16 @@ function bindCalendarInteractions(data, itemMap) {
         const grid = zone.querySelector(".calendar-day-events, .calendar-events");
         if (!grid) return null;
         const styles = getComputedStyle(grid);
-        const rowHeight = parseFloat(styles.getPropertyValue("--hour-row-height")) || 64;
         const topGap = parseFloat(styles.getPropertyValue("--hour-top-gap")) || 0;
         const hourCount = parseFloat(styles.getPropertyValue("--hour-count")) || 0;
+        let rowHeight = parseFloat(styles.getPropertyValue("--hour-row-height")) || 64;
+        const rect = grid.getBoundingClientRect();
+        if (hourCount > 0 && rect.height > topGap + 1) {
+            const computed = (rect.height - topGap) / hourCount;
+            if (Number.isFinite(computed) && computed > 0) {
+                rowHeight = computed;
+            }
+        }
         return { grid, rowHeight, topGap, hourCount };
     };
 
