@@ -1951,6 +1951,12 @@ adminApi.MapGet("/billing/charges", async (ClaimsPrincipal user, string? from, s
     var users = await db.Users.AsNoTracking()
         .Where(u => u.StudioId == studioId && customers.Values.Select(c => c.UserId).Contains(u.Id))
         .ToDictionaryAsync(u => u.Id, u => u);
+    var invoiceNumbers = charges.Select(c => c.InvoiceNo).Where(v => !string.IsNullOrWhiteSpace(v)).Distinct().ToList();
+    var invoices = invoiceNumbers.Count == 0
+        ? new Dictionary<string, Invoice>()
+        : await db.Invoices.AsNoTracking()
+            .Where(i => i.StudioId == studioId && invoiceNumbers.Contains(i.InvoiceNo))
+            .ToDictionaryAsync(i => i.InvoiceNo, i => i);
 
     var response = charges.Select(c =>
     {
@@ -1962,6 +1968,7 @@ adminApi.MapGet("/billing/charges", async (ClaimsPrincipal user, string? from, s
         }
         lineMap.TryGetValue(c.Id, out var lines);
         var description = lines?.FirstOrDefault()?.Description ?? "";
+        invoices.TryGetValue(c.InvoiceNo ?? "", out var invoice);
         return (object)new
         {
             c.Id,
@@ -1973,7 +1980,9 @@ adminApi.MapGet("/billing/charges", async (ClaimsPrincipal user, string? from, s
             c.SourceId,
             c.TotalCents,
             c.Currency,
-            description
+            description,
+            c.InvoiceNo,
+            invoiceUrl = invoice?.Url ?? ""
         };
     });
 
@@ -2169,6 +2178,53 @@ adminApi.MapGet("/billing/charges/export", async (ClaimsPrincipal user, string? 
     var dataBytes = Encoding.UTF8.GetBytes(sb.ToString());
     var payload = bom.Concat(dataBytes).ToArray();
     return Results.File(payload, "text/csv", "billing-charges.csv");
+});
+
+adminApi.MapGet("/invoices", async (ClaimsPrincipal user, Guid? customerId, string? from, string? to, AppDbContext db) =>
+{
+    var studioId = GetStudioId(user);
+    var query = db.Invoices.AsNoTracking().Where(i => i.StudioId == studioId);
+    if (customerId.HasValue && customerId != Guid.Empty)
+    {
+        query = query.Where(i => i.CustomerId == customerId);
+    }
+    if (DateOnly.TryParse(from, out var fromDate))
+    {
+        var fromUtc = fromDate.ToDateTime(TimeOnly.MinValue);
+        query = query.Where(i => i.IssuedAtUtc >= fromUtc);
+    }
+    if (DateOnly.TryParse(to, out var toDate))
+    {
+        var toUtc = toDate.ToDateTime(TimeOnly.MinValue).AddDays(1);
+        query = query.Where(i => i.IssuedAtUtc < toUtc);
+    }
+    var invoices = await query.OrderByDescending(i => i.IssuedAtUtc).Take(500).ToListAsync();
+    var customerIds = invoices.Where(i => i.CustomerId.HasValue).Select(i => i.CustomerId!.Value).Distinct().ToList();
+    var customers = await db.Customers.AsNoTracking()
+        .Where(c => c.StudioId == studioId && customerIds.Contains(c.Id))
+        .ToDictionaryAsync(c => c.Id, c => c);
+
+    var response = invoices.Select(invoice =>
+    {
+        Customer? customer = null;
+        if (invoice.CustomerId.HasValue)
+        {
+            customers.TryGetValue(invoice.CustomerId.Value, out customer);
+        }
+        return new
+        {
+            invoice.Id,
+            invoice.InvoiceNo,
+            invoice.IssuedAtUtc,
+            invoice.TotalCents,
+            invoice.Currency,
+            invoice.Url,
+            invoice.CustomerId,
+            customerName = customer?.FullName ?? ""
+        };
+    });
+
+    return Results.Ok(response);
 });
 
 adminApi.MapPost("/billing/run", async (ClaimsPrincipal user, string? date, AppDbContext db) =>
@@ -3345,6 +3401,21 @@ adminApi.MapGet("/customers/{id:guid}/details", async (ClaimsPrincipal user, Gui
         })
         .ToListAsync();
 
+    var invoices = await db.Invoices.AsNoTracking()
+        .Where(i => i.StudioId == studioId && i.CustomerId == customer.Id)
+        .OrderByDescending(i => i.IssuedAtUtc)
+        .Take(20)
+        .Select(i => new
+        {
+            i.Id,
+            i.InvoiceNo,
+            i.IssuedAtUtc,
+            i.TotalCents,
+            i.Currency,
+            i.Url
+        })
+        .ToListAsync();
+
     var auditLogs = await db.AuditLogs.AsNoTracking()
         .Where(l => l.StudioId == studioId && l.EntityId == customer.Id.ToString())
         .OrderByDescending(l => l.CreatedAtUtc)
@@ -3394,7 +3465,8 @@ adminApi.MapGet("/customers/{id:guid}/details", async (ClaimsPrincipal user, Gui
         registrations,
         attachments,
         healthDeclarations,
-        auditLogs = auditPayload
+        auditLogs = auditPayload,
+        invoices
     });
 });
 

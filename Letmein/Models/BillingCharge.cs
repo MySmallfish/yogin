@@ -12,6 +12,7 @@ public class BillingCharge
     public int SubtotalCents { get; set; }
     public int TaxCents { get; set; }
     public int TotalCents { get; set; }
+    public string InvoiceNo { get; set; } = "";
     public string SourceType { get; set; } = "";
     public Guid? SourceId { get; set; }
     public DateTime? BillingPeriodStart { get; set; }
