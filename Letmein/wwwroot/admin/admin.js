@@ -11475,17 +11475,6 @@ function bindCalendarInteractions(data, itemMap) {
         const id = card.getAttribute("data-event") || "";
         card.addEventListener("dragstart", (event) => {
             if (!event.dataTransfer || !id) return;
-            const grid = card.closest(".calendar-day-events, .calendar-events");
-            if (grid && Number.isFinite(event.clientY)) {
-                const rect = card.getBoundingClientRect();
-                const styles = getComputedStyle(grid);
-                const rowHeight = parseFloat(styles.getPropertyValue("--hour-row-height")) || 64;
-                let offsetY = event.clientY - rect.top;
-                if (!Number.isFinite(offsetY)) offsetY = 0;
-                offsetY = Math.max(0, offsetY);
-                const offsetMinutes = (offsetY / rowHeight) * 60;
-                event.dataTransfer.setData("text/offset-minutes", String(offsetMinutes));
-            }
             event.dataTransfer.setData("text/plain", id);
             event.dataTransfer.effectAllowed = "move";
             card.classList.add("dragging");
@@ -11531,7 +11520,6 @@ function bindCalendarInteractions(data, itemMap) {
                 let offsetY = event.clientY - rect.top - metrics.topGap;
                 if (!Number.isFinite(offsetY)) offsetY = 0;
                 offsetY = Math.max(0, offsetY);
-                const dragOffsetMinutes = Number(event.dataTransfer?.getData("text/offset-minutes")) || 0;
                 const durationMinutes = Number(item.durationMinutes || (item.endUtc
                     ? Math.max(15, Math.round((new Date(item.endUtc).getTime() - currentStart.getTime()) / 60000))
                     : 60));
@@ -11541,8 +11529,7 @@ function bindCalendarInteractions(data, itemMap) {
                 const maxOffset = (maxMinutes / 60) * metrics.rowHeight;
                 const clampedOffset = Math.min(Math.max(0, offsetY), maxOffset);
                 const minutesFromStart = (clampedOffset / metrics.rowHeight) * 60;
-                const adjustedMinutes = minutesFromStart - dragOffsetMinutes;
-                const snapped = Math.round(adjustedMinutes / 15) * 15;
+                const snapped = Math.round(minutesFromStart / 15) * 15;
                 const clamped = Math.min(Math.max(0, snapped), maxMinutes);
                 targetStartMinutes = Math.round(clamped / 15) * 15;
             }
