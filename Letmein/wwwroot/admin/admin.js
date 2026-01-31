@@ -11491,14 +11491,20 @@ function bindCalendarInteractions(data, itemMap) {
         const topGap = parseFloat(styles.getPropertyValue("--hour-top-gap")) || 0;
         const hourCount = parseFloat(styles.getPropertyValue("--hour-count")) || 0;
         let rowHeight = parseFloat(styles.getPropertyValue("--hour-row-height")) || 64;
-        const rect = grid.getBoundingClientRect();
-        if (hourCount > 0 && rect.height > topGap + 1) {
-            const computed = (rect.height - topGap) / hourCount;
-            if (Number.isFinite(computed) && computed > 0) {
-                rowHeight = computed;
+        let gridTop = grid.getBoundingClientRect().top + topGap;
+        const timeGrid = zone.closest(".calendar-time-grid");
+        const hoursColumn = timeGrid?.querySelector(".calendar-hours");
+        const hourCells = hoursColumn?.querySelectorAll(".calendar-hour") || [];
+        if (hourCells.length >= 2) {
+            const firstRect = hourCells[0].getBoundingClientRect();
+            const secondRect = hourCells[1].getBoundingClientRect();
+            const measured = secondRect.top - firstRect.top;
+            if (Number.isFinite(measured) && measured > 0) {
+                rowHeight = measured;
             }
+            gridTop = firstRect.top;
         }
-        return { grid, rowHeight, topGap, hourCount };
+        return { grid, rowHeight, topGap, hourCount, gridTop };
     };
 
     dropZones.forEach(zone => {
@@ -11523,8 +11529,7 @@ function bindCalendarInteractions(data, itemMap) {
             const metrics = isTimeGrid ? resolveTimeGridMetrics(zone) : null;
             let targetStartMinutes = null;
             if (metrics) {
-                const rect = metrics.grid.getBoundingClientRect();
-                let offsetY = event.clientY - rect.top - metrics.topGap;
+                let offsetY = event.clientY - metrics.gridTop;
                 if (!Number.isFinite(offsetY)) offsetY = 0;
                 offsetY = Math.max(0, offsetY);
                 const durationMinutes = Number(item.durationMinutes || (item.endUtc

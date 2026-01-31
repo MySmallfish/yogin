@@ -63,3 +63,4 @@
 2026-01-31 22:35  Fix calendar drag/drop time offset handling, harden time formatting, extend audit summary translations, add WhatsApp bot PRD, and update agent context notes.
 2026-01-31 22:48  Adjust calendar drag/drop to align start time to drop position (ignore pointer offset) to fix hour mismatch.
 2026-01-31 23:00  Recompute calendar drag/drop row height from actual grid size to align drop time with visual grid.
+2026-01-31 23:12  Align drag/drop time mapping to hour label positions to fix visual mismatch.
