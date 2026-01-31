@@ -10801,6 +10801,42 @@ function translateAuditSummary(log) {
             template: t("audit.summary.resetPassword", "Reset password for {item}")
         },
         {
+            regex: /^Created customer (.+)$/i,
+            template: t("audit.summary.createdCustomer", "Created customer {item}")
+        },
+        {
+            regex: /^Updated customer (.+)$/i,
+            template: t("audit.summary.updatedCustomer", "Updated customer {item}")
+        },
+        {
+            regex: /^Created customer for guest (.+)$/i,
+            template: t("audit.summary.createdCustomerGuest", "Created customer for guest {item}")
+        },
+        {
+            regex: /^Created customer status (.+)$/i,
+            template: t("audit.summary.createdCustomerStatus", "Created customer status {item}")
+        },
+        {
+            regex: /^Updated customer status (.+)$/i,
+            template: t("audit.summary.updatedCustomerStatus", "Updated customer status {item}")
+        },
+        {
+            regex: /^Archived customer status (.+)$/i,
+            template: t("audit.summary.archivedCustomerStatus", "Archived customer status {item}")
+        },
+        {
+            regex: /^Created customer tag (.+)$/i,
+            template: t("audit.summary.createdCustomerTag", "Created customer tag {item}")
+        },
+        {
+            regex: /^Renamed customer tag (.+) to (.+)$/i,
+            template: t("audit.summary.renamedCustomerTag", "Renamed customer tag {from} to {to}")
+        },
+        {
+            regex: /^Deleted customer tag (.+)$/i,
+            template: t("audit.summary.deletedCustomerTag", "Deleted customer tag {item}")
+        },
+        {
             regex: /^Uploaded attachment for customer (.+)$/i,
             template: t("audit.summary.uploadedAttachmentCustomer", "Uploaded attachment for customer {item}")
         },
@@ -10819,6 +10855,18 @@ function translateAuditSummary(log) {
         {
             regex: /^Added activity for customer (.+)$/i,
             template: t("audit.summary.activityCustomer", "Added activity for customer {item}")
+        },
+        {
+            regex: /^Recorded attendance for customer (.+)$/i,
+            template: t("audit.summary.recordedAttendance", "Recorded attendance for customer {item}")
+        },
+        {
+            regex: /^Removed attendance for customer (.+)$/i,
+            template: t("audit.summary.removedAttendance", "Removed attendance for customer {item}")
+        },
+        {
+            regex: /^Submitted health declaration for customer (.+)$/i,
+            template: t("audit.summary.submittedHealth", "Submitted health declaration for customer {item}")
         },
         {
             regex: /^Removed registration$/i,
@@ -10879,6 +10927,12 @@ function translateAuditSummary(log) {
         }
         if (output.includes("{skipped}") && match[3]) {
             output = output.replace("{skipped}", match[3]);
+        }
+        if (output.includes("{from}") && match[1]) {
+            output = output.replace("{from}", match[1]);
+        }
+        if (output.includes("{to}") && match[2]) {
+            output = output.replace("{to}", match[2]);
         }
         return output;
     }
@@ -11421,6 +11475,17 @@ function bindCalendarInteractions(data, itemMap) {
         const id = card.getAttribute("data-event") || "";
         card.addEventListener("dragstart", (event) => {
             if (!event.dataTransfer || !id) return;
+            const grid = card.closest(".calendar-day-events, .calendar-events");
+            if (grid && Number.isFinite(event.clientY)) {
+                const rect = card.getBoundingClientRect();
+                const styles = getComputedStyle(grid);
+                const rowHeight = parseFloat(styles.getPropertyValue("--hour-row-height")) || 64;
+                let offsetY = event.clientY - rect.top;
+                if (!Number.isFinite(offsetY)) offsetY = 0;
+                offsetY = Math.max(0, offsetY);
+                const offsetMinutes = (offsetY / rowHeight) * 60;
+                event.dataTransfer.setData("text/offset-minutes", String(offsetMinutes));
+            }
             event.dataTransfer.setData("text/plain", id);
             event.dataTransfer.effectAllowed = "move";
             card.classList.add("dragging");
@@ -11466,6 +11531,7 @@ function bindCalendarInteractions(data, itemMap) {
                 let offsetY = event.clientY - rect.top - metrics.topGap;
                 if (!Number.isFinite(offsetY)) offsetY = 0;
                 offsetY = Math.max(0, offsetY);
+                const dragOffsetMinutes = Number(event.dataTransfer?.getData("text/offset-minutes")) || 0;
                 const durationMinutes = Number(item.durationMinutes || (item.endUtc
                     ? Math.max(15, Math.round((new Date(item.endUtc).getTime() - currentStart.getTime()) / 60000))
                     : 60));
@@ -11475,7 +11541,8 @@ function bindCalendarInteractions(data, itemMap) {
                 const maxOffset = (maxMinutes / 60) * metrics.rowHeight;
                 const clampedOffset = Math.min(Math.max(0, offsetY), maxOffset);
                 const minutesFromStart = (clampedOffset / metrics.rowHeight) * 60;
-                const snapped = Math.round(minutesFromStart / 15) * 15;
+                const adjustedMinutes = minutesFromStart - dragOffsetMinutes;
+                const snapped = Math.round(adjustedMinutes / 15) * 15;
                 const clamped = Math.min(Math.max(0, snapped), maxMinutes);
                 targetStartMinutes = Math.round(clamped / 15) * 15;
             }
@@ -11562,11 +11629,13 @@ function getLocaleFromSettings() {
 }
 
 function formatTimeOnly(date, timeZone) {
+    const value = date instanceof Date ? date : new Date(date);
+    if (!value || Number.isNaN(value.getTime())) return "";
     return new Intl.DateTimeFormat(getLocaleFromSettings(), {
         hour: "2-digit",
         minute: "2-digit",
         hourCycle: "h23"
-    }).format(date);
+    }).format(value);
 }
 
 function formatTimeInput(date, timeZone) {

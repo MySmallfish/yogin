@@ -60,3 +60,4 @@
 2026-01-30 14:06  Guard invalid session dates to prevent calendar render RangeError.
 2026-01-31 21:01  Add invoices (model, API, admin screen) with billing invoice links, add profession/age fields, and translate audit summaries.
 2026-01-31 21:05  Fix migration designer import for AddInvoices.
+2026-01-31 22:35  Fix calendar drag/drop time offset handling, harden time formatting, extend audit summary translations, add WhatsApp bot PRD, and update agent context notes.
