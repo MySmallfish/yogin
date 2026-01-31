@@ -59,3 +59,4 @@
 2026-01-30 13:25  Reduce hour label size and add delegated billing click handlers to ensure controls respond.
 2026-01-30 14:06  Guard invalid session dates to prevent calendar render RangeError.
 2026-01-31 21:01  Add invoices (model, API, admin screen) with billing invoice links, add profession/age fields, and translate audit summaries.
+2026-01-31 21:05  Fix migration designer import for AddInvoices.
