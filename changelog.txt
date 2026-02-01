@@ -72,3 +72,4 @@
 2026-02-01 00:33  Fallback drag/drop to keep original start time when drop mapping misfires.
 2026-02-01 00:44  Fix dragstart crash by resolving item from itemMap before using startUtc.
 2026-02-01 00:58  Add temporary drag/drop debug overlay to display computed drop time.
+2026-02-01 01:07  Keep drag/drop debug overlay visible on hover/drop for easier diagnosis.

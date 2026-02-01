@@ -11471,6 +11471,19 @@ function bindCalendarInteractions(data, itemMap) {
     const timeZone = getLocalTimeZone();
     const dropZones = document.querySelectorAll(".calendar-dropzone[data-date]");
     let dragTimeOffsetMinutes = 0;
+    let dragDebugTimer = null;
+    const debugEl = document.getElementById("drag-debug");
+    const showDragDebug = (text) => {
+        if (!debugEl) return;
+        debugEl.textContent = text;
+        debugEl.style.display = "block";
+        if (dragDebugTimer) {
+            clearTimeout(dragDebugTimer);
+        }
+        dragDebugTimer = setTimeout(() => {
+            debugEl.style.display = "none";
+        }, 6000);
+    };
 
     document.querySelectorAll(".calendar-event[data-event]").forEach(card => {
         const id = card.getAttribute("data-event") || "";
@@ -11492,6 +11505,7 @@ function bindCalendarInteractions(data, itemMap) {
             event.dataTransfer.setData("text/plain", id);
             event.dataTransfer.effectAllowed = "move";
             card.classList.add("dragging");
+            showDragDebug("dragging...");
         });
         card.addEventListener("dragend", () => {
             card.classList.remove("dragging");
@@ -11524,6 +11538,18 @@ function bindCalendarInteractions(data, itemMap) {
         zone.addEventListener("dragover", (event) => {
             event.preventDefault();
             zone.classList.add("drag-over");
+            const isTimeGrid = Boolean(zone.closest(".calendar-time-grid"));
+            const metrics = isTimeGrid ? resolveTimeGridMetrics(zone) : null;
+            if (!metrics) return;
+            let offsetY = event.clientY - metrics.gridTop;
+            if (!Number.isFinite(offsetY)) offsetY = 0;
+            offsetY = Math.max(0, offsetY);
+            const minutesFromStart = (offsetY / metrics.rowHeight) * 60;
+            const snapped = Math.round(minutesFromStart / 15) * 15;
+            const absoluteMinutes = (7 * 60) + snapped;
+            const hours = Math.floor(absoluteMinutes / 60) % 24;
+            const mins = String(absoluteMinutes % 60).padStart(2, "0");
+            showDragDebug(`hover=${String(hours).padStart(2, "0")}:${mins} offsetY=${Math.round(offsetY)} row=${Math.round(metrics.rowHeight)} top=${Math.round(metrics.gridTop)}`);
         });
         zone.addEventListener("dragleave", () => {
             zone.classList.remove("drag-over");
@@ -11557,12 +11583,9 @@ function bindCalendarInteractions(data, itemMap) {
                 const snapped = Math.round(minutesFromStart / 15) * 15;
                 const clamped = Math.min(Math.max(0, snapped), maxMinutes);
                 targetStartMinutes = Math.round(clamped / 15) * 15;
-                const debugEl = document.getElementById("drag-debug");
-                if (debugEl) {
-                    const hours = Math.floor((targetStartMinutes + (7 * 60)) / 60) % 24;
-                    const mins = String((targetStartMinutes + (7 * 60)) % 60).padStart(2, "0");
-                    debugEl.textContent = `drop=${String(hours).padStart(2, "0")}:${mins} offsetY=${Math.round(offsetY)} row=${Math.round(metrics.rowHeight)} top=${Math.round(metrics.gridTop)}`;
-                }
+                const hours = Math.floor((targetStartMinutes + (7 * 60)) / 60) % 24;
+                const mins = String((targetStartMinutes + (7 * 60)) % 60).padStart(2, "0");
+                showDragDebug(`drop=${String(hours).padStart(2, "0")}:${mins} offsetY=${Math.round(offsetY)} row=${Math.round(metrics.rowHeight)} top=${Math.round(metrics.gridTop)}`);
             }
             if (currentKey === dateKey) {
                 if (targetStartMinutes === null) return;
