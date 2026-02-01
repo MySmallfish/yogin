@@ -11492,6 +11492,7 @@ function bindCalendarInteractions(data, itemMap) {
         const hourCount = parseFloat(styles.getPropertyValue("--hour-count")) || 0;
         let rowHeight = parseFloat(styles.getPropertyValue("--hour-row-height")) || 64;
         let gridTop = grid.getBoundingClientRect().top + topGap;
+        let baseHour = 7;
         const timeGrid = zone.closest(".calendar-time-grid");
         const hoursColumn = timeGrid?.querySelector(".calendar-hours");
         const hourCells = hoursColumn?.querySelectorAll(".calendar-hour") || [];
@@ -11503,8 +11504,16 @@ function bindCalendarInteractions(data, itemMap) {
                 rowHeight = measured;
             }
             gridTop = firstRect.top;
+            const labelText = String(hourCells[0].textContent || "").trim();
+            const match = labelText.match(/(\d{1,2})/);
+            if (match) {
+                const parsedHour = Number(match[1]);
+                if (Number.isFinite(parsedHour)) {
+                    baseHour = parsedHour;
+                }
+            }
         }
-        return { grid, rowHeight, topGap, hourCount, gridTop };
+        return { grid, rowHeight, topGap, hourCount, gridTop, baseHour };
     };
 
     dropZones.forEach(zone => {
@@ -11541,7 +11550,10 @@ function bindCalendarInteractions(data, itemMap) {
                 const maxOffset = (maxMinutes / 60) * metrics.rowHeight;
                 const clampedOffset = Math.min(Math.max(0, offsetY), maxOffset);
                 const minutesFromStart = (clampedOffset / metrics.rowHeight) * 60;
-                const snapped = Math.round(minutesFromStart / 15) * 15;
+                const absoluteMinutes = (Number(metrics.baseHour || 7) * 60) + minutesFromStart;
+                const dayStartMinutes = 7 * 60;
+                const relativeMinutes = absoluteMinutes - dayStartMinutes;
+                const snapped = Math.round(relativeMinutes / 15) * 15;
                 const clamped = Math.min(Math.max(0, snapped), maxMinutes);
                 targetStartMinutes = Math.round(clamped / 15) * 15;
             }

@@ -64,3 +64,4 @@
 2026-01-31 22:48  Adjust calendar drag/drop to align start time to drop position (ignore pointer offset) to fix hour mismatch.
 2026-01-31 23:00  Recompute calendar drag/drop row height from actual grid size to align drop time with visual grid.
 2026-01-31 23:12  Align drag/drop time mapping to hour label positions to fix visual mismatch.
+2026-01-31 23:26  Map drag/drop time using hour label base hour to eliminate 1-hour offset.
