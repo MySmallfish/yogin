@@ -11470,11 +11470,20 @@ function bindCalendarInteractions(data, itemMap) {
     const calendarMeta = data.calendar || {};
     const timeZone = getLocalTimeZone();
     const dropZones = document.querySelectorAll(".calendar-dropzone[data-date]");
+    let dragTimeOffsetMinutes = 0;
 
     document.querySelectorAll(".calendar-event[data-event]").forEach(card => {
         const id = card.getAttribute("data-event") || "";
         card.addEventListener("dragstart", (event) => {
             if (!event.dataTransfer || !id) return;
+            const start = new Date(item.startUtc);
+            if (!Number.isNaN(start.getTime())) {
+                const dayStartMinutes = 7 * 60;
+                const startMinutes = (start.getHours() * 60) + start.getMinutes();
+                dragTimeOffsetMinutes = Math.max(0, startMinutes - dayStartMinutes);
+            } else {
+                dragTimeOffsetMinutes = 0;
+            }
             event.dataTransfer.setData("text/plain", id);
             event.dataTransfer.effectAllowed = "move";
             card.classList.add("dragging");
@@ -11551,7 +11560,10 @@ function bindCalendarInteractions(data, itemMap) {
                 if (currentMinutes === dayStartMinutes + targetStartMinutes) return;
             }
             try {
-                await moveEventInstance(item, dateKey, targetStartMinutes);
+                const effectiveStartMinutes = (targetStartMinutes === null || targetStartMinutes === 0)
+                    ? dragTimeOffsetMinutes
+                    : targetStartMinutes;
+                await moveEventInstance(item, dateKey, effectiveStartMinutes);
                 actor.send({ type: "REFRESH" });
             } catch (error) {
                 showToast(error.message || t("session.moveError", "Unable to move session."), "error");

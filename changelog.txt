@@ -69,3 +69,4 @@
 2026-01-31 23:50  Anchor drag/drop mapping to hour label top to eliminate remaining offset.
 2026-02-01 00:06  Use hour label positions to compute drag/drop time offsets precisely.
 2026-02-01 00:18  Simplify drag/drop mapping to grid top + measured row height for accurate hour alignment.
+2026-02-01 00:33  Fallback drag/drop to keep original start time when drop mapping misfires.
