@@ -2227,12 +2227,17 @@ adminApi.MapGet("/invoices", async (ClaimsPrincipal user, Guid? customerId, stri
     return Results.Ok(response);
 });
 
-adminApi.MapPost("/billing/run", async (ClaimsPrincipal user, string? date, AppDbContext db) =>
+adminApi.MapPost("/billing/run", async (ClaimsPrincipal user, string? from, string? to, AppDbContext db) =>
 {
     var studioId = GetStudioId(user);
-    var runDate = DateOnly.TryParse(date, out var parsedDate)
-        ? parsedDate.ToDateTime(TimeOnly.MinValue)
+    var fromDate = DateOnly.TryParse(from, out var parsedFrom) ? parsedFrom.ToDateTime(TimeOnly.MinValue) : DateTime.MinValue;
+    var runDate = DateOnly.TryParse(to, out var parsedTo)
+        ? parsedTo.ToDateTime(TimeOnly.MinValue)
         : DateTime.UtcNow.Date;
+    if (fromDate > runDate)
+    {
+        return Results.BadRequest(new { error = "Invalid billing range." });
+    }
     var subscriptions = await db.BillingSubscriptions
         .Where(s => s.StudioId == studioId && s.Status == BillingSubscriptionStatus.Active)
         .ToListAsync();
@@ -2253,6 +2258,11 @@ adminApi.MapPost("/billing/run", async (ClaimsPrincipal user, string? date, AppD
         {
             var periodStart = nextChargeDate.Date;
             var periodEnd = ComputeNextBillingDate(periodStart, subscription.BillingInterval, subscription.BillingAnchorDay);
+            if (periodStart < fromDate)
+            {
+                nextChargeDate = periodEnd;
+                continue;
+            }
             var exists = await db.BillingCharges.AnyAsync(c =>
                 c.StudioId == studioId &&
                 c.SourceType == "subscription" &&

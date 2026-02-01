@@ -99,14 +99,14 @@ actor.subscribe((state) => {
     const openApp = document.getElementById("open-app");
     if (openApp) {
         openApp.addEventListener("click", () => {
-            window.location.href = `/app#/schedule?studio=${slug}`;
+            window.location.href = `/app?studio=${slug}#/schedule`;
         });
     }
 
     document.querySelectorAll("button[data-event]").forEach(btn => {
         btn.addEventListener("click", () => {
             const id = btn.getAttribute("data-event");
-            window.location.href = `/app#/event/${id}?studio=${slug}`;
+            window.location.href = `/app?studio=${slug}#/event/${id}`;
         });
     });
 });

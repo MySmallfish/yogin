@@ -124,6 +124,18 @@ const layoutTemplate = compileTemplate("layout", `
             </span>
             <span class="nav-label">{{t "nav.payroll" "Payroll"}}</span>
           </a>
+          <a href="#/billing" data-route="billing" class="nav-item">
+            <span class="nav-short" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 7h16v10H4z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 10h16" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 14h4" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            </span>
+            <span class="nav-label">{{t "nav.billing" "Billing"}}</span>
+          </a>
+          <a href="#/invoices" data-route="invoices" class="nav-item">
+            <span class="nav-short" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1v5h5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 13h8M8 17h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </span>
+            <span class="nav-label">{{t "nav.invoices" "Invoices"}}</span>
+          </a>
           <a href="#/audit" data-route="audit" class="nav-item">
             <span class="nav-short" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M9 2h6a2 2 0 0 1 2 2h3v18H4V4h3a2 2 0 0 1 2-2zm0 4h6V4H9v2zm-1 9l2 2 4-4 1.5 1.5L10 19l-3.5-3.5L8 15z"/></svg>
@@ -295,7 +307,7 @@ const calendarTemplate = compileTemplate("calendar", `
           {{#if day.hasEvents}}
             <div class="calendar-events">
               {{#each day.events}}
-                <div class="calendar-event {{#if isCancelled}}cancelled{{/if}} {{#if isPast}}past{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}} {{#unless suppressActions}}has-rail{{/unless}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
+                <div class="calendar-event {{#if isAllDay}}all-day{{else}}timed{{/if}} {{#if isCancelled}}cancelled{{/if}} {{#if isPast}}past{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}} {{#unless suppressActions}}has-rail{{/unless}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
                   {{#unless suppressActions}}
                     <div class="event-actions-rail" aria-label="{{t "calendar.actions" "Actions"}}">
                       <button class="event-actions" type="button" aria-label="{{t "calendar.actions" "Actions"}}">
@@ -323,6 +335,9 @@ const calendarTemplate = compileTemplate("calendar", `
                     </span>
                   {{/if}}
                 </div>
+                {{#if timeRange}}
+                  <div class="event-time">{{timeRange}}</div>
+                {{/if}}
                 <div class="event-meta">{{roomSummary}}</div>
                 <div class="event-meta">{{instructorName}}</div>
                 {{#if isCancelled}}
@@ -356,7 +371,7 @@ const calendarTemplate = compileTemplate("calendar", `
             {{#if hasEvents}}
               <div class="calendar-day-events">
                 {{#each events}}
-                  <div class="calendar-event compact {{#if isCancelled}}cancelled{{/if}} {{#if isPast}}past{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}} {{#unless suppressActions}}has-rail{{/unless}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
+                  <div class="calendar-event compact {{#if isAllDay}}all-day{{else}}timed{{/if}} {{#if isCancelled}}cancelled{{/if}} {{#if isPast}}past{{/if}} {{#if isHoliday}}holiday{{/if}} {{#if isBirthday}}birthday{{/if}} {{#if hasBirthdayList}}has-birthday-list{{/if}} {{#unless suppressActions}}has-rail{{/unless}}" data-event="{{id}}" data-birthday-names="{{birthdayNamesJson}}" data-birthday-contacts="{{birthdayContactsJson}}" data-birthday-label="{{birthdayDateLabel}}" {{#unless isLocked}}draggable="true"{{/unless}} style="{{eventStyle}}">
                     {{#unless suppressActions}}
                       <div class="event-actions-rail" aria-label="{{t "calendar.actions" "Actions"}}">
                         <button class="event-actions" type="button" aria-label="{{t "calendar.actions" "Actions"}}">
@@ -384,6 +399,9 @@ const calendarTemplate = compileTemplate("calendar", `
                         </span>
                       {{/if}}
                     </div>
+                    {{#if timeRange}}
+                      <div class="event-time">{{timeRange}}</div>
+                    {{/if}}
                     <div class="event-meta">{{roomSummary}}</div>
                     <div class="event-meta">{{instructorName}}</div>
                   </div>
@@ -1582,7 +1600,7 @@ const customerModalTemplate = compileTemplate("customer-modal", `
           </div>
         </div>
         <div>
-          <label>{{t "customer.dateOfBirth" "Date of birth"}}</label>
+          <label>{{t "customer.dateOfBirth" "Date of birth"}} {{#if ageLabel}}<span class="meta">({{ageLabel}})</span>{{/if}}</label>
           <input name="dateOfBirth" type="date" class="date-input" value="{{dateOfBirthValue}}" />
         </div>
         <div class="span-2 address-row">
@@ -1596,7 +1614,7 @@ const customerModalTemplate = compileTemplate("customer-modal", `
           </div>
         </div>
         <div>
-          <label>{{t "customer.occupation" "Occupation"}}</label>
+          <label>{{t "customer.profession" "Profession"}}</label>
           <input name="occupation" value="{{occupation}}" />
         </div>
         <div>
@@ -2220,6 +2238,212 @@ const planCategoryModalTemplate = compileTemplate("plan-category-modal", `
   </div>
 `);
 
+const billingItemModalTemplate = compileTemplate("billing-item-modal", `
+  <div class="modal-overlay" id="billing-item-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h3>{{title}}</h3>
+          <div class="muted">{{subtitle}}</div>
+        </div>
+        <button class="modal-close" id="close-billing-item" type="button" aria-label="{{t "common.close" "Close"}}"></button>
+      </div>
+      <input type="hidden" name="billingItemId" value="{{id}}" />
+      <div class="form-grid">
+        <div>
+          <label>{{t "billing.itemName" "Name"}}</label>
+          <input name="billingItemName" value="{{name}}" />
+        </div>
+        <div>
+          <label>{{t "billing.itemType" "Type"}}</label>
+          <select name="billingItemType">
+            {{#each typeOptions}}
+              <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+            {{/each}}
+          </select>
+        </div>
+        <div>
+          <label>{{t "billing.amount" "Price"}}</label>
+          <input type="number" step="0.01" name="billingItemPrice" value="{{price}}" />
+        </div>
+        <div>
+          <label>{{t "billing.status" "Status"}}</label>
+          <select name="billingItemActive">
+            {{#each activeOptions}}
+              <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+            {{/each}}
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="modal-actions">
+          <button id="save-billing-item">{{saveLabel}}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+`);
+
+const billingSubscriptionModalTemplate = compileTemplate("billing-subscription-modal", `
+  <div class="modal-overlay" id="billing-subscription-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h3>{{title}}</h3>
+          <div class="muted">{{subtitle}}</div>
+        </div>
+        <button class="modal-close" id="close-billing-subscription" type="button" aria-label="{{t "common.close" "Close"}}"></button>
+      </div>
+      <div class="form-grid">
+        <div>
+          <label>{{t "billing.customer" "Customer"}}</label>
+          <select name="billingSubscriptionCustomer">
+            {{#each customerOptions}}
+              <option value="{{id}}">{{name}}</option>
+            {{/each}}
+          </select>
+        </div>
+        <div>
+          <label>{{t "billing.plan" "Plan"}}</label>
+          <select name="billingSubscriptionItem">
+            {{#each itemOptions}}
+              <option value="{{id}}">{{name}}</option>
+            {{/each}}
+          </select>
+        </div>
+        <div>
+          <label>{{t "billing.startDate" "Start date"}}</label>
+          <input type="date" class="date-input" name="billingSubscriptionStart" value="{{startValue}}" />
+        </div>
+        <div>
+          <label>{{t "billing.interval" "Interval"}}</label>
+          <select name="billingSubscriptionInterval">
+            {{#each intervalOptions}}
+              <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+            {{/each}}
+          </select>
+        </div>
+        <div>
+          <label>{{t "billing.anchorDay" "Anchor day"}}</label>
+          <input type="number" name="billingSubscriptionAnchor" value="{{anchorDay}}" placeholder="{{t "billing.anchorHint" "Leave blank for default"}}"/>
+        </div>
+        <div>
+          <label>{{t "billing.overridePrice" "Price override"}}</label>
+          <input type="number" step="0.01" name="billingSubscriptionPrice" value="{{price}}" placeholder="{{t "billing.overrideHint" "Optional"}}"/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="modal-actions">
+          <button id="save-billing-subscription">{{saveLabel}}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+`);
+
+const billingChargeModalTemplate = compileTemplate("billing-charge-modal", `
+  <div class="modal-overlay" id="billing-charge-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h3>{{title}}</h3>
+          <div class="muted">{{subtitle}}</div>
+        </div>
+        <button class="modal-close" id="close-billing-charge" type="button" aria-label="{{t "common.close" "Close"}}"></button>
+      </div>
+      <div class="form-grid">
+        <div>
+          <label>{{t "billing.customer" "Customer"}}</label>
+          <select name="billingChargeCustomer">
+            {{#each customerOptions}}
+              <option value="{{id}}">{{name}}</option>
+            {{/each}}
+          </select>
+        </div>
+        <div>
+          <label>{{t "billing.description" "Description"}}</label>
+          <input name="billingChargeDescription" value="{{description}}" />
+        </div>
+        <div>
+          <label>{{t "billing.amount" "Amount"}}</label>
+          <input type="number" step="0.01" name="billingChargeAmount" value="{{amount}}" />
+        </div>
+        <div>
+          <label>{{t "billing.chargeDate" "Date"}}</label>
+          <input type="date" class="date-input" name="billingChargeDate" value="{{dateValue}}" />
+        </div>
+        <div>
+          <label>{{t "billing.source" "Source"}}</label>
+          <select name="billingChargeSource">
+            {{#each sourceOptions}}
+              <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+            {{/each}}
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="modal-actions">
+          <button id="save-billing-charge">{{saveLabel}}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+`);
+
+const billingAdjustModalTemplate = compileTemplate("billing-adjust-modal", `
+  <div class="modal-overlay" id="billing-adjust-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h3>{{title}}</h3>
+          <div class="muted">{{subtitle}}</div>
+        </div>
+        <button class="modal-close" id="close-billing-adjust" type="button" aria-label="{{t "common.close" "Close"}}"></button>
+      </div>
+      <div class="form-grid">
+        <div>
+          <label>{{t "billing.amount" "Amount"}}</label>
+          <input type="number" step="0.01" name="billingAdjustAmount" value="" />
+        </div>
+        <div class="span-2">
+          <label>{{t "billing.reason" "Reason"}}</label>
+          <input name="billingAdjustReason" value="" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="modal-actions">
+          <button id="save-billing-adjust">{{t "billing.adjust" "Adjust"}}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+`);
+
+const billingVoidModalTemplate = compileTemplate("billing-void-modal", `
+  <div class="modal-overlay" id="billing-void-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h3>{{title}}</h3>
+          <div class="muted">{{subtitle}}</div>
+        </div>
+        <button class="modal-close" id="close-billing-void" type="button" aria-label="{{t "common.close" "Close"}}"></button>
+      </div>
+      <div class="form-grid">
+        <div class="span-2">
+          <label>{{t "billing.reason" "Reason"}}</label>
+          <input name="billingVoidReason" value="" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="modal-actions">
+          <button id="save-billing-void" class="btn-danger">{{t "billing.void" "Void"}}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+`);
+
 const bulkRegistrationTemplate = compileTemplate("bulk-registration", `
   <div class="modal-overlay" id="bulk-registration-modal">
     <div class="modal">
@@ -2473,9 +2697,10 @@ const customerDetailsTemplate = compileTemplate("customer-details", `
             <div><span class="label">{{t "customers.phone" "Phone"}}</span><span>{{phone}}</span></div>
             <div><span class="label">{{t "customer.idNumber" "ID number"}}</span><span>{{idNumber}}</span></div>
             <div><span class="label">{{t "customer.sex" "Sex"}}</span><span>{{gender}}</span></div>
-            <div><span class="label">{{t "customer.dateOfBirth" "Date of birth"}}</span><span>{{dateOfBirth}}</span></div>
+            <div><span class="label">{{t "customer.dateOfBirth" "Date of birth"}}</span><span>{{dateOfBirth}}{{#if ageLabel}} <span class="meta">({{ageLabel}})</span>{{/if}}</span></div>
             <div><span class="label">{{t "customer.city" "City"}}</span><span>{{city}}</span></div>
             <div><span class="label">{{t "customer.address" "Address"}}</span><span>{{address}}</span></div>
+            <div><span class="label">{{t "customer.profession" "Profession"}}</span><span>{{occupation}}</span></div>
             <div><span class="label">{{t "customer.tags" "Tags"}}</span><span class="tags-inline">{{{tagsHtml}}}</span></div>
             <div><span class="label">{{t "customer.signedHealth" "Signed health waiver"}}</span><span>{{signedHealthLabel}}</span></div>
           </div>
@@ -2573,9 +2798,38 @@ const customerDetailsTemplate = compileTemplate("customer-details", `
         <section class="details-section">
           <div class="details-section-header">
             <h3>{{t "customer.details.recentInvoices" "Recent invoices"}}</h3>
-            <button class="secondary" id="view-billing">{{t "customer.details.viewBilling" "View billing"}}</button>
+            <button class="secondary" id="view-invoices">{{t "customer.details.viewInvoices" "View all"}}</button>
           </div>
-          <div class="empty-state">{{t "customer.details.noBilling" "No billing activity yet."}}</div>
+          {{#if recentInvoices.length}}
+            <table class="table details-table">
+              <thead>
+                <tr>
+                  <th>{{t "invoices.number" "Invoice"}}</th>
+                  <th>{{t "invoices.issued" "Issued"}}</th>
+                  <th>{{t "invoices.total" "Total"}}</th>
+                  <th>{{t "invoices.url" "Invoice"}}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{#each recentInvoices}}
+                <tr>
+                  <td>{{invoiceNo}}</td>
+                  <td>{{issuedLabel}}</td>
+                  <td>{{amountLabel}}</td>
+                  <td>
+                    {{#if url}}
+                      <a class="secondary" href="{{url}}" target="_blank" rel="noreferrer">{{t "invoices.download" "Download"}}</a>
+                    {{else}}
+                      -
+                    {{/if}}
+                  </td>
+                </tr>
+                {{/each}}
+              </tbody>
+            </table>
+          {{else}}
+            <div class="empty-state">{{t "customer.details.noInvoices" "No invoices yet."}}</div>
+          {{/if}}
         </section>
       </div>
       <div class="details-activity">
@@ -2863,6 +3117,311 @@ const payrollTemplate = compileTemplate("payroll", `
       {{/if}}
     </tbody>
   </table>
+`);
+
+const billingTemplate = compileTemplate("billing", `
+  <div class="notice">{{t "billing.notice" "Track subscriptions and charges for your studio."}}</div>
+  {{#if errorMessage}}
+    <div class="notice">{{errorMessage}}</div>
+  {{/if}}
+  <div class="billing-toolbar">
+    <div class="billing-actions">
+      <button class="primary btn-icon" id="billing-run">
+        <span class="icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </span>
+        {{t "billing.run" "Run billing"}}
+      </button>
+      <button class="secondary btn-icon" id="billing-export">
+        <span class="icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 3h12l4 4v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm11 1v4h4M7 9l2 3-2 3h2l1-2 1 2h2l-2-3 2-3h-2l-1 2-1-2H7z"/></svg>
+        </span>
+        {{t "billing.export" "Export CSV"}}
+      </button>
+      <button class="secondary btn-icon" id="billing-new-charge">
+        <span class="icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </span>
+        {{t "billing.newCharge" "New charge"}}
+      </button>
+    </div>
+    <div class="billing-filters">
+      <div>
+        <label>{{t "billing.from" "From"}}</label>
+        <input type="date" class="date-input" name="billingFrom" value="{{fromValue}}" />
+      </div>
+      <div>
+        <label>{{t "billing.to" "To"}}</label>
+        <input type="date" class="date-input" name="billingTo" value="{{toValue}}" />
+      </div>
+      <div>
+        <label>{{t "billing.status" "Status"}}</label>
+        <select name="billingStatus">
+          {{#each statusOptions}}
+            <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+          {{/each}}
+        </select>
+      </div>
+      <div>
+        <label>{{t "billing.customer" "Customer"}}</label>
+        <select name="billingCustomer">
+          {{#each customerOptions}}
+            <option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>
+          {{/each}}
+        </select>
+      </div>
+      <div>
+        <label>{{t "billing.source" "Source"}}</label>
+        <select name="billingSource">
+          {{#each sourceOptions}}
+            <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+          {{/each}}
+        </select>
+      </div>
+      <button class="secondary" id="billing-apply">{{t "common.apply" "Apply"}}</button>
+    </div>
+  </div>
+  <section class="billing-section">
+    <div class="section-header">
+      <div>
+        <h3>{{t "billing.charges" "Charges"}}</h3>
+        <div class="muted">{{chargesCount}}</div>
+      </div>
+    </div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>{{t "billing.chargeDate" "Date"}}</th>
+          <th>{{t "billing.customer" "Customer"}}</th>
+          <th>{{t "billing.description" "Description"}}</th>
+          <th>{{t "billing.source" "Source"}}</th>
+          <th>{{t "billing.amount" "Amount"}}</th>
+          <th>{{t "billing.status" "Status"}}</th>
+          <th>{{t "billing.invoice" "Invoice"}}</th>
+          <th>{{t "billing.actions" "Actions"}}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#if charges.length}}
+          {{#each charges}}
+          <tr>
+            <td>{{chargeDateLabel}}</td>
+            <td>{{customerName}}</td>
+            <td>{{description}}</td>
+            <td>{{sourceLabel}}</td>
+            <td>{{amountLabel}}</td>
+            <td>{{statusLabel}}</td>
+            <td>
+              {{#if invoiceUrl}}
+                <a class="secondary" href="{{invoiceUrl}}" target="_blank" rel="noreferrer">{{invoiceNo}}</a>
+              {{else}}
+                -
+              {{/if}}
+            </td>
+            <td class="table-actions">
+              <button class="secondary icon-only" data-charge-adjust="{{id}}" aria-label="{{t "billing.adjust" "Adjust"}}" title="{{t "billing.adjust" "Adjust"}}">
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M4 12h16M12 4v16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                </span>
+              </button>
+              <button class="secondary btn-danger icon-only" data-charge-void="{{id}}" aria-label="{{t "billing.void" "Void"}}" title="{{t "billing.void" "Void"}}">
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8 6V4h8v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M19 6l-1 14H6L5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                </span>
+              </button>
+            </td>
+          </tr>
+          {{/each}}
+        {{else}}
+          <tr>
+            <td colspan="8" class="empty-state">{{t "billing.emptyCharges" "No charges found."}}</td>
+          </tr>
+        {{/if}}
+      </tbody>
+    </table>
+  </section>
+  <section class="billing-section">
+    <div class="section-header">
+      <div>
+        <h3>{{t "billing.subscriptions" "Subscriptions"}}</h3>
+        <div class="muted">{{t "billing.subscriptionsHint" "Active customer subscriptions"}}</div>
+      </div>
+      <button class="secondary btn-icon" id="billing-new-subscription">
+        <span class="icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </span>
+        {{t "billing.newSubscription" "New subscription"}}
+      </button>
+    </div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>{{t "billing.customer" "Customer"}}</th>
+          <th>{{t "billing.plan" "Plan"}}</th>
+          <th>{{t "billing.nextCharge" "Next charge"}}</th>
+          <th>{{t "billing.amount" "Amount"}}</th>
+          <th>{{t "billing.status" "Status"}}</th>
+          <th>{{t "billing.actions" "Actions"}}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#if subscriptions.length}}
+          {{#each subscriptions}}
+            <tr>
+              <td>{{customerName}}</td>
+              <td>{{itemName}}</td>
+              <td>{{nextChargeLabel}}</td>
+              <td>{{amountLabel}}</td>
+              <td>{{statusLabel}}</td>
+              <td class="table-actions">
+                {{#if canPause}}
+                  <button class="secondary icon-only" data-subscription-pause="{{id}}" aria-label="{{t "billing.pause" "Pause"}}" title="{{t "billing.pause" "Pause"}}">
+                    <span class="icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24"><path d="M7 5h3v14H7zm7 0h3v14h-3z"/></svg>
+                    </span>
+                  </button>
+                {{/if}}
+                {{#if canResume}}
+                  <button class="secondary icon-only" data-subscription-resume="{{id}}" aria-label="{{t "billing.resume" "Resume"}}" title="{{t "billing.resume" "Resume"}}">
+                    <span class="icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24"><path d="M8 5l10 7-10 7V5z"/></svg>
+                    </span>
+                  </button>
+                {{/if}}
+                <button class="secondary btn-danger icon-only" data-subscription-cancel="{{id}}" aria-label="{{t "billing.cancel" "Cancel"}}" title="{{t "billing.cancel" "Cancel"}}">
+                  <span class="icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8 6V4h8v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M19 6l-1 14H6L5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                  </span>
+                </button>
+              </td>
+            </tr>
+          {{/each}}
+        {{else}}
+          <tr>
+            <td colspan="6" class="empty-state">{{t "billing.emptySubscriptions" "No subscriptions yet."}}</td>
+          </tr>
+        {{/if}}
+      </tbody>
+    </table>
+  </section>
+  <section class="billing-section">
+    <div class="section-header">
+      <div>
+        <h3>{{t "billing.items" "Billable items"}}</h3>
+        <div class="muted">{{t "billing.itemsHint" "Products and fees you can charge."}}</div>
+      </div>
+      <button class="secondary btn-icon" id="billing-new-item">
+        <span class="icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </span>
+        {{t "billing.newItem" "New item"}}
+      </button>
+    </div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>{{t "billing.itemName" "Name"}}</th>
+          <th>{{t "billing.itemType" "Type"}}</th>
+          <th>{{t "billing.amount" "Price"}}</th>
+          <th>{{t "billing.status" "Status"}}</th>
+          <th>{{t "billing.actions" "Actions"}}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#if items.length}}
+          {{#each items}}
+            <tr>
+              <td>{{name}}</td>
+              <td>{{typeLabel}}</td>
+              <td>{{priceLabel}}</td>
+              <td>{{statusLabel}}</td>
+              <td class="table-actions">
+                <button class="secondary icon-only" data-item-edit="{{id}}" aria-label="{{t "common.edit" "Edit"}}" title="{{t "common.edit" "Edit"}}">
+                  <span class="icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M4 17.25V20h2.75L18.81 7.94l-2.75-2.75L4 17.25z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+                  </span>
+                </button>
+              </td>
+            </tr>
+          {{/each}}
+        {{else}}
+          <tr>
+            <td colspan="5" class="empty-state">{{t "billing.emptyItems" "No billable items yet."}}</td>
+          </tr>
+        {{/if}}
+      </tbody>
+    </table>
+  </section>
+`);
+
+const invoicesTemplate = compileTemplate("invoices", `
+  <div class="notice">{{t "invoices.notice" "Invoices are generated externally and shown here for reference."}}</div>
+  {{#if errorMessage}}
+    <div class="notice">{{errorMessage}}</div>
+  {{/if}}
+  <div class="billing-toolbar">
+    <div class="billing-filters">
+      <div>
+        <label>{{t "invoices.from" "From"}}</label>
+        <input type="date" class="date-input" name="invoiceFrom" value="{{fromValue}}" />
+      </div>
+      <div>
+        <label>{{t "invoices.to" "To"}}</label>
+        <input type="date" class="date-input" name="invoiceTo" value="{{toValue}}" />
+      </div>
+      <div>
+        <label>{{t "invoices.customer" "Customer"}}</label>
+        <select name="invoiceCustomer">
+          {{#each customerOptions}}
+            <option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>
+          {{/each}}
+        </select>
+      </div>
+      <button class="secondary" id="invoice-apply">{{t "common.apply" "Apply"}}</button>
+    </div>
+  </div>
+  <section class="billing-section">
+    <div class="section-header">
+      <div>
+        <h3>{{t "invoices.title" "Invoices"}}</h3>
+        <div class="muted">{{invoiceCount}}</div>
+      </div>
+    </div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>{{t "invoices.number" "Invoice"}}</th>
+          <th>{{t "invoices.customer" "Customer"}}</th>
+          <th>{{t "invoices.issued" "Issued"}}</th>
+          <th>{{t "invoices.total" "Total"}}</th>
+          <th>{{t "invoices.url" "Invoice"}}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#if hasInvoices}}
+          {{#each invoices}}
+          <tr>
+            <td>{{invoiceNo}}</td>
+            <td>{{customerName}}</td>
+            <td>{{issuedLabel}}</td>
+            <td>{{amountLabel}}</td>
+            <td>
+              {{#if url}}
+                <a class="secondary" href="{{url}}" target="_blank" rel="noreferrer">{{t "invoices.download" "Download"}}</a>
+              {{else}}
+                -
+              {{/if}}
+            </td>
+          </tr>
+          {{/each}}
+        {{else}}
+          <tr>
+            <td colspan="5" class="empty-state">{{t "invoices.empty" "No invoices found."}}</td>
+          </tr>
+        {{/if}}
+      </tbody>
+    </table>
+  </section>
 `);
 
 const auditTemplate = compileTemplate("audit", `
@@ -3385,6 +3944,66 @@ const adminMachine = createMachine({
                     }
                     return { studio, payroll, payrollFilters: { from, to, instructorId }, payrollError };
                 }
+                case "billing": {
+                    const from = getQueryParam("from") || "";
+                    const to = getQueryParam("to") || "";
+                    const status = getQueryParam("status") || "";
+                    const customerId = getQueryParam("customerId") || "";
+                    const sourceType = getQueryParam("sourceType") || "";
+                    const params = new URLSearchParams();
+                    if (from) params.set("from", from);
+                    if (to) params.set("to", to);
+                    if (status) params.set("status", status);
+                    if (customerId) params.set("customerId", customerId);
+                    if (sourceType) params.set("sourceType", sourceType);
+                    const qs = params.toString();
+                    let charges = [];
+                    let billingError = "";
+                    try {
+                        charges = await apiGet(`/api/admin/billing/charges${qs ? `?${qs}` : ""}`);
+                    } catch (error) {
+                        billingError = error.message || t("billing.loadError", "Unable to load billing data.");
+                    }
+                    const [subscriptions, items, customers] = await Promise.all([
+                        apiGet("/api/admin/billing/subscriptions"),
+                        apiGet("/api/admin/billing/items"),
+                        apiGet("/api/admin/customers")
+                    ]);
+                    return {
+                        studio,
+                        charges,
+                        subscriptions,
+                        items,
+                        customers,
+                        billingFilters: { from, to, status, customerId, sourceType },
+                        billingError
+                    };
+                }
+                case "invoices": {
+                    const from = getQueryParam("from") || "";
+                    const to = getQueryParam("to") || "";
+                    const customerId = getQueryParam("customerId") || "";
+                    const params = new URLSearchParams();
+                    if (from) params.set("from", from);
+                    if (to) params.set("to", to);
+                    if (customerId) params.set("customerId", customerId);
+                    const qs = params.toString();
+                    let invoices = [];
+                    let invoiceError = "";
+                    try {
+                        invoices = await apiGet(`/api/admin/invoices${qs ? `?${qs}` : ""}`);
+                    } catch (error) {
+                        invoiceError = error.message || t("invoices.loadError", "Unable to load invoices.");
+                    }
+                    const customers = await apiGet("/api/admin/customers");
+                    return {
+                        studio,
+                        invoices,
+                        customers,
+                        invoiceFilters: { from, to, customerId },
+                        invoiceError
+                    };
+                }
                 case "settings": {
                     return { studio };
                 }
@@ -3406,6 +4025,12 @@ function render(state) {
     }
 
     const route = state.context.route;
+    if (lastRenderedRoute !== route) {
+        closeEventActionsMenu();
+        clearModalEscape();
+        document.querySelectorAll(".modal-overlay").forEach(overlay => overlay.remove());
+        lastRenderedRoute = route;
+    }
     debugLog("render", { route, state: state.value, hash: window.location.hash, path: window.location.pathname });
     const titleMap = {
         calendar: t("page.calendar.title", "Calendar"),
@@ -3418,6 +4043,8 @@ function render(state) {
         guests: t("page.guests.title", "Guest directory"),
         reports: t("page.reports.title", "Performance pulse"),
         payroll: t("page.payroll.title", "Instructor payroll"),
+        billing: t("page.billing.title", "Billing"),
+        invoices: t("page.invoices.title", "Invoices"),
         audit: t("page.audit.title", "Audit log"),
         settings: t("page.settings.title", "Studio settings")
     };
@@ -3433,6 +4060,8 @@ function render(state) {
         guests: t("page.guests.subtitle", "Read-only viewers with schedule access."),
         reports: t("page.reports.subtitle", "Revenue and occupancy at a glance."),
         payroll: t("page.payroll.subtitle", "Track reported sessions and instructor rates."),
+        billing: t("page.billing.subtitle", "Subscriptions, charges, and exports."),
+        invoices: t("page.invoices.subtitle", "Invoice history and downloads."),
         audit: t("page.audit.subtitle", "Every change across admin, instructor, and client activity."),
         settings: t("page.settings.subtitle", "Brand and week logic.")
     };
@@ -3556,6 +4185,14 @@ function render(state) {
         const signedHealthLabel = customer.signedHealthView ? t("common.yes", "Yes") : t("common.no", "No");
         const registrations = formatCustomerRegistrations(details.registrations || []);
         const recentRegistrations = registrations.slice(0, 5);
+        const ageLabel = formatAgeLabel(customer.dateOfBirth);
+        const invoices = (details.invoices || []).map(item => ({
+            ...item,
+            issuedLabel: formatDateDisplay(item.issuedAtUtc),
+            amountLabel: formatPlainPrice(item.totalCents),
+            url: item.url || ""
+        }));
+        const recentInvoices = invoices.slice(0, 5);
         const attachments = (details.attachments || []).map(item => ({
             ...item,
             uploadedLabel: formatDateTime(item.uploadedAtUtc),
@@ -3571,7 +4208,8 @@ function render(state) {
             ...log,
             timeLabel: formatDateTime(log.createdAtUtc),
             actorLabel: log.actorName || log.actorRole || "-",
-            actionLabel: formatAuditAction(log.action || "")
+            actionLabel: formatAuditAction(log.action || ""),
+            summary: translateAuditSummary(log)
         }));
         const tagsHtml = renderTagChips(customer.tags || formatTags(customer.tagsJson), tagColorMap);
         content = customerDetailsTemplate({
@@ -3579,9 +4217,11 @@ function render(state) {
             statusLabel,
             signedHealthLabel,
             dateOfBirth: customer.dateOfBirth ? formatDateDisplay(customer.dateOfBirth) : "",
+            ageLabel,
             tagsHtml,
             registrations,
             recentRegistrations,
+            recentInvoices,
             attachments,
             healthDeclarations,
             auditLogs
@@ -3695,6 +4335,102 @@ function render(state) {
         });
     }
 
+    if (route === "billing") {
+        const filters = data.billingFilters || { from: "", to: "", status: "", customerId: "", sourceType: "" };
+        const customers = (data.customers || []).map(customer => ({
+            id: customer.id,
+            name: customer.fullName || customer.email || customer.phone || "-"
+        }));
+        const customerOptions = [
+            { id: "", name: t("billing.customerAll", "All customers"), selected: !filters.customerId },
+            ...customers.map(customer => ({
+                ...customer,
+                selected: String(customer.id) === String(filters.customerId || "")
+            }))
+        ];
+        const statusOptions = [
+            { value: "", label: t("billing.statusAll", "All statuses"), selected: !filters.status },
+            { value: "Draft", label: formatBillingChargeStatus("Draft"), selected: filters.status === "Draft" },
+            { value: "Posted", label: formatBillingChargeStatus("Posted"), selected: filters.status === "Posted" },
+            { value: "Voided", label: formatBillingChargeStatus("Voided"), selected: filters.status === "Voided" }
+        ];
+        const sourceOptions = [
+            { value: "", label: t("billing.sourceAll", "All sources"), selected: !filters.sourceType },
+            { value: "subscription", label: formatBillingSource("subscription"), selected: filters.sourceType === "subscription" },
+            { value: "session_registration", label: formatBillingSource("session_registration"), selected: filters.sourceType === "session_registration" },
+            { value: "workshop_registration", label: formatBillingSource("workshop_registration"), selected: filters.sourceType === "workshop_registration" },
+            { value: "manual", label: formatBillingSource("manual"), selected: filters.sourceType === "manual" },
+            { value: "fee", label: formatBillingSource("fee"), selected: filters.sourceType === "fee" },
+            { value: "adjustment", label: formatBillingSource("adjustment"), selected: filters.sourceType === "adjustment" }
+        ];
+        const charges = (data.charges || []).map(charge => ({
+            ...charge,
+            chargeDateLabel: charge.chargeDate ? formatDateDisplay(new Date(charge.chargeDate)) : "-",
+            amountLabel: formatPlainPrice(charge.totalCents),
+            statusLabel: formatBillingChargeStatus(charge.status),
+            sourceLabel: formatBillingSource(charge.sourceType),
+            invoiceNo: charge.invoiceNo || "",
+            invoiceUrl: charge.invoiceUrl || ""
+        }));
+        const subscriptions = (data.subscriptions || []).map(sub => ({
+            ...sub,
+            nextChargeLabel: sub.nextChargeDate ? formatDateDisplay(new Date(sub.nextChargeDate)) : "-",
+            amountLabel: formatPlainPrice(sub.priceCents),
+            statusLabel: formatBillingSubscriptionStatus(sub.status),
+            canPause: String(sub.status) === "Active",
+            canResume: String(sub.status) === "Paused"
+        }));
+        const items = (data.items || []).map(item => ({
+            ...item,
+            typeLabel: formatBillingItemType(item.type),
+            priceLabel: formatPlainPrice(item.defaultPriceCents),
+            statusLabel: item.active ? t("common.yes", "Yes") : t("common.no", "No")
+        }));
+        const chargesCount = `${charges.length} ${t("billing.chargeCount", "charges")}`;
+        content = billingTemplate({
+            fromValue: filters.from || "",
+            toValue: filters.to || "",
+            customerOptions,
+            statusOptions,
+            sourceOptions,
+            charges,
+            subscriptions,
+            items,
+            chargesCount,
+            errorMessage: data.billingError || ""
+        });
+    }
+
+    if (route === "invoices") {
+        const filters = data.invoiceFilters || { from: "", to: "", customerId: "" };
+        const customers = (data.customers || []).map(customer => ({
+            id: customer.id,
+            name: customer.fullName || customer.email || customer.phone || "-"
+        }));
+        const customerOptions = [
+            { id: "", name: t("invoices.customerAll", "All customers"), selected: !filters.customerId },
+            ...customers.map(customer => ({
+                ...customer,
+                selected: String(customer.id) === String(filters.customerId || "")
+            }))
+        ];
+        const invoices = (data.invoices || []).map(invoice => ({
+            ...invoice,
+            issuedLabel: invoice.issuedAtUtc ? formatDateDisplay(new Date(invoice.issuedAtUtc)) : "-",
+            amountLabel: formatPlainPrice(invoice.totalCents)
+        }));
+        const invoiceCount = `${invoices.length} ${t("invoices.count", "invoices")}`;
+        content = invoicesTemplate({
+            fromValue: filters.from || "",
+            toValue: filters.to || "",
+            customerOptions,
+            invoices,
+            hasInvoices: invoices.length > 0,
+            invoiceCount,
+            errorMessage: data.invoiceError || ""
+        });
+    }
+
     if (route === "audit") {
         const logs = (data.audit?.logs || []).map(log => {
             const actorLabel = log.actorName || log.actorEmail || log.actorRole || "-";
@@ -3705,7 +4441,8 @@ function render(state) {
                 timeLabel: formatShortDateTime(log.createdAtUtc),
                 actorLabel,
                 actionLabel: formatAuditAction(log.action),
-                relatesToLabel
+                relatesToLabel,
+                summary: translateAuditSummary(log)
             };
         });
         const filters = data.audit?.filters || {};
@@ -3801,6 +4538,164 @@ function render(state) {
                 if (instructorId) params.set("instructorId", instructorId);
                 const query = params.toString();
                 window.location.hash = `#/payroll${query ? `?${query}` : ""}`;
+            });
+        }
+    }
+
+    if (route === "billing") {
+        const runBtn = document.getElementById("billing-run");
+        const exportBtn = document.getElementById("billing-export");
+        const newChargeBtn = document.getElementById("billing-new-charge");
+        const newSubscriptionBtn = document.getElementById("billing-new-subscription");
+        const newItemBtn = document.getElementById("billing-new-item");
+        const applyBtn = document.getElementById("billing-apply");
+
+        if (runBtn) {
+            runBtn.addEventListener("click", async () => {
+                try {
+                    await apiPost("/api/admin/billing/run", {});
+                    showToast(t("billing.runSuccess", "Billing run complete."), "success");
+                    actor.send({ type: "REFRESH" });
+                } catch (error) {
+                    showToast(error.message || t("billing.runError", "Unable to run billing."), "error");
+                }
+            });
+        }
+
+        if (exportBtn) {
+            exportBtn.addEventListener("click", () => {
+                const fromValue = document.querySelector("[name=\"billingFrom\"]")?.value || "";
+                const toValue = document.querySelector("[name=\"billingTo\"]")?.value || "";
+                const params = new URLSearchParams();
+                if (fromValue) params.set("from", fromValue);
+                if (toValue) params.set("to", toValue);
+                const qs = params.toString();
+                window.location.href = `/api/admin/billing/charges/export${qs ? `?${qs}` : ""}`;
+            });
+        }
+
+        if (newChargeBtn) {
+            newChargeBtn.addEventListener("click", () => {
+                openBillingChargeModal(data);
+            });
+        }
+
+        if (newSubscriptionBtn) {
+            newSubscriptionBtn.addEventListener("click", () => {
+                openBillingSubscriptionModal(data);
+            });
+        }
+
+        if (newItemBtn) {
+            newItemBtn.addEventListener("click", () => {
+                openBillingItemModal(null);
+            });
+        }
+
+        if (applyBtn) {
+            applyBtn.addEventListener("click", () => {
+                const fromRaw = document.querySelector("[name=\"billingFrom\"]")?.value || "";
+                const toRaw = document.querySelector("[name=\"billingTo\"]")?.value || "";
+                const statusValue = document.querySelector("[name=\"billingStatus\"]")?.value || "";
+                const customerValue = document.querySelector("[name=\"billingCustomer\"]")?.value || "";
+                const sourceValue = document.querySelector("[name=\"billingSource\"]")?.value || "";
+                const params = new URLSearchParams();
+                if (fromRaw) params.set("from", fromRaw);
+                if (toRaw) params.set("to", toRaw);
+                if (statusValue) params.set("status", statusValue);
+                if (customerValue) params.set("customerId", customerValue);
+                if (sourceValue) params.set("sourceType", sourceValue);
+                const query = params.toString();
+                window.location.hash = `#/billing${query ? `?${query}` : ""}`;
+            });
+        }
+
+        document.querySelectorAll("[data-item-edit]").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const id = btn.getAttribute("data-item-edit");
+                const item = (data.items || []).find(entry => String(entry.id) === String(id));
+                if (!item) return;
+                openBillingItemModal(item);
+            });
+        });
+
+        document.querySelectorAll("[data-charge-void]").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const id = btn.getAttribute("data-charge-void");
+                if (!id) return;
+                openBillingVoidModal(id);
+            });
+        });
+
+        document.querySelectorAll("[data-charge-adjust]").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const id = btn.getAttribute("data-charge-adjust");
+                if (!id) return;
+                openBillingAdjustModal(id);
+            });
+        });
+
+        document.querySelectorAll("[data-subscription-pause]").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const id = btn.getAttribute("data-subscription-pause");
+                if (!id) return;
+                try {
+                    await apiPost(`/api/admin/billing/subscriptions/${id}/pause`, {});
+                    actor.send({ type: "REFRESH" });
+                } catch (error) {
+                    showToast(error.message || t("billing.pauseError", "Unable to pause subscription."), "error");
+                }
+            });
+        });
+
+        document.querySelectorAll("[data-subscription-resume]").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const id = btn.getAttribute("data-subscription-resume");
+                if (!id) return;
+                try {
+                    await apiPost(`/api/admin/billing/subscriptions/${id}/resume`, {});
+                    actor.send({ type: "REFRESH" });
+                } catch (error) {
+                    showToast(error.message || t("billing.resumeError", "Unable to resume subscription."), "error");
+                }
+            });
+        });
+
+        document.querySelectorAll("[data-subscription-cancel]").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const id = btn.getAttribute("data-subscription-cancel");
+                if (!id) return;
+                openConfirmModal({
+                    title: t("billing.cancelTitle", "Cancel subscription?"),
+                    message: t("billing.cancelMessage", "This will stop future billing."),
+                    confirmLabel: t("billing.cancel", "Cancel"),
+                    cancelLabel: t("common.cancel", "Cancel"),
+                    onConfirm: async () => {
+                        try {
+                            await apiPost(`/api/admin/billing/subscriptions/${id}/cancel`, {});
+                            actor.send({ type: "REFRESH" });
+                        } catch (error) {
+                            showToast(error.message || t("billing.cancelError", "Unable to cancel subscription."), "error");
+                        }
+                    }
+                });
+            });
+        });
+    }
+
+    if (route === "invoices") {
+        const applyBtn = document.getElementById("invoice-apply");
+        if (applyBtn) {
+            applyBtn.addEventListener("click", () => {
+                const fromRaw = document.querySelector("[name=\"invoiceFrom\"]")?.value || "";
+                const toRaw = document.querySelector("[name=\"invoiceTo\"]")?.value || "";
+                const customerValue = document.querySelector("[name=\"invoiceCustomer\"]")?.value || "";
+                const params = new URLSearchParams();
+                if (fromRaw) params.set("from", fromRaw);
+                if (toRaw) params.set("to", toRaw);
+                if (customerValue) params.set("customerId", customerValue);
+                const query = params.toString();
+                window.location.hash = `#/invoices${query ? `?${query}` : ""}`;
             });
         }
     }
@@ -4482,7 +5377,7 @@ function bindRouteActions(route, data, state) {
     if (route === "customer") {
         const editBtn = document.getElementById("edit-customer");
         const viewAllBtn = document.getElementById("view-all-registrations");
-        const billingBtn = document.getElementById("view-billing");
+        const billingBtn = document.getElementById("view-invoices");
         const attachmentInput = document.getElementById("customer-attachment-input");
         const activityForm = document.getElementById("activity-form");
         if (editBtn) {
@@ -4510,7 +5405,10 @@ function bindRouteActions(route, data, state) {
         }
         if (billingBtn) {
             billingBtn.addEventListener("click", () => {
-                openBillingModal();
+                const details = data.customerDetails || {};
+                const customer = details.customer;
+                if (!customer?.id) return;
+                window.location.hash = `#/invoices?customerId=${customer.id}`;
             });
         }
         if (attachmentInput) {
@@ -5361,9 +6259,15 @@ let globalEscapeHandlerAttached = false;
 let activeEventMenu = null;
 let activeEventMenuCleanup = null;
 let calendarSearchShouldFocus = false;
+let lastRenderedRoute = null;
+let billingHandlersBound = false;
 
 function getSidebarState() {
-    return localStorage.getItem(sidebarStorageKey) === "1";
+    const stored = localStorage.getItem(sidebarStorageKey);
+    if (stored === null) {
+        return window.innerWidth < 1500;
+    }
+    return stored === "1";
 }
 
 function setSidebarState(value) {
@@ -5648,8 +6552,8 @@ function resetUserForm() {
 }
 
 function getSessionTiming(item, timeZone) {
-    const start = new Date(item.startUtc);
-    const end = item.endUtc ? new Date(item.endUtc) : null;
+    const start = parseUtcDate(item.startUtc) || new Date(item.startUtc);
+    const end = item.endUtc ? (parseUtcDate(item.endUtc) || new Date(item.endUtc)) : null;
     const timeRange = end ? `${formatTimeOnly(start, timeZone)} - ${formatTimeOnly(end, timeZone)}` : formatTimeOnly(start, timeZone);
     const startLabel = formatFullDate(start, timeZone);
     const sessionDateKey = getDateKeyInTimeZone(start, timeZone);
@@ -6000,8 +6904,8 @@ async function openCalendarEventModal(item, data, options = {}) {
             const nextEndLocal = new Date(nextStartLocal.getTime() + durationValue * 60000);
             const nextStartUtc = nextStartLocal.toISOString();
             const nextEndUtc = nextEndLocal.toISOString();
-            const currentStartUtc = new Date(item.startUtc).getTime();
-            const currentEndUtc = item.endUtc ? new Date(item.endUtc).getTime() : currentStartUtc;
+            const currentStartUtc = (parseUtcDate(item.startUtc) || new Date(item.startUtc)).getTime();
+            const currentEndUtc = item.endUtc ? (parseUtcDate(item.endUtc) || new Date(item.endUtc)).getTime() : currentStartUtc;
             const startChanged = Math.abs(nextStartLocal.getTime() - currentStartUtc) > 1000;
             const endChanged = Math.abs(nextEndLocal.getTime() - currentEndUtc) > 1000;
 
@@ -6572,8 +7476,8 @@ async function duplicateSessionFromItem(item, data) {
         }
     }
 
-    const start = new Date(item.startUtc);
-    const end = item.endUtc ? new Date(item.endUtc) : null;
+    const start = parseUtcDate(item.startUtc) || new Date(item.startUtc);
+    const end = item.endUtc ? (parseUtcDate(item.endUtc) || new Date(item.endUtc)) : null;
     const durationMinutes = end
         ? Math.max(1, Math.round((end.getTime() - start.getTime()) / 60000))
         : (series?.durationMinutes || 60);
@@ -6738,7 +7642,7 @@ function openCustomerRegistrationsModal(registrations) {
     }
 }
 
-function openBillingModal() {
+async function openBillingModal(customer) {
     const existing = document.getElementById("customer-billing-modal");
     if (existing) {
         clearModalEscape();
@@ -6753,11 +7657,13 @@ function openBillingModal() {
         <div class="modal-header">
           <div>
             <h3>${t("customer.details.billing", "Billing")}</h3>
-            <div class="muted">${t("customer.details.viewBilling", "View billing")}</div>
+            <div class="muted">${customer?.fullName || ""}</div>
           </div>
           <button class="modal-close" type="button" aria-label="${t("common.close", "Close")}"></button>
         </div>
-        <div class="empty-state">${t("customer.details.noBilling", "No billing activity yet.")}</div>
+        <div class="modal-body" id="customer-billing-body">
+          <div class="empty-state">${t("billing.loading", "Loading billing data...")}</div>
+        </div>
       </div>
     `;
 
@@ -6773,6 +7679,60 @@ function openBillingModal() {
     const closeBtn = overlay.querySelector(".modal-close");
     if (closeBtn) {
         closeBtn.addEventListener("click", closeModal);
+    }
+
+    if (!customer?.id) {
+        const body = overlay.querySelector("#customer-billing-body");
+        if (body) {
+            body.innerHTML = `<div class="empty-state">${t("customer.details.noBilling", "No billing activity yet.")}</div>`;
+        }
+        return;
+    }
+
+    try {
+        const charges = await apiGet(`/api/admin/billing/charges?customerId=${customer.id}`);
+        const rows = (charges || []).map(charge => {
+            const invoiceLabel = charge.invoiceUrl
+                ? `<a class="secondary" href="${charge.invoiceUrl}" target="_blank" rel="noreferrer">${escapeHtml(charge.invoiceNo || t("invoices.download", "Download"))}</a>`
+                : "-";
+            return `
+          <tr>
+            <td>${formatDateDisplay(new Date(charge.chargeDate))}</td>
+            <td>${escapeHtml(charge.description || "")}</td>
+            <td>${formatPlainPrice(charge.totalCents)}</td>
+            <td>${formatBillingChargeStatus(charge.status)}</td>
+            <td>${invoiceLabel}</td>
+          </tr>
+        `;
+        }).join("");
+        const body = overlay.querySelector("#customer-billing-body");
+        if (body) {
+            if (!charges || charges.length === 0) {
+                body.innerHTML = `<div class="empty-state">${t("customer.details.noBilling", "No billing activity yet.")}</div>`;
+            } else {
+                body.innerHTML = `
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>${t("billing.chargeDate", "Date")}</th>
+                        <th>${t("billing.description", "Description")}</th>
+                        <th>${t("billing.amount", "Amount")}</th>
+                        <th>${t("billing.status", "Status")}</th>
+                        <th>${t("billing.invoice", "Invoice")}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${rows}
+                    </tbody>
+                  </table>
+                `;
+            }
+        }
+    } catch (error) {
+        const body = overlay.querySelector("#customer-billing-body");
+        if (body) {
+            body.innerHTML = `<div class="empty-state">${t("billing.loadError", "Unable to load billing data.")}</div>`;
+        }
     }
 }
 
@@ -7556,7 +8516,7 @@ async function openBulkRegistrationModal(selectedCustomers, data) {
     const sessions = await apiGet(`/api/admin/calendar?from=${from}&to=${to}`);
 
     const sessionOptions = (sessions || []).map(item => {
-        const start = new Date(item.startUtc);
+        const start = parseUtcDate(item.startUtc) || new Date(item.startUtc);
         const label = `${item.seriesTitle} - ${formatMonthDay(start, timeZone)} ${formatTimeOnly(start, timeZone)}`;
         return { id: item.id, label };
     });
@@ -7745,6 +8705,7 @@ function openCustomerModal(customer, data, options = {}) {
         idNumber: customer?.idNumber || "",
         genderOptions,
         dateOfBirthValue: customer?.dateOfBirth ? normalizeDateInputValue(customer.dateOfBirth) : "",
+        ageLabel: formatAgeLabel(customer?.dateOfBirth),
         city: customer?.city || "",
         address: customer?.address || "",
         occupation: customer?.occupation || "",
@@ -8901,6 +9862,368 @@ function openPlanModal(plan, planCategories = []) {
     }
 }
 
+function openBillingItemModal(item) {
+    const existing = document.getElementById("billing-item-modal");
+    if (existing) {
+        clearModalEscape();
+        existing.remove();
+    }
+
+    const isEdit = Boolean(item?.id);
+    const typeOptions = [
+        { value: "Membership", label: formatBillingItemType("Membership"), selected: item?.type === "Membership" },
+        { value: "ClassPass", label: formatBillingItemType("ClassPass"), selected: item?.type === "ClassPass" },
+        { value: "DropIn", label: formatBillingItemType("DropIn"), selected: item?.type === "DropIn" },
+        { value: "Workshop", label: formatBillingItemType("Workshop"), selected: item?.type === "Workshop" },
+        { value: "Retail", label: formatBillingItemType("Retail"), selected: item?.type === "Retail" },
+        { value: "Fee", label: formatBillingItemType("Fee"), selected: item?.type === "Fee" },
+        { value: "Custom", label: formatBillingItemType("Custom"), selected: !item?.type || item?.type === "Custom" }
+    ];
+    const activeOptions = [
+        { value: "true", label: t("common.yes", "Yes"), selected: item?.active ?? true },
+        { value: "false", label: t("common.no", "No"), selected: item?.active === false }
+    ];
+    const modalMarkup = billingItemModalTemplate({
+        title: isEdit ? t("billing.itemEditTitle", "Edit item") : t("billing.itemAddTitle", "New item"),
+        subtitle: isEdit ? t("billing.itemEditSubtitle", "Update catalog details.") : t("billing.itemAddSubtitle", "Create a billable catalog item."),
+        saveLabel: isEdit ? t("common.saveChanges", "Save changes") : t("billing.newItem", "New item"),
+        id: item?.id || "",
+        name: item?.name || "",
+        price: toCurrencyUnits(item?.defaultPriceCents ?? 0),
+        typeOptions,
+        activeOptions
+    });
+
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = modalMarkup;
+    const overlay = wrapper.firstElementChild;
+    if (!overlay) return;
+    document.body.appendChild(overlay);
+
+    let cleanupEscape = () => {};
+    const closeModal = () => {
+        cleanupEscape();
+        overlay.remove();
+    };
+    cleanupEscape = bindModalEscape(closeModal);
+    bindModalBackdrop(overlay);
+
+    const closeBtn = overlay.querySelector("#close-billing-item");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", closeModal);
+    }
+
+    const saveBtn = overlay.querySelector("#save-billing-item");
+    if (saveBtn) {
+        saveBtn.addEventListener("click", async () => {
+            const name = overlay.querySelector("[name=\"billingItemName\"]")?.value.trim() || "";
+            const type = overlay.querySelector("[name=\"billingItemType\"]")?.value || "Custom";
+            const priceValue = Number(overlay.querySelector("[name=\"billingItemPrice\"]")?.value || 0);
+            const active = overlay.querySelector("[name=\"billingItemActive\"]")?.value === "true";
+            if (!name) {
+                showToast(t("billing.nameRequired", "Name is required."), "error");
+                return;
+            }
+            const payload = {
+                name,
+                type,
+                defaultPriceCents: toCents(priceValue),
+                currency: "ILS",
+                active
+            };
+            try {
+                if (isEdit && item?.id) {
+                    await apiPut(`/api/admin/billing/items/${item.id}`, payload);
+                } else {
+                    await apiPost("/api/admin/billing/items", payload);
+                }
+                closeModal();
+                actor.send({ type: "REFRESH" });
+            } catch (error) {
+                showToast(error.message || t("billing.saveError", "Unable to save billing item."), "error");
+            }
+        });
+    }
+}
+
+function openBillingSubscriptionModal(data) {
+    const existing = document.getElementById("billing-subscription-modal");
+    if (existing) {
+        clearModalEscape();
+        existing.remove();
+    }
+
+    const customers = (data.customers || []).map(customer => ({
+        id: customer.id,
+        name: customer.fullName || customer.email || customer.phone || "-"
+    }));
+    if (!customers.length) {
+        showToast(t("billing.noCustomers", "Add a customer first."), "error");
+        return;
+    }
+
+    let items = (data.items || []).filter(item => String(item.type) === "Membership");
+    if (!items.length) {
+        items = data.items || [];
+    }
+    const itemOptions = items.map(item => ({
+        id: item.id,
+        name: item.name
+    }));
+    if (!itemOptions.length) {
+        showToast(t("billing.noItems", "Add a billable item first."), "error");
+        return;
+    }
+
+    const intervalOptions = [
+        { value: "Monthly", label: formatBillingInterval("Monthly"), selected: true },
+        { value: "Weekly", label: formatBillingInterval("Weekly"), selected: false }
+    ];
+    const startValue = normalizeDateInputValue(new Date());
+    const modalMarkup = billingSubscriptionModalTemplate({
+        title: t("billing.subscriptionAddTitle", "New subscription"),
+        subtitle: t("billing.subscriptionAddSubtitle", "Set up recurring billing."),
+        saveLabel: t("billing.newSubscription", "New subscription"),
+        customerOptions: customers,
+        itemOptions,
+        intervalOptions,
+        startValue,
+        anchorDay: "",
+        price: ""
+    });
+
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = modalMarkup;
+    const overlay = wrapper.firstElementChild;
+    if (!overlay) return;
+    document.body.appendChild(overlay);
+
+    let cleanupEscape = () => {};
+    const closeModal = () => {
+        cleanupEscape();
+        overlay.remove();
+    };
+    cleanupEscape = bindModalEscape(closeModal);
+    bindModalBackdrop(overlay);
+
+    const closeBtn = overlay.querySelector("#close-billing-subscription");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", closeModal);
+    }
+
+    const saveBtn = overlay.querySelector("#save-billing-subscription");
+    if (saveBtn) {
+        saveBtn.addEventListener("click", async () => {
+            const customerId = overlay.querySelector("[name=\"billingSubscriptionCustomer\"]")?.value || "";
+            const billableItemId = overlay.querySelector("[name=\"billingSubscriptionItem\"]")?.value || "";
+            const startDate = overlay.querySelector("[name=\"billingSubscriptionStart\"]")?.value || "";
+            const interval = overlay.querySelector("[name=\"billingSubscriptionInterval\"]")?.value || "Monthly";
+            const anchorDayValue = overlay.querySelector("[name=\"billingSubscriptionAnchor\"]")?.value || "";
+            const priceValue = overlay.querySelector("[name=\"billingSubscriptionPrice\"]")?.value || "";
+            if (!customerId || !billableItemId || !startDate) {
+                showToast(t("billing.subscriptionRequired", "Customer, plan, and start date are required."), "error");
+                return;
+            }
+            const anchorDay = Number(anchorDayValue);
+            const priceOverride = Number(priceValue);
+            const payload = {
+                customerId,
+                billableItemId,
+                startDate,
+                billingInterval: interval,
+                billingAnchorDay: Number.isFinite(anchorDay) ? anchorDay : 0,
+                priceOverrideCents: Number.isFinite(priceOverride) && priceOverride > 0 ? toCents(priceOverride) : null
+            };
+            try {
+                await apiPost("/api/admin/billing/subscriptions", payload);
+                closeModal();
+                actor.send({ type: "REFRESH" });
+            } catch (error) {
+                showToast(error.message || t("billing.saveError", "Unable to save subscription."), "error");
+            }
+        });
+    }
+}
+
+function openBillingChargeModal(data) {
+    const existing = document.getElementById("billing-charge-modal");
+    if (existing) {
+        clearModalEscape();
+        existing.remove();
+    }
+
+    const customers = (data.customers || []).map(customer => ({
+        id: customer.id,
+        name: customer.fullName || customer.email || customer.phone || "-"
+    }));
+    if (!customers.length) {
+        showToast(t("billing.noCustomers", "Add a customer first."), "error");
+        return;
+    }
+    const sourceOptions = [
+        { value: "manual", label: formatBillingSource("manual"), selected: true },
+        { value: "fee", label: formatBillingSource("fee"), selected: false },
+        { value: "session_registration", label: formatBillingSource("session_registration"), selected: false },
+        { value: "workshop_registration", label: formatBillingSource("workshop_registration"), selected: false }
+    ];
+    const modalMarkup = billingChargeModalTemplate({
+        title: t("billing.chargeAddTitle", "New charge"),
+        subtitle: t("billing.chargeAddSubtitle", "Record a manual charge."),
+        saveLabel: t("billing.newCharge", "New charge"),
+        customerOptions: customers,
+        sourceOptions,
+        amount: "",
+        description: "",
+        dateValue: normalizeDateInputValue(new Date())
+    });
+
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = modalMarkup;
+    const overlay = wrapper.firstElementChild;
+    if (!overlay) return;
+    document.body.appendChild(overlay);
+
+    let cleanupEscape = () => {};
+    const closeModal = () => {
+        cleanupEscape();
+        overlay.remove();
+    };
+    cleanupEscape = bindModalEscape(closeModal);
+    bindModalBackdrop(overlay);
+
+    const closeBtn = overlay.querySelector("#close-billing-charge");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", closeModal);
+    }
+
+    const saveBtn = overlay.querySelector("#save-billing-charge");
+    if (saveBtn) {
+        saveBtn.addEventListener("click", async () => {
+            const customerId = overlay.querySelector("[name=\"billingChargeCustomer\"]")?.value || "";
+            const description = overlay.querySelector("[name=\"billingChargeDescription\"]")?.value.trim() || "";
+            const amountValue = Number(overlay.querySelector("[name=\"billingChargeAmount\"]")?.value || 0);
+            const chargeDate = overlay.querySelector("[name=\"billingChargeDate\"]")?.value || "";
+            const sourceType = overlay.querySelector("[name=\"billingChargeSource\"]")?.value || "manual";
+            if (!customerId || !description || !chargeDate || !Number.isFinite(amountValue) || amountValue === 0) {
+                showToast(t("billing.chargeRequired", "Customer, description, date, and amount are required."), "error");
+                return;
+            }
+            const payload = {
+                customerId,
+                description,
+                amountCents: toCents(amountValue),
+                chargeDate,
+                sourceType
+            };
+            try {
+                await apiPost("/api/admin/billing/charges", payload);
+                closeModal();
+                actor.send({ type: "REFRESH" });
+            } catch (error) {
+                showToast(error.message || t("billing.saveError", "Unable to save charge."), "error");
+            }
+        });
+    }
+}
+
+function openBillingAdjustModal(chargeId) {
+    const existing = document.getElementById("billing-adjust-modal");
+    if (existing) {
+        clearModalEscape();
+        existing.remove();
+    }
+
+    const modalMarkup = billingAdjustModalTemplate({
+        title: t("billing.adjustTitle", "Adjust charge"),
+        subtitle: t("billing.adjustSubtitle", "Create a credit adjustment."),
+    });
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = modalMarkup;
+    const overlay = wrapper.firstElementChild;
+    if (!overlay) return;
+    document.body.appendChild(overlay);
+
+    let cleanupEscape = () => {};
+    const closeModal = () => {
+        cleanupEscape();
+        overlay.remove();
+    };
+    cleanupEscape = bindModalEscape(closeModal);
+    bindModalBackdrop(overlay);
+
+    const closeBtn = overlay.querySelector("#close-billing-adjust");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", closeModal);
+    }
+
+    const saveBtn = overlay.querySelector("#save-billing-adjust");
+    if (saveBtn) {
+        saveBtn.addEventListener("click", async () => {
+            const amountValue = Number(overlay.querySelector("[name=\"billingAdjustAmount\"]")?.value || 0);
+            const reason = overlay.querySelector("[name=\"billingAdjustReason\"]")?.value.trim() || "";
+            if (!Number.isFinite(amountValue) || amountValue === 0) {
+                showToast(t("billing.adjustAmountRequired", "Enter an adjustment amount."), "error");
+                return;
+            }
+            try {
+                await apiPost(`/api/admin/billing/charges/${chargeId}/adjust`, {
+                    amountCents: toCents(amountValue),
+                    reason
+                });
+                closeModal();
+                actor.send({ type: "REFRESH" });
+            } catch (error) {
+                showToast(error.message || t("billing.adjustError", "Unable to adjust charge."), "error");
+            }
+        });
+    }
+}
+
+function openBillingVoidModal(chargeId) {
+    const existing = document.getElementById("billing-void-modal");
+    if (existing) {
+        clearModalEscape();
+        existing.remove();
+    }
+
+    const modalMarkup = billingVoidModalTemplate({
+        title: t("billing.voidTitle", "Void charge"),
+        subtitle: t("billing.voidSubtitle", "Provide a reason for the void."),
+    });
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = modalMarkup;
+    const overlay = wrapper.firstElementChild;
+    if (!overlay) return;
+    document.body.appendChild(overlay);
+
+    let cleanupEscape = () => {};
+    const closeModal = () => {
+        cleanupEscape();
+        overlay.remove();
+    };
+    cleanupEscape = bindModalEscape(closeModal);
+    bindModalBackdrop(overlay);
+
+    const closeBtn = overlay.querySelector("#close-billing-void");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", closeModal);
+    }
+
+    const saveBtn = overlay.querySelector("#save-billing-void");
+    if (saveBtn) {
+        saveBtn.addEventListener("click", async () => {
+            const reason = overlay.querySelector("[name=\"billingVoidReason\"]")?.value.trim() || "";
+            try {
+                await apiPost(`/api/admin/billing/charges/${chargeId}/void`, { reason });
+                closeModal();
+                actor.send({ type: "REFRESH" });
+            } catch (error) {
+                showToast(error.message || t("billing.voidError", "Unable to void charge."), "error");
+            }
+        });
+    }
+}
+
 function openSeriesModal(series, data) {
     const existing = document.getElementById("series-modal");
     if (existing) {
@@ -8949,8 +10272,9 @@ function openSeriesModal(series, data) {
     }));
     const titleSuggestions = buildTitleSuggestions(data);
     const titleSuggestionId = createTitleSuggestionId("series-title");
-    const generateUntilValue = series?.generateUntil
-        ? normalizeDateInputValue(series.generateUntil)
+    const generateUntilDate = series?.generateUntil ? new Date(series.generateUntil) : null;
+    const generateUntilValue = generateUntilDate && generateUntilDate.getFullYear() > 1900
+        ? normalizeDateInputValue(generateUntilDate)
         : normalizeDateInputValue(addDays(new Date(), 365));
     const modalMarkup = seriesModalTemplate({
         modalTitle: isEdit ? t("series.editTitle", "Edit series") : t("series.newTitle", "New series"),
@@ -9309,6 +10633,50 @@ function formatPlanType(value) {
     return value || "-";
 }
 
+function formatBillingItemType(value) {
+    if (value === "Membership") return t("billing.itemType.membership", "Membership");
+    if (value === "ClassPass") return t("billing.itemType.classPass", "Class pass");
+    if (value === "DropIn") return t("billing.itemType.dropIn", "Drop-in");
+    if (value === "Workshop") return t("billing.itemType.workshop", "Workshop");
+    if (value === "Retail") return t("billing.itemType.retail", "Retail");
+    if (value === "Fee") return t("billing.itemType.fee", "Fee");
+    if (value === "Custom") return t("billing.itemType.custom", "Custom");
+    return value || "-";
+}
+
+function formatBillingChargeStatus(value) {
+    if (value === "Draft") return t("billing.status.draft", "Draft");
+    if (value === "Posted") return t("billing.status.posted", "Posted");
+    if (value === "Voided") return t("billing.status.voided", "Voided");
+    return value || "-";
+}
+
+function formatBillingSubscriptionStatus(value) {
+    if (value === "Active") return t("billing.subscription.active", "Active");
+    if (value === "Paused") return t("billing.subscription.paused", "Paused");
+    if (value === "Cancelled") return t("billing.subscription.cancelled", "Cancelled");
+    if (value === "Ended") return t("billing.subscription.ended", "Ended");
+    return value || "-";
+}
+
+function formatBillingInterval(value) {
+    if (value === "Monthly") return t("billing.interval.monthly", "Monthly");
+    if (value === "Weekly") return t("billing.interval.weekly", "Weekly");
+    if (value === "Custom") return t("billing.interval.custom", "Custom");
+    return value || "-";
+}
+
+function formatBillingSource(value) {
+    if (value === "subscription") return t("billing.source.subscription", "Subscription");
+    if (value === "session_registration") return t("billing.source.session", "Session");
+    if (value === "workshop_registration") return t("billing.source.workshop", "Workshop");
+    if (value === "pos_sale") return t("billing.source.sale", "Sale");
+    if (value === "fee") return t("billing.source.fee", "Fee");
+    if (value === "adjustment") return t("billing.source.adjustment", "Adjustment");
+    if (value === "manual") return t("billing.source.manual", "Manual");
+    return value || "-";
+}
+
 function parsePlanCategoryIds(plan) {
     return parseGuidListJson(plan?.categoryIdsJson);
 }
@@ -9371,8 +10739,8 @@ function formatCustomerStatus(value) {
 
 function formatCustomerRegistrations(registrations) {
     return (registrations || []).map(reg => {
-        const start = reg.startUtc ? new Date(reg.startUtc) : null;
-        const end = reg.endUtc ? new Date(reg.endUtc) : null;
+        const start = reg.startUtc ? (parseUtcDate(reg.startUtc) || new Date(reg.startUtc)) : null;
+        const end = reg.endUtc ? (parseUtcDate(reg.endUtc) || new Date(reg.endUtc)) : null;
         const dateLabel = start ? formatDateDisplay(start) : "-";
         const timeLabel = start
             ? `${formatTimeOnly(start)}${end ? ` - ${formatTimeOnly(end)}` : ""}`
@@ -9408,6 +10776,169 @@ function formatAuditAction(value) {
     return value;
 }
 
+function translateAuditSummary(log) {
+    const summary = String(log?.summary || "").trim();
+    if (!summary) return "";
+    const patterns = [
+        {
+            regex: /^Created billing subscription for (.+)$/i,
+            template: t("audit.summary.createdSubscription", "Created billing subscription for {item}")
+        },
+        {
+            regex: /^Created charge for (.+)$/i,
+            template: t("audit.summary.createdCharge", "Created charge for {item}")
+        },
+        {
+            regex: /^Generated (\\d+) charges$/i,
+            template: t("audit.summary.generatedCharges", "Generated {count} charges")
+        },
+        {
+            regex: /^Imported customers \\(created: (\\d+), updated: (\\d+), skipped: (\\d+)\\)$/i,
+            template: t("audit.summary.importedCustomers", "Imported customers (created: {created}, updated: {updated}, skipped: {skipped})")
+        },
+        {
+            regex: /^Reset password for (.+)$/i,
+            template: t("audit.summary.resetPassword", "Reset password for {item}")
+        },
+        {
+            regex: /^Created customer (.+)$/i,
+            template: t("audit.summary.createdCustomer", "Created customer {item}")
+        },
+        {
+            regex: /^Updated customer (.+)$/i,
+            template: t("audit.summary.updatedCustomer", "Updated customer {item}")
+        },
+        {
+            regex: /^Created customer for guest (.+)$/i,
+            template: t("audit.summary.createdCustomerGuest", "Created customer for guest {item}")
+        },
+        {
+            regex: /^Created customer status (.+)$/i,
+            template: t("audit.summary.createdCustomerStatus", "Created customer status {item}")
+        },
+        {
+            regex: /^Updated customer status (.+)$/i,
+            template: t("audit.summary.updatedCustomerStatus", "Updated customer status {item}")
+        },
+        {
+            regex: /^Archived customer status (.+)$/i,
+            template: t("audit.summary.archivedCustomerStatus", "Archived customer status {item}")
+        },
+        {
+            regex: /^Created customer tag (.+)$/i,
+            template: t("audit.summary.createdCustomerTag", "Created customer tag {item}")
+        },
+        {
+            regex: /^Renamed customer tag (.+) to (.+)$/i,
+            template: t("audit.summary.renamedCustomerTag", "Renamed customer tag {from} to {to}")
+        },
+        {
+            regex: /^Deleted customer tag (.+)$/i,
+            template: t("audit.summary.deletedCustomerTag", "Deleted customer tag {item}")
+        },
+        {
+            regex: /^Uploaded attachment for customer (.+)$/i,
+            template: t("audit.summary.uploadedAttachmentCustomer", "Uploaded attachment for customer {item}")
+        },
+        {
+            regex: /^Uploaded attachment for user (.+)$/i,
+            template: t("audit.summary.uploadedAttachmentUser", "Uploaded attachment for user {item}")
+        },
+        {
+            regex: /^Added attachment (.+)$/i,
+            template: t("audit.summary.addedAttachment", "Added attachment {item}")
+        },
+        {
+            regex: /^Deleted attachment (.+)$/i,
+            template: t("audit.summary.deletedAttachment", "Deleted attachment {item}")
+        },
+        {
+            regex: /^Added activity for customer (.+)$/i,
+            template: t("audit.summary.activityCustomer", "Added activity for customer {item}")
+        },
+        {
+            regex: /^Recorded attendance for customer (.+)$/i,
+            template: t("audit.summary.recordedAttendance", "Recorded attendance for customer {item}")
+        },
+        {
+            regex: /^Removed attendance for customer (.+)$/i,
+            template: t("audit.summary.removedAttendance", "Removed attendance for customer {item}")
+        },
+        {
+            regex: /^Submitted health declaration for customer (.+)$/i,
+            template: t("audit.summary.submittedHealth", "Submitted health declaration for customer {item}")
+        },
+        {
+            regex: /^Removed registration$/i,
+            template: t("audit.summary.removedRegistration", "Removed registration")
+        },
+        {
+            regex: /^Cancelled booking$/i,
+            template: t("audit.summary.cancelledBooking", "Cancelled booking")
+        },
+        {
+            regex: /^Updated session details$/i,
+            template: t("audit.summary.updatedSession", "Updated session details")
+        },
+        {
+            regex: /^Deleted session$/i,
+            template: t("audit.summary.deletedSession", "Deleted session")
+        },
+        {
+            regex: /^Generated sessions for (.+)$/i,
+            template: t("audit.summary.generatedSessions", "Generated sessions for {item}")
+        },
+        {
+            regex: /^Created (.+)$/i,
+            template: t("audit.summary.created", "Created {item}")
+        },
+        {
+            regex: /^Updated (.+)$/i,
+            template: t("audit.summary.updated", "Updated {item}")
+        },
+        {
+            regex: /^Deleted (.+)$/i,
+            template: t("audit.summary.deleted", "Deleted {item}")
+        },
+        {
+            regex: /^Archived (.+)$/i,
+            template: t("audit.summary.archived", "Archived {item}")
+        },
+        {
+            regex: /^Generated (.+)$/i,
+            template: t("audit.summary.generated", "Generated {item}")
+        }
+    ];
+    for (const entry of patterns) {
+        const match = summary.match(entry.regex);
+        if (!match) continue;
+        let output = entry.template;
+        if (output.includes("{item}") && match[1]) {
+            output = output.replace("{item}", match[1]);
+        }
+        if (output.includes("{count}") && match[1]) {
+            output = output.replace("{count}", match[1]);
+        }
+        if (output.includes("{created}") && match[1]) {
+            output = output.replace("{created}", match[1]);
+        }
+        if (output.includes("{updated}") && match[2]) {
+            output = output.replace("{updated}", match[2]);
+        }
+        if (output.includes("{skipped}") && match[3]) {
+            output = output.replace("{skipped}", match[3]);
+        }
+        if (output.includes("{from}") && match[1]) {
+            output = output.replace("{from}", match[1]);
+        }
+        if (output.includes("{to}") && match[2]) {
+            output = output.replace("{to}", match[2]);
+        }
+        return output;
+    }
+    return summary;
+}
+
 function formatAuditEntity(value) {
     const normalized = String(value || "").trim();
     if (!normalized) return "";
@@ -9421,6 +10952,9 @@ function formatAuditEntity(value) {
         Instructor: t("audit.entity.instructor", "Instructor"),
         Room: t("audit.entity.room", "Room"),
         Plan: t("audit.entity.plan", "Plan"),
+        BillableItem: t("audit.entity.billableItem", "Billable item"),
+        BillingSubscription: t("audit.entity.billingSubscription", "Subscription"),
+        BillingCharge: t("audit.entity.billingCharge", "Charge"),
         Payment: t("audit.entity.payment", "Payment"),
         Membership: t("audit.entity.membership", "Membership"),
         HealthDeclaration: t("audit.entity.health", "Health waiver"),
@@ -9513,16 +11047,23 @@ function buildEventMap(items, timeZone) {
     const map = new Map();
     const now = new Date();
     items.forEach(item => {
-        const start = new Date(item.startUtc);
-        const end = item.endUtc ? new Date(item.endUtc) : null;
+        if (!item?.startUtc) {
+            return;
+        }
+        const start = parseUtcDate(item.startUtc) || new Date(item.startUtc);
+        if (Number.isNaN(start.getTime())) {
+            return;
+        }
+        const end = item.endUtc ? (parseUtcDate(item.endUtc) || new Date(item.endUtc)) : null;
+        const endSafe = end && !Number.isNaN(end.getTime()) ? end : null;
         const dateKey = getDateKeyInTimeZone(start, timeZone);
         const isHoliday = Boolean(item.isHoliday);
         const isBirthday = Boolean(item.isBirthday);
         const isAllDay = isHoliday || isBirthday;
-        const pastCheck = end ?? start;
+        const pastCheck = endSafe ?? start;
         const isPast = !isAllDay && pastCheck < now;
         const startTime = isAllDay ? "" : formatTimeOnly(start, timeZone);
-        const endTime = isAllDay || !end ? "" : formatTimeOnly(end, timeZone);
+        const endTime = isAllDay || !endSafe ? "" : formatTimeOnly(endSafe, timeZone);
         const timeRange = endTime ? `${startTime} - ${endTime}` : startTime;
         const statusLabel = normalizeStatus(item.status);
         const isCancelled = String(item.status) === "Cancelled" || item.status === 1;
@@ -9533,9 +11074,12 @@ function buildEventMap(items, timeZone) {
             : `${birthdayIcon} ${t("calendar.birthday", "Birthday")}`;
         const seriesTitle = isBirthday ? birthdayTitle : item.seriesTitle;
         const seriesIcon = isBirthday ? "" : item.seriesIcon;
-        const durationFallback = end ? Math.max(15, Math.round((end.getTime() - start.getTime()) / 60000)) : 60;
+        const durationFallback = endSafe ? Math.max(15, Math.round((endSafe.getTime() - start.getTime()) / 60000)) : 60;
         const durationMinutes = Number(item.durationMinutes || durationFallback || 60);
-        const eventStyle = `${item.seriesColor ? `--series-color: ${item.seriesColor};` : ""}--event-duration: ${durationMinutes};`;
+        const dayStartMinutes = 7 * 60;
+        const startMinutes = (start.getHours() * 60) + start.getMinutes();
+        const eventStartMinutes = isAllDay ? 0 : Math.max(0, startMinutes - dayStartMinutes);
+        const eventStyle = `${item.seriesColor ? `--series-color: ${item.seriesColor};` : ""}--event-duration: ${durationMinutes};--event-start: ${eventStartMinutes};`;
         const booked = Number(item.booked || 0);
         const capacity = Number(item.capacity || 0);
         const remoteBooked = Number(item.remoteBooked || 0);
@@ -9620,6 +11164,7 @@ function buildEventMap(items, timeZone) {
             remoteSummary: remoteCapacity > 0 && !isHoliday ? `${remoteBooked}/${remoteCapacity}` : "",
             price: formatPlainPrice(item.priceCents),
             eventStyle,
+            isAllDay,
             birthdayNames: [],
             birthdayCount: 0,
             hasBirthdayList: false,
@@ -9704,6 +11249,17 @@ function parseDateInput(value) {
     }
     const [year, month, day] = trimmed.split("-").map(part => Number(part));
     return new Date(year || 0, (month || 1) - 1, day || 1, 12);
+}
+
+function parseUtcDate(value) {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+    const raw = String(value).trim();
+    if (!raw) return null;
+    if (/[zZ]$/.test(raw) || /[+-]\d{2}:\d{2}$/.test(raw)) {
+        return new Date(raw);
+    }
+    return new Date(`${raw}Z`);
 }
 
 function formatDateKeyLocal(date) {
@@ -9925,11 +11481,29 @@ function bindCalendarInteractions(data, itemMap) {
     const calendarMeta = data.calendar || {};
     const timeZone = getLocalTimeZone();
     const dropZones = document.querySelectorAll(".calendar-dropzone[data-date]");
+    let dragTimeOffsetMinutes = 0;
+    let dragPointerOffsetPx = 0;
 
     document.querySelectorAll(".calendar-event[data-event]").forEach(card => {
         const id = card.getAttribute("data-event") || "";
         card.addEventListener("dragstart", (event) => {
             if (!event.dataTransfer || !id) return;
+            const item = itemMap.get(String(id));
+            if (item?.startUtc) {
+                const start = parseUtcDate(item.startUtc) || new Date(item.startUtc);
+                if (!Number.isNaN(start.getTime())) {
+                    const dayStartMinutes = 7 * 60;
+                    const startMinutes = (start.getHours() * 60) + start.getMinutes();
+                    dragTimeOffsetMinutes = Math.max(0, startMinutes - dayStartMinutes);
+                } else {
+                    dragTimeOffsetMinutes = 0;
+                }
+            } else {
+                dragTimeOffsetMinutes = 0;
+            }
+            const rect = card.getBoundingClientRect();
+            const pointerOffset = event.clientY - rect.top;
+            dragPointerOffsetPx = Number.isFinite(pointerOffset) ? Math.max(0, pointerOffset) : 0;
             event.dataTransfer.setData("text/plain", id);
             event.dataTransfer.effectAllowed = "move";
             card.classList.add("dragging");
@@ -9939,10 +11513,40 @@ function bindCalendarInteractions(data, itemMap) {
         });
     });
 
+    const resolveTimeGridMetrics = (zone) => {
+        const grid = zone.querySelector(".calendar-day-events, .calendar-events");
+        if (!grid) return null;
+        const styles = getComputedStyle(grid);
+        const topGap = parseFloat(styles.getPropertyValue("--hour-top-gap")) || 0;
+        const hourCount = parseFloat(styles.getPropertyValue("--hour-count")) || 0;
+        let rowHeight = parseFloat(styles.getPropertyValue("--hour-row-height")) || 64;
+        let gridTop = grid.getBoundingClientRect().top + topGap;
+        const timeGrid = zone.closest(".calendar-time-grid");
+        const hoursColumn = timeGrid?.querySelector(".calendar-hours");
+        const hourCells = hoursColumn?.querySelectorAll(".calendar-hour") || [];
+        if (hourCells.length >= 2) {
+            const firstRect = hourCells[0].getBoundingClientRect();
+            const secondRect = hourCells[1].getBoundingClientRect();
+            const measured = secondRect.top - firstRect.top;
+            if (Number.isFinite(measured) && measured > 0) {
+                rowHeight = measured;
+            }
+        }
+        return { grid, rowHeight, topGap, hourCount, gridTop };
+    };
+
     dropZones.forEach(zone => {
         zone.addEventListener("dragover", (event) => {
             event.preventDefault();
             zone.classList.add("drag-over");
+            const isTimeGrid = Boolean(zone.closest(".calendar-time-grid"));
+            const metrics = isTimeGrid ? resolveTimeGridMetrics(zone) : null;
+            if (!metrics) return;
+            let offsetY = event.clientY - metrics.gridTop - dragPointerOffsetPx;
+            if (!Number.isFinite(offsetY)) offsetY = 0;
+            offsetY = Math.max(0, offsetY);
+            const minutesFromStart = (offsetY / metrics.rowHeight) * 60;
+            const snapped = Math.round(minutesFromStart / 30) * 30;
         });
         zone.addEventListener("dragleave", () => {
             zone.classList.remove("drag-over");
@@ -9955,10 +11559,56 @@ function bindCalendarInteractions(data, itemMap) {
             if (!eventId || !dateKey) return;
             const item = itemMap.get(String(eventId));
             if (!item || item.isHoliday || item.isBirthday) return;
-            const currentKey = getDateKeyInTimeZone(new Date(item.startUtc), timeZone);
-            if (currentKey === dateKey) return;
+            const currentStart = parseUtcDate(item.startUtc) || new Date(item.startUtc);
+            const currentKey = getDateKeyInTimeZone(currentStart, timeZone);
+            const isTimeGrid = Boolean(zone.closest(".calendar-time-grid"));
+            const metrics = isTimeGrid ? resolveTimeGridMetrics(zone) : null;
+            let debugOffsetY = null;
+            let debugRowHeight = null;
+            let debugGridTop = null;
+            let targetStartMinutes = null;
+            if (metrics) {
+                let offsetY = event.clientY - metrics.gridTop - dragPointerOffsetPx;
+                if (!Number.isFinite(offsetY)) offsetY = 0;
+                offsetY = Math.max(0, offsetY);
+                debugOffsetY = offsetY;
+                debugRowHeight = metrics.rowHeight;
+                debugGridTop = metrics.gridTop;
+                const durationMinutes = Number(item.durationMinutes || (item.endUtc
+                    ? Math.max(15, Math.round(((parseUtcDate(item.endUtc) || new Date(item.endUtc)).getTime() - currentStart.getTime()) / 60000))
+                    : 60));
+                const maxMinutes = metrics.hourCount > 0
+                    ? Math.max(0, (metrics.hourCount * 60) - durationMinutes)
+                    : Math.max(0, 24 * 60 - durationMinutes);
+                const maxOffset = (maxMinutes / 60) * metrics.rowHeight;
+                const clampedOffset = Math.min(Math.max(0, offsetY), maxOffset);
+                const minutesFromStart = (clampedOffset / metrics.rowHeight) * 60;
+                const snapped = Math.round(minutesFromStart / 30) * 30;
+                const clamped = Math.min(Math.max(0, snapped), maxMinutes);
+                targetStartMinutes = Math.round(clamped / 30) * 30;
+            }
+            if (currentKey === dateKey) {
+                if (targetStartMinutes === null) return;
+                const currentMinutes = currentStart.getHours() * 60 + currentStart.getMinutes();
+                const dayStartMinutes = 7 * 60;
+                if (currentMinutes === dayStartMinutes + targetStartMinutes) return;
+            }
             try {
-                await moveEventInstance(item, dateKey);
+                const effectiveStartMinutes = (targetStartMinutes === null || targetStartMinutes === 0)
+                    ? dragTimeOffsetMinutes
+                    : targetStartMinutes;
+                console.log("[calendar] drop", {
+                    eventId,
+                    dateKey,
+                    isTimeGrid,
+                    targetStartMinutes,
+                    effectiveStartMinutes,
+                    dragTimeOffsetMinutes,
+                    offsetY: debugOffsetY,
+                    rowHeight: debugRowHeight,
+                    gridTop: debugGridTop
+                });
+                await moveEventInstance(item, dateKey, effectiveStartMinutes);
                 actor.send({ type: "REFRESH" });
             } catch (error) {
                 showToast(error.message || t("session.moveError", "Unable to move session."), "error");
@@ -9973,17 +11623,26 @@ function bindCalendarInteractions(data, itemMap) {
     });
 }
 
-async function moveEventInstance(item, dateKey) {
-    const start = new Date(item.startUtc);
-    const end = item.endUtc ? new Date(item.endUtc) : null;
-    const durationMs = end ? end.getTime() - start.getTime() : null;
+async function moveEventInstance(item, dateKey, startMinutesOverride) {
+    const start = parseUtcDate(item.startUtc) || new Date(item.startUtc);
+    const end = item.endUtc ? (parseUtcDate(item.endUtc) || new Date(item.endUtc)) : null;
+    const durationMinutes = Number(item.durationMinutes || (end ? Math.max(15, Math.round((end.getTime() - start.getTime()) / 60000)) : 60));
+    const durationMs = durationMinutes ? durationMinutes * 60000 : null;
     const targetDate = parseDateInput(dateKey);
+    const dayStartMinutes = 7 * 60;
+    const originalMinutes = start.getHours() * 60 + start.getMinutes();
+    const targetMinutes = Number.isFinite(startMinutesOverride)
+        ? dayStartMinutes + Number(startMinutesOverride)
+        : originalMinutes;
+    const safeMinutes = Math.max(0, Math.min(23 * 60 + 59, targetMinutes));
+    const targetHours = Math.floor(safeMinutes / 60);
+    const targetMinutesOnly = safeMinutes % 60;
     const movedStart = new Date(
         targetDate.getFullYear(),
         targetDate.getMonth(),
         targetDate.getDate(),
-        start.getHours(),
-        start.getMinutes(),
+        targetHours,
+        targetMinutesOnly,
         start.getSeconds(),
         start.getMilliseconds()
     );
@@ -9999,7 +11658,7 @@ async function moveEventInstance(item, dateKey) {
 }
 
 function getDateKeyInTimeZone(value, timeZone) {
-    const date = value instanceof Date ? value : new Date(value);
+    const date = value instanceof Date ? value : (parseUtcDate(value) || new Date(value));
     return formatDateKeyLocal(date);
 }
 
@@ -10025,11 +11684,13 @@ function getLocaleFromSettings() {
 }
 
 function formatTimeOnly(date, timeZone) {
+    const value = date instanceof Date ? date : new Date(date);
+    if (!value || Number.isNaN(value.getTime())) return "";
     return new Intl.DateTimeFormat(getLocaleFromSettings(), {
         hour: "2-digit",
         minute: "2-digit",
         hourCycle: "h23"
-    }).format(date);
+    }).format(value);
 }
 
 function formatTimeInput(date, timeZone) {
@@ -10058,6 +11719,25 @@ function formatMonthYear(date, timeZone) {
     return `${month}/${date.getFullYear()}`;
 }
 
+function calculateAge(dateValue) {
+    if (!dateValue) return null;
+    const date = dateValue instanceof Date ? dateValue : parseDateInput(dateValue);
+    if (!date || Number.isNaN(date.getTime())) return null;
+    const today = new Date();
+    let age = today.getFullYear() - date.getFullYear();
+    const monthDiff = today.getMonth() - date.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < date.getDate())) {
+        age -= 1;
+    }
+    return age >= 0 ? age : null;
+}
+
+function formatAgeLabel(dateValue) {
+    const age = calculateAge(dateValue);
+    if (age === null || Number.isNaN(age)) return "";
+    return t("customer.ageLabel", "Age {age}").replace("{age}", String(age));
+}
+
 function formatHebrewDate(date) {
     return new Intl.DateTimeFormat("he-IL-u-ca-hebrew", {
         day: "numeric",
@@ -10081,15 +11761,157 @@ function getWeekdayNames(weekStartsOn) {
     return names.slice(weekStartsOn).concat(names.slice(0, weekStartsOn));
 }
 
+function bindBillingDelegates() {
+    if (billingHandlersBound) return;
+    document.addEventListener("click", async (event) => {
+        const snapshot = actor.getSnapshot();
+        const route = snapshot?.context?.route;
+        if (route !== "billing") return;
+        const data = snapshot?.context?.data || {};
+        const runBtn = event.target.closest("#billing-run");
+        if (runBtn) {
+            event.preventDefault();
+            try {
+                await apiPost("/api/admin/billing/run", {});
+                showToast(t("billing.runSuccess", "Billing run complete."), "success");
+                actor.send({ type: "REFRESH" });
+            } catch (error) {
+                showToast(error.message || t("billing.runError", "Unable to run billing."), "error");
+            }
+            return;
+        }
+        const exportBtn = event.target.closest("#billing-export");
+        if (exportBtn) {
+            event.preventDefault();
+            const fromValue = document.querySelector("[name=\"billingFrom\"]")?.value || "";
+            const toValue = document.querySelector("[name=\"billingTo\"]")?.value || "";
+            const params = new URLSearchParams();
+            if (fromValue) params.set("from", fromValue);
+            if (toValue) params.set("to", toValue);
+            const qs = params.toString();
+            window.location.href = `/api/admin/billing/charges/export${qs ? `?${qs}` : ""}`;
+            return;
+        }
+        const newChargeBtn = event.target.closest("#billing-new-charge");
+        if (newChargeBtn) {
+            event.preventDefault();
+            openBillingChargeModal(data);
+            return;
+        }
+        const newSubscriptionBtn = event.target.closest("#billing-new-subscription");
+        if (newSubscriptionBtn) {
+            event.preventDefault();
+            openBillingSubscriptionModal(data);
+            return;
+        }
+        const newItemBtn = event.target.closest("#billing-new-item");
+        if (newItemBtn) {
+            event.preventDefault();
+            openBillingItemModal(null);
+            return;
+        }
+        const applyBtn = event.target.closest("#billing-apply");
+        if (applyBtn) {
+            event.preventDefault();
+            const fromRaw = document.querySelector("[name=\"billingFrom\"]")?.value || "";
+            const toRaw = document.querySelector("[name=\"billingTo\"]")?.value || "";
+            const statusValue = document.querySelector("[name=\"billingStatus\"]")?.value || "";
+            const customerValue = document.querySelector("[name=\"billingCustomer\"]")?.value || "";
+            const sourceValue = document.querySelector("[name=\"billingSource\"]")?.value || "";
+            const params = new URLSearchParams();
+            if (fromRaw) params.set("from", fromRaw);
+            if (toRaw) params.set("to", toRaw);
+            if (statusValue) params.set("status", statusValue);
+            if (customerValue) params.set("customerId", customerValue);
+            if (sourceValue) params.set("sourceType", sourceValue);
+            const query = params.toString();
+            window.location.hash = `#/billing${query ? `?${query}` : ""}`;
+            return;
+        }
+        const itemEditBtn = event.target.closest("[data-item-edit]");
+        if (itemEditBtn) {
+            event.preventDefault();
+            const id = itemEditBtn.getAttribute("data-item-edit");
+            const item = (data.items || []).find(entry => String(entry.id) === String(id));
+            if (item) {
+                openBillingItemModal(item);
+            }
+            return;
+        }
+        const adjustBtn = event.target.closest("[data-charge-adjust]");
+        if (adjustBtn) {
+            event.preventDefault();
+            const id = adjustBtn.getAttribute("data-charge-adjust");
+            if (id) openBillingAdjustModal(id);
+            return;
+        }
+        const voidBtn = event.target.closest("[data-charge-void]");
+        if (voidBtn) {
+            event.preventDefault();
+            const id = voidBtn.getAttribute("data-charge-void");
+            if (id) openBillingVoidModal(id);
+            return;
+        }
+        const pauseBtn = event.target.closest("[data-subscription-pause]");
+        if (pauseBtn) {
+            event.preventDefault();
+            const id = pauseBtn.getAttribute("data-subscription-pause");
+            if (!id) return;
+            try {
+                await apiPost(`/api/admin/billing/subscriptions/${id}/pause`, {});
+                actor.send({ type: "REFRESH" });
+            } catch (error) {
+                showToast(error.message || t("billing.pauseError", "Unable to pause subscription."), "error");
+            }
+            return;
+        }
+        const resumeBtn = event.target.closest("[data-subscription-resume]");
+        if (resumeBtn) {
+            event.preventDefault();
+            const id = resumeBtn.getAttribute("data-subscription-resume");
+            if (!id) return;
+            try {
+                await apiPost(`/api/admin/billing/subscriptions/${id}/resume`, {});
+                actor.send({ type: "REFRESH" });
+            } catch (error) {
+                showToast(error.message || t("billing.resumeError", "Unable to resume subscription."), "error");
+            }
+            return;
+        }
+        const cancelBtn = event.target.closest("[data-subscription-cancel]");
+        if (cancelBtn) {
+            event.preventDefault();
+            const id = cancelBtn.getAttribute("data-subscription-cancel");
+            if (!id) return;
+            openConfirmModal({
+                title: t("billing.cancelTitle", "Cancel subscription?"),
+                message: t("billing.cancelMessage", "This will stop future billing."),
+                confirmLabel: t("billing.cancel", "Cancel"),
+                cancelLabel: t("common.cancel", "Cancel"),
+                onConfirm: async () => {
+                    try {
+                        await apiPost(`/api/admin/billing/subscriptions/${id}/cancel`, {});
+                        actor.send({ type: "REFRESH" });
+                    } catch (error) {
+                        showToast(error.message || t("billing.cancelError", "Unable to cancel subscription."), "error");
+                    }
+                }
+            });
+        }
+    });
+    billingHandlersBound = true;
+}
+
 actor.subscribe((state) => {
     debugLog("state", { value: state.value, route: state.context.route });
     render(state);
 });
 
 ensureGlobalEscapeHandler();
+bindBillingDelegates();
 actor.start();
 
-const adminRoutes = new Set(["calendar", "events", "rooms", "plans", "customers", "customer", "users", "guests", "reports", "payroll", "audit", "settings"]);
+const adminRoutes = new Set(["calendar", "events", "rooms", "plans", "customers", "customer", "users", "guests", "reports", "payroll", "billing", "invoices", "audit", "settings"]);
 
 function getRouteParam(route, index = 1) {
     const hash = window.location.hash || `#/${route}`;

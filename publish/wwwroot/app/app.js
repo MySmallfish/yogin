@@ -248,19 +248,43 @@ const scheduleTemplate = compileTemplate("schedule", `
 `);
 
 const eventTemplate = compileTemplate("event", `
-  <div class="event-layout">
-    <div class="card">
+  <div class="event-layout" style="{{#if seriesColor}}--event-accent: {{seriesColor}};{{/if}}">
+    <section class="card event-card event-details">
       <div class="event-header">
-        <h3>{{seriesTitle}}</h3>
+        <div class="event-title-block">
+          <div class="event-title-row">
+            {{#if seriesIcon}}<span class="event-icon" aria-hidden="true">{{seriesIcon}}</span>{{/if}}
+            <h2>{{seriesTitle}}</h2>
+          </div>
+          <div class="event-time">{{start}}</div>
+        </div>
         <span class="pill {{statusClass}}">{{statusLabel}}</span>
       </div>
-      <div class="meta">{{start}} - {{roomName}}</div>
-      <div class="meta">{{description}}</div>
-      <div class="meta">{{t "schedule.instructor" "Instructor"}}: {{instructorName}}</div>
-      <div class="meta">{{availability}}</div>
-      <div class="meta">{{price}}</div>
-    </div>
-    <div class="card">
+      <div class="event-highlight">
+        <div class="event-availability">{{availability}}</div>
+        <div class="event-price">{{price}}</div>
+      </div>
+      <div class="event-meta-grid">
+        <div class="event-meta-item">
+          <span class="event-meta-label">{{t "event.room" "Room"}}</span>
+          <span class="event-meta-value">{{roomName}}</span>
+        </div>
+        <div class="event-meta-item">
+          <span class="event-meta-label">{{t "event.instructor" "Instructor"}}</span>
+          <span class="event-meta-value">{{instructorName}}</span>
+        </div>
+        {{#if hasRemote}}
+          <div class="event-meta-item">
+            <span class="event-meta-label">{{t "event.remote" "Remote"}}</span>
+            <span class="event-meta-value">{{t "event.remoteAvailable" "Zoom available"}}</span>
+          </div>
+        {{/if}}
+      </div>
+      {{#if description}}
+        <div class="event-description">{{description}}</div>
+      {{/if}}
+    </section>
+    <section class="card event-card event-booking">
       <h3>{{t "event.book.title" "Book your spot"}}</h3>
       {{#if error}}
         <div class="notice">{{error}}</div>
@@ -308,7 +332,7 @@ const eventTemplate = compileTemplate("event", `
           </div>
         </div>
       {{/if}}
-    </div>
+    </section>
   </div>
 `);
 
@@ -785,7 +809,14 @@ const appMachine = createMachine({
                 }
                 case "event": {
                     const event = await apiGet(`/api/public/studios/${input.studioSlug}/event-instances/${input.params.id}`);
-                    const memberships = await apiGet("/api/app/me/memberships");
+                    let memberships = [];
+                    try {
+                        memberships = await apiGet("/api/app/me/memberships");
+                    } catch (error) {
+                        if (error?.status && error.status !== 401 && error.status !== 403) {
+                            throw error;
+                        }
+                    }
                     const plans = await apiGet(`/api/public/studios/${input.studioSlug}/plans`);
                     return { event, memberships, plans };
                 }

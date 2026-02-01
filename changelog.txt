@@ -77,3 +77,4 @@
 2026-02-01 01:33  Treat UTC strings without timezone as UTC, update hover snap to 30 minutes, and use UTC parsing for calendar dates.
 2026-02-01 01:52  Snap drag/drop based on item top (subtract pointer offset) so drops align to card top.
 2026-02-01 02:10  Add half-hour grid lines, unify secondary button styling via CSS vars, and add STYLEGUIDE.md.
+2026-02-01 03:18  Add billing run guard/confirmation with default current-month range, require cancel reason, translate overlap/voided charge, add waiver status tags, update button radius and day header accent, and support billing run range on backend.
