@@ -6552,8 +6552,8 @@ function resetUserForm() {
 }
 
 function getSessionTiming(item, timeZone) {
-    const start = new Date(item.startUtc);
-    const end = item.endUtc ? new Date(item.endUtc) : null;
+    const start = parseUtcDate(item.startUtc) || new Date(item.startUtc);
+    const end = item.endUtc ? (parseUtcDate(item.endUtc) || new Date(item.endUtc)) : null;
     const timeRange = end ? `${formatTimeOnly(start, timeZone)} - ${formatTimeOnly(end, timeZone)}` : formatTimeOnly(start, timeZone);
     const startLabel = formatFullDate(start, timeZone);
     const sessionDateKey = getDateKeyInTimeZone(start, timeZone);
@@ -6904,8 +6904,8 @@ async function openCalendarEventModal(item, data, options = {}) {
             const nextEndLocal = new Date(nextStartLocal.getTime() + durationValue * 60000);
             const nextStartUtc = nextStartLocal.toISOString();
             const nextEndUtc = nextEndLocal.toISOString();
-            const currentStartUtc = new Date(item.startUtc).getTime();
-            const currentEndUtc = item.endUtc ? new Date(item.endUtc).getTime() : currentStartUtc;
+            const currentStartUtc = (parseUtcDate(item.startUtc) || new Date(item.startUtc)).getTime();
+            const currentEndUtc = item.endUtc ? (parseUtcDate(item.endUtc) || new Date(item.endUtc)).getTime() : currentStartUtc;
             const startChanged = Math.abs(nextStartLocal.getTime() - currentStartUtc) > 1000;
             const endChanged = Math.abs(nextEndLocal.getTime() - currentEndUtc) > 1000;
 
@@ -7476,8 +7476,8 @@ async function duplicateSessionFromItem(item, data) {
         }
     }
 
-    const start = new Date(item.startUtc);
-    const end = item.endUtc ? new Date(item.endUtc) : null;
+    const start = parseUtcDate(item.startUtc) || new Date(item.startUtc);
+    const end = item.endUtc ? (parseUtcDate(item.endUtc) || new Date(item.endUtc)) : null;
     const durationMinutes = end
         ? Math.max(1, Math.round((end.getTime() - start.getTime()) / 60000))
         : (series?.durationMinutes || 60);
@@ -8516,7 +8516,7 @@ async function openBulkRegistrationModal(selectedCustomers, data) {
     const sessions = await apiGet(`/api/admin/calendar?from=${from}&to=${to}`);
 
     const sessionOptions = (sessions || []).map(item => {
-        const start = new Date(item.startUtc);
+        const start = parseUtcDate(item.startUtc) || new Date(item.startUtc);
         const label = `${item.seriesTitle} - ${formatMonthDay(start, timeZone)} ${formatTimeOnly(start, timeZone)}`;
         return { id: item.id, label };
     });
@@ -10739,8 +10739,8 @@ function formatCustomerStatus(value) {
 
 function formatCustomerRegistrations(registrations) {
     return (registrations || []).map(reg => {
-        const start = reg.startUtc ? new Date(reg.startUtc) : null;
-        const end = reg.endUtc ? new Date(reg.endUtc) : null;
+        const start = reg.startUtc ? (parseUtcDate(reg.startUtc) || new Date(reg.startUtc)) : null;
+        const end = reg.endUtc ? (parseUtcDate(reg.endUtc) || new Date(reg.endUtc)) : null;
         const dateLabel = start ? formatDateDisplay(start) : "-";
         const timeLabel = start
             ? `${formatTimeOnly(start)}${end ? ` - ${formatTimeOnly(end)}` : ""}`
@@ -11050,11 +11050,11 @@ function buildEventMap(items, timeZone) {
         if (!item?.startUtc) {
             return;
         }
-        const start = new Date(item.startUtc);
+        const start = parseUtcDate(item.startUtc) || new Date(item.startUtc);
         if (Number.isNaN(start.getTime())) {
             return;
         }
-        const end = item.endUtc ? new Date(item.endUtc) : null;
+        const end = item.endUtc ? (parseUtcDate(item.endUtc) || new Date(item.endUtc)) : null;
         const endSafe = end && !Number.isNaN(end.getTime()) ? end : null;
         const dateKey = getDateKeyInTimeZone(start, timeZone);
         const isHoliday = Boolean(item.isHoliday);
@@ -11249,6 +11249,17 @@ function parseDateInput(value) {
     }
     const [year, month, day] = trimmed.split("-").map(part => Number(part));
     return new Date(year || 0, (month || 1) - 1, day || 1, 12);
+}
+
+function parseUtcDate(value) {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+    const raw = String(value).trim();
+    if (!raw) return null;
+    if (/[zZ]$/.test(raw) || /[+-]\d{2}:\d{2}$/.test(raw)) {
+        return new Date(raw);
+    }
+    return new Date(`${raw}Z`);
 }
 
 function formatDateKeyLocal(date) {
@@ -11491,7 +11502,7 @@ function bindCalendarInteractions(data, itemMap) {
             if (!event.dataTransfer || !id) return;
             const item = itemMap.get(String(id));
             if (item?.startUtc) {
-                const start = new Date(item.startUtc);
+                const start = parseUtcDate(item.startUtc) || new Date(item.startUtc);
                 if (!Number.isNaN(start.getTime())) {
                     const dayStartMinutes = 7 * 60;
                     const startMinutes = (start.getHours() * 60) + start.getMinutes();
@@ -11545,7 +11556,7 @@ function bindCalendarInteractions(data, itemMap) {
             if (!Number.isFinite(offsetY)) offsetY = 0;
             offsetY = Math.max(0, offsetY);
             const minutesFromStart = (offsetY / metrics.rowHeight) * 60;
-            const snapped = Math.round(minutesFromStart / 15) * 15;
+            const snapped = Math.round(minutesFromStart / 30) * 30;
             const absoluteMinutes = (7 * 60) + snapped;
             const hours = Math.floor(absoluteMinutes / 60) % 24;
             const mins = String(absoluteMinutes % 60).padStart(2, "0");
@@ -11562,7 +11573,7 @@ function bindCalendarInteractions(data, itemMap) {
             if (!eventId || !dateKey) return;
             const item = itemMap.get(String(eventId));
             if (!item || item.isHoliday || item.isBirthday) return;
-            const currentStart = new Date(item.startUtc);
+            const currentStart = parseUtcDate(item.startUtc) || new Date(item.startUtc);
             const currentKey = getDateKeyInTimeZone(currentStart, timeZone);
             const isTimeGrid = Boolean(zone.closest(".calendar-time-grid"));
             const metrics = isTimeGrid ? resolveTimeGridMetrics(zone) : null;
@@ -11578,7 +11589,7 @@ function bindCalendarInteractions(data, itemMap) {
                 debugRowHeight = metrics.rowHeight;
                 debugGridTop = metrics.gridTop;
                 const durationMinutes = Number(item.durationMinutes || (item.endUtc
-                    ? Math.max(15, Math.round((new Date(item.endUtc).getTime() - currentStart.getTime()) / 60000))
+                    ? Math.max(15, Math.round(((parseUtcDate(item.endUtc) || new Date(item.endUtc)).getTime() - currentStart.getTime()) / 60000))
                     : 60));
                 const maxMinutes = metrics.hourCount > 0
                     ? Math.max(0, (metrics.hourCount * 60) - durationMinutes)
@@ -11630,8 +11641,8 @@ function bindCalendarInteractions(data, itemMap) {
 }
 
 async function moveEventInstance(item, dateKey, startMinutesOverride) {
-    const start = new Date(item.startUtc);
-    const end = item.endUtc ? new Date(item.endUtc) : null;
+    const start = parseUtcDate(item.startUtc) || new Date(item.startUtc);
+    const end = item.endUtc ? (parseUtcDate(item.endUtc) || new Date(item.endUtc)) : null;
     const durationMinutes = Number(item.durationMinutes || (end ? Math.max(15, Math.round((end.getTime() - start.getTime()) / 60000)) : 60));
     const durationMs = durationMinutes ? durationMinutes * 60000 : null;
     const targetDate = parseDateInput(dateKey);
@@ -11664,7 +11675,7 @@ async function moveEventInstance(item, dateKey, startMinutesOverride) {
 }
 
 function getDateKeyInTimeZone(value, timeZone) {
-    const date = value instanceof Date ? value : new Date(value);
+    const date = value instanceof Date ? value : (parseUtcDate(value) || new Date(value));
     return formatDateKeyLocal(date);
 }
 
