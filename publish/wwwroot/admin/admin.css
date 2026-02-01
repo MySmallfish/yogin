@@ -16,6 +16,7 @@
   --btn-secondary-fg: var(--slate);
   --btn-secondary-border: var(--line);
   --btn-secondary-hover-bg: rgba(15, 23, 42, 0.04);
+  --button-radius: 999px;
   --line: rgba(15, 23, 42, 0.12);
   --surface: rgba(255, 255, 255, 0.86);
   --shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
@@ -773,7 +774,7 @@ select[multiple] {
 
 button {
   padding: 10px 16px;
-  border-radius: 12px;
+  border-radius: var(--button-radius);
   border: 1px solid transparent;
   background: var(--btn-primary-bg);
   color: var(--btn-primary-fg);
@@ -1164,6 +1165,16 @@ button .icon svg {
   flex: 1;
 }
 
+.billing-range-guard {
+  display: flex;
+  align-items: flex-end;
+}
+
+.billing-range-guard .checkbox {
+  font-size: 12px;
+  color: var(--muted);
+}
+
 .billing-section {
   margin-bottom: 24px;
 }
@@ -1223,6 +1234,18 @@ button .icon svg {
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.05);
   font-size: 12px;
+}
+
+.tag-accent {
+  background: rgba(var(--accent-rgb), 0.2);
+  color: var(--ink);
+  border: 1px solid rgba(var(--accent-rgb), 0.35);
+}
+
+.tag-danger {
+  background: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.35);
 }
 
 .calendar-toolbar {
@@ -1466,6 +1489,7 @@ button .icon svg {
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 12px;
+  color: var(--accent);
 }
 
 .calendar-day {

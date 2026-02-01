@@ -2702,7 +2702,7 @@ const customerDetailsTemplate = compileTemplate("customer-details", `
             <div><span class="label">{{t "customer.address" "Address"}}</span><span>{{address}}</span></div>
             <div><span class="label">{{t "customer.profession" "Profession"}}</span><span>{{occupation}}</span></div>
             <div><span class="label">{{t "customer.tags" "Tags"}}</span><span class="tags-inline">{{{tagsHtml}}}</span></div>
-            <div><span class="label">{{t "customer.signedHealth" "Signed health waiver"}}</span><span>{{signedHealthLabel}}</span></div>
+            <div><span class="label">{{t "customer.signedHealth" "Signed health waiver"}}</span><span>{{{signedHealthTag}}}</span></div>
           </div>
         </section>
         <section class="details-section">
@@ -3146,13 +3146,19 @@ const billingTemplate = compileTemplate("billing", `
       </button>
     </div>
     <div class="billing-filters">
+      <div class="billing-range-guard">
+        <label class="checkbox">
+          <input type="checkbox" id="billing-run-guard" {{#if runRangeEnabled}}checked{{/if}} />
+          <span>{{t "billing.runGuard" "Enable custom billing range"}}</span>
+        </label>
+      </div>
       <div>
         <label>{{t "billing.from" "From"}}</label>
-        <input type="date" class="date-input" name="billingFrom" value="{{fromValue}}" />
+        <input type="date" class="date-input" name="billingFrom" value="{{fromValue}}" {{#unless runRangeEnabled}}disabled{{/unless}} />
       </div>
       <div>
         <label>{{t "billing.to" "To"}}</label>
-        <input type="date" class="date-input" name="billingTo" value="{{toValue}}" />
+        <input type="date" class="date-input" name="billingTo" value="{{toValue}}" {{#unless runRangeEnabled}}disabled{{/unless}} />
       </div>
       <div>
         <label>{{t "billing.status" "Status"}}</label>
@@ -4182,7 +4188,9 @@ function render(state) {
         } else {
         const tagColorMap = buildTagColorMap(data.customerTags || []);
         const statusLabel = formatCustomerStatus(customer.isArchived ? "Archived" : (customer.statusName || "Active"));
-        const signedHealthLabel = customer.signedHealthView ? t("common.yes", "Yes") : t("common.no", "No");
+        const signedHealthTag = customer.signedHealthView
+            ? `<span class="tag tag-accent">${t("customer.waiverValid", "V - Valid Waiver")}</span>`
+            : `<span class="tag tag-danger">${t("customer.waiverMissing", "No Waiver")}</span>`;
         const registrations = formatCustomerRegistrations(details.registrations || []);
         const recentRegistrations = registrations.slice(0, 5);
         const ageLabel = formatAgeLabel(customer.dateOfBirth);
@@ -4215,7 +4223,7 @@ function render(state) {
         content = customerDetailsTemplate({
             ...customer,
             statusLabel,
-            signedHealthLabel,
+            signedHealthTag,
             dateOfBirth: customer.dateOfBirth ? formatDateDisplay(customer.dateOfBirth) : "",
             ageLabel,
             tagsHtml,
@@ -4337,6 +4345,10 @@ function render(state) {
 
     if (route === "billing") {
         const filters = data.billingFilters || { from: "", to: "", status: "", customerId: "", sourceType: "" };
+        const today = new Date();
+        const defaultFrom = normalizeDateInputValue(new Date(today.getFullYear(), today.getMonth(), 1));
+        const defaultTo = normalizeDateInputValue(today);
+        const runRangeEnabled = Boolean(filters.from || filters.to);
         const customers = (data.customers || []).map(customer => ({
             id: customer.id,
             name: customer.fullName || customer.email || customer.phone || "-"
@@ -4388,8 +4400,9 @@ function render(state) {
         }));
         const chargesCount = `${charges.length} ${t("billing.chargeCount", "charges")}`;
         content = billingTemplate({
-            fromValue: filters.from || "",
-            toValue: filters.to || "",
+            fromValue: runRangeEnabled ? (filters.from || "") : defaultFrom,
+            toValue: runRangeEnabled ? (filters.to || "") : defaultTo,
+            runRangeEnabled,
             customerOptions,
             statusOptions,
             sourceOptions,
@@ -4549,16 +4562,42 @@ function render(state) {
         const newSubscriptionBtn = document.getElementById("billing-new-subscription");
         const newItemBtn = document.getElementById("billing-new-item");
         const applyBtn = document.getElementById("billing-apply");
+        const runGuard = document.getElementById("billing-run-guard");
+
+        if (runGuard) {
+            syncBillingRangeGuard();
+            runGuard.addEventListener("change", syncBillingRangeGuard);
+        }
 
         if (runBtn) {
             runBtn.addEventListener("click", async () => {
-                try {
-                    await apiPost("/api/admin/billing/run", {});
-                    showToast(t("billing.runSuccess", "Billing run complete."), "success");
-                    actor.send({ type: "REFRESH" });
-                } catch (error) {
-                    showToast(error.message || t("billing.runError", "Unable to run billing."), "error");
+                const { useCustom, fromValue, toValue } = resolveBillingRunRange();
+                if (useCustom && (!fromValue || !toValue)) {
+                    showToast(t("billing.runRangeError", "Select a date range first."), "error");
+                    return;
                 }
+                const message = t("billing.runConfirmMessage", "Generate charges from {from} to {to}.")
+                    .replace("{from}", formatDateDisplay(fromValue))
+                    .replace("{to}", formatDateDisplay(toValue));
+                openConfirmModal({
+                    title: t("billing.runConfirmTitle", "Run billing?"),
+                    message,
+                    confirmLabel: t("billing.runConfirm", "Run billing"),
+                    cancelLabel: t("common.cancel", "Cancel"),
+                    onConfirm: async () => {
+                        try {
+                            const params = new URLSearchParams();
+                            if (fromValue) params.set("from", fromValue);
+                            if (toValue) params.set("to", toValue);
+                            const qs = params.toString();
+                            await apiPost(`/api/admin/billing/run${qs ? `?${qs}` : ""}`, {});
+                            showToast(t("billing.runSuccess", "Billing run complete."), "success");
+                            actor.send({ type: "REFRESH" });
+                        } catch (error) {
+                            showToast(error.message || t("billing.runError", "Unable to run billing."), "error");
+                        }
+                    }
+                });
             });
         }
 
@@ -6334,13 +6373,23 @@ function setFavicon(url) {
     link.href = url;
 }
 
+function normalizeToastMessage(message) {
+    const normalized = String(message || "").trim();
+    if (!normalized) return "";
+    if (normalized === "Session overlaps with another scheduled session.") {
+        return t("session.overlapError", "Session overlaps with another scheduled session.");
+    }
+    return message;
+}
+
 function showToast(message, type = "info") {
-    if (!message) return;
+    const normalizedMessage = normalizeToastMessage(message);
+    if (!normalizedMessage) return;
     const root = document.getElementById("toast-root");
     if (!root) return;
     const toast = document.createElement("div");
     toast.className = `toast toast-${type}`;
-    toast.textContent = message;
+    toast.textContent = normalizedMessage;
     root.appendChild(toast);
     requestAnimationFrame(() => {
         toast.classList.add("show");
@@ -10187,8 +10236,8 @@ function openBillingVoidModal(chargeId) {
     }
 
     const modalMarkup = billingVoidModalTemplate({
-        title: t("billing.voidTitle", "Void charge"),
-        subtitle: t("billing.voidSubtitle", "Provide a reason for the void."),
+        title: t("billing.voidTitle", "Cancel this Item"),
+        subtitle: t("billing.voidSubtitle", "Provide a reason for the cancellation."),
     });
     const wrapper = document.createElement("div");
     wrapper.innerHTML = modalMarkup;
@@ -10213,6 +10262,10 @@ function openBillingVoidModal(chargeId) {
     if (saveBtn) {
         saveBtn.addEventListener("click", async () => {
             const reason = overlay.querySelector("[name=\"billingVoidReason\"]")?.value.trim() || "";
+            if (!reason) {
+                showToast(t("billing.reasonRequired", "Reason is required."), "error");
+                return;
+            }
             try {
                 await apiPost(`/api/admin/billing/charges/${chargeId}/void`, { reason });
                 closeModal();
@@ -10793,6 +10846,10 @@ function translateAuditSummary(log) {
             template: t("audit.summary.generatedCharges", "Generated {count} charges")
         },
         {
+            regex: /^Voided charge$/i,
+            template: t("audit.summary.voidedCharge", "Voided charge")
+        },
+        {
             regex: /^Imported customers \\(created: (\\d+), updated: (\\d+), skipped: (\\d+)\\)$/i,
             template: t("audit.summary.importedCustomers", "Imported customers (created: {created}, updated: {updated}, skipped: {skipped})")
         },
@@ -11284,6 +11341,37 @@ function normalizeDateInputValue(value) {
     return formatDateKeyLocal(parsed);
 }
 
+function getBillingDefaultRange() {
+    const today = new Date();
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    return {
+        from: normalizeDateInputValue(startOfMonth),
+        to: normalizeDateInputValue(today)
+    };
+}
+
+function resolveBillingRunRange() {
+    const guard = document.getElementById("billing-run-guard");
+    const fromInput = document.querySelector("[name=\"billingFrom\"]");
+    const toInput = document.querySelector("[name=\"billingTo\"]");
+    const { from: defaultFrom, to: defaultTo } = getBillingDefaultRange();
+    const useCustom = Boolean(guard?.checked);
+    const fromValue = useCustom ? normalizeDateInputValue(fromInput?.value || "") : defaultFrom;
+    const toValue = useCustom ? normalizeDateInputValue(toInput?.value || "") : defaultTo;
+    return { useCustom, fromValue, toValue, defaultFrom, defaultTo, fromInput, toInput };
+}
+
+function syncBillingRangeGuard() {
+    const { useCustom, fromValue, toValue, defaultFrom, defaultTo, fromInput, toInput } = resolveBillingRunRange();
+    if (!fromInput || !toInput) return;
+    fromInput.disabled = !useCustom;
+    toInput.disabled = !useCustom;
+    if (!useCustom) {
+        fromInput.value = defaultFrom || fromValue;
+        toInput.value = defaultTo || toValue;
+    }
+}
+
 function normalizeTimeInputValue(value) {
     const trimmed = String(value || "").trim().toLowerCase();
     if (!trimmed) return "";
@@ -11771,13 +11859,33 @@ function bindBillingDelegates() {
         const runBtn = event.target.closest("#billing-run");
         if (runBtn) {
             event.preventDefault();
-            try {
-                await apiPost("/api/admin/billing/run", {});
-                showToast(t("billing.runSuccess", "Billing run complete."), "success");
-                actor.send({ type: "REFRESH" });
-            } catch (error) {
-                showToast(error.message || t("billing.runError", "Unable to run billing."), "error");
+            const { useCustom, fromValue, toValue } = resolveBillingRunRange();
+            if (useCustom && (!fromValue || !toValue)) {
+                showToast(t("billing.runRangeError", "Select a date range first."), "error");
+                return;
             }
+            const message = t("billing.runConfirmMessage", "Generate charges from {from} to {to}.")
+                .replace("{from}", formatDateDisplay(fromValue))
+                .replace("{to}", formatDateDisplay(toValue));
+            openConfirmModal({
+                title: t("billing.runConfirmTitle", "Run billing?"),
+                message,
+                confirmLabel: t("billing.runConfirm", "Run billing"),
+                cancelLabel: t("common.cancel", "Cancel"),
+                onConfirm: async () => {
+                    try {
+                        const params = new URLSearchParams();
+                        if (fromValue) params.set("from", fromValue);
+                        if (toValue) params.set("to", toValue);
+                        const qs = params.toString();
+                        await apiPost(`/api/admin/billing/run${qs ? `?${qs}` : ""}`, {});
+                        showToast(t("billing.runSuccess", "Billing run complete."), "success");
+                        actor.send({ type: "REFRESH" });
+                    } catch (error) {
+                        showToast(error.message || t("billing.runError", "Unable to run billing."), "error");
+                    }
+                }
+            });
             return;
         }
         const exportBtn = event.target.closest("#billing-export");
@@ -11897,6 +12005,14 @@ function bindBillingDelegates() {
                     }
                 }
             });
+        }
+    });
+    document.addEventListener("change", (event) => {
+        const snapshot = actor.getSnapshot();
+        const route = snapshot?.context?.route;
+        if (route !== "billing") return;
+        if (event.target.closest("#billing-run-guard")) {
+            syncBillingRangeGuard();
         }
     });
     billingHandlersBound = true;
