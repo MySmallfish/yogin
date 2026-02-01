@@ -78,3 +78,4 @@
 2026-02-01 01:52  Snap drag/drop based on item top (subtract pointer offset) so drops align to card top.
 2026-02-01 02:10  Add half-hour grid lines, unify secondary button styling via CSS vars, and add STYLEGUIDE.md.
 2026-02-01 03:18  Add billing run guard/confirmation with default current-month range, require cancel reason, translate overlap/voided charge, add waiver status tags, update button radius and day header accent, and support billing run range on backend.
+2026-02-01 03:29  Allow drag to 07:00, auto-collapse sidebar below 1800px, move Plans into Calendar group, and make Admin header open Reports.
