@@ -4098,7 +4098,7 @@ function render(state) {
             list: t("calendar.subtitle.list", "List view of sessions.")
         };
         subtitle = subtitleMapView[view] || subtitle;
-        content = calendarTemplate(viewState);
+        content = `${calendarTemplate(viewState)}<div id="drag-debug" class="drag-debug"></div>`;
     }
 
     if (route === "events") {
@@ -11557,6 +11557,12 @@ function bindCalendarInteractions(data, itemMap) {
                 const snapped = Math.round(minutesFromStart / 15) * 15;
                 const clamped = Math.min(Math.max(0, snapped), maxMinutes);
                 targetStartMinutes = Math.round(clamped / 15) * 15;
+                const debugEl = document.getElementById("drag-debug");
+                if (debugEl) {
+                    const hours = Math.floor((targetStartMinutes + (7 * 60)) / 60) % 24;
+                    const mins = String((targetStartMinutes + (7 * 60)) % 60).padStart(2, "0");
+                    debugEl.textContent = `drop=${String(hours).padStart(2, "0")}:${mins} offsetY=${Math.round(offsetY)} row=${Math.round(metrics.rowHeight)} top=${Math.round(metrics.gridTop)}`;
+                }
             }
             if (currentKey === dateKey) {
                 if (targetStartMinutes === null) return;
