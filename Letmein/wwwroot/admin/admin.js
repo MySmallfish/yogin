@@ -11503,7 +11503,6 @@ function bindCalendarInteractions(data, itemMap) {
             if (Number.isFinite(measured) && measured > 0) {
                 rowHeight = measured;
             }
-            gridTop = firstRect.top;
             const labelText = String(hourCells[0].textContent || "").trim();
             const match = labelText.match(/(\d{1,2})/);
             if (match) {
