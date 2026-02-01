@@ -1854,8 +1854,8 @@ button .icon svg {
     to bottom,
     transparent,
     transparent calc(var(--hour-row-height) - 1px),
-    rgba(15, 23, 42, 0.18) calc(var(--hour-row-height) - 1px),
-    rgba(15, 23, 42, 0.18) var(--hour-row-height)
+    rgba(15, 23, 42, 0.32) calc(var(--hour-row-height) - 1px),
+    rgba(15, 23, 42, 0.32) var(--hour-row-height)
   );
   background-position: 0 var(--hour-top-gap);
   background-repeat: repeat;

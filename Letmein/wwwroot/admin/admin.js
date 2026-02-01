@@ -11566,11 +11566,17 @@ function bindCalendarInteractions(data, itemMap) {
             const currentKey = getDateKeyInTimeZone(currentStart, timeZone);
             const isTimeGrid = Boolean(zone.closest(".calendar-time-grid"));
             const metrics = isTimeGrid ? resolveTimeGridMetrics(zone) : null;
+            let debugOffsetY = null;
+            let debugRowHeight = null;
+            let debugGridTop = null;
             let targetStartMinutes = null;
             if (metrics) {
                 let offsetY = event.clientY - metrics.gridTop;
                 if (!Number.isFinite(offsetY)) offsetY = 0;
                 offsetY = Math.max(0, offsetY);
+                debugOffsetY = offsetY;
+                debugRowHeight = metrics.rowHeight;
+                debugGridTop = metrics.gridTop;
                 const durationMinutes = Number(item.durationMinutes || (item.endUtc
                     ? Math.max(15, Math.round((new Date(item.endUtc).getTime() - currentStart.getTime()) / 60000))
                     : 60));
@@ -11580,9 +11586,9 @@ function bindCalendarInteractions(data, itemMap) {
                 const maxOffset = (maxMinutes / 60) * metrics.rowHeight;
                 const clampedOffset = Math.min(Math.max(0, offsetY), maxOffset);
                 const minutesFromStart = (clampedOffset / metrics.rowHeight) * 60;
-                const snapped = Math.round(minutesFromStart / 15) * 15;
+                const snapped = Math.round(minutesFromStart / 30) * 30;
                 const clamped = Math.min(Math.max(0, snapped), maxMinutes);
-                targetStartMinutes = Math.round(clamped / 15) * 15;
+                targetStartMinutes = Math.round(clamped / 30) * 30;
                 const hours = Math.floor((targetStartMinutes + (7 * 60)) / 60) % 24;
                 const mins = String((targetStartMinutes + (7 * 60)) % 60).padStart(2, "0");
                 showDragDebug(`drop=${String(hours).padStart(2, "0")}:${mins} offsetY=${Math.round(offsetY)} row=${Math.round(metrics.rowHeight)} top=${Math.round(metrics.gridTop)}`);
@@ -11597,6 +11603,17 @@ function bindCalendarInteractions(data, itemMap) {
                 const effectiveStartMinutes = (targetStartMinutes === null || targetStartMinutes === 0)
                     ? dragTimeOffsetMinutes
                     : targetStartMinutes;
+                console.log("[calendar] drop", {
+                    eventId,
+                    dateKey,
+                    isTimeGrid,
+                    targetStartMinutes,
+                    effectiveStartMinutes,
+                    dragTimeOffsetMinutes,
+                    offsetY: debugOffsetY,
+                    rowHeight: debugRowHeight,
+                    gridTop: debugGridTop
+                });
                 await moveEventInstance(item, dateKey, effectiveStartMinutes);
                 actor.send({ type: "REFRESH" });
             } catch (error) {
