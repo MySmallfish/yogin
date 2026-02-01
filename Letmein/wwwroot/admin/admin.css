@@ -10,6 +10,12 @@
   --accent-2: #f6d88a;
   --accent-rgb: 241, 194, 50;
   --accent-dark: #d19e18;
+  --btn-primary-bg: var(--accent);
+  --btn-primary-fg: #ffffff;
+  --btn-secondary-bg: #ffffff;
+  --btn-secondary-fg: var(--slate);
+  --btn-secondary-border: var(--line);
+  --btn-secondary-hover-bg: rgba(15, 23, 42, 0.04);
   --line: rgba(15, 23, 42, 0.12);
   --surface: rgba(255, 255, 255, 0.86);
   --shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
@@ -768,9 +774,9 @@ select[multiple] {
 button {
   padding: 10px 16px;
   border-radius: 12px;
-  border: none;
-  background: var(--accent);
-  color: white;
+  border: 1px solid transparent;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s ease;
@@ -780,8 +786,16 @@ button {
 }
 
 button.secondary {
-  background: #e2e8f0;
-  color: var(--slate);
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-fg);
+  border-color: var(--btn-secondary-border);
+}
+
+button.secondary:hover,
+.icon-button:hover,
+.nav-arrow:hover,
+.circle-button:hover {
+  background: var(--btn-secondary-hover-bg);
 }
 
 button.modal-close {
@@ -830,6 +844,13 @@ button.modal-close:hover {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--btn-secondary-border);
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-fg);
 }
 
 .icon-button .icon svg {
@@ -1421,19 +1442,6 @@ button .icon svg {
   gap: 12px;
 }
 
-.drag-debug {
-  position: fixed;
-  bottom: 16px;
-  right: 16px;
-  background: rgba(15, 23, 42, 0.85);
-  color: #fff;
-  padding: 8px 10px;
-  border-radius: 10px;
-  font-size: 12px;
-  z-index: 80;
-  pointer-events: none;
-  display: none;
-}
 
 .stat-card {
   background: white;
@@ -1850,14 +1858,11 @@ button .icon svg {
   gap: 0;
   position: relative;
   display: block;
-  background-image: repeating-linear-gradient(
-    to bottom,
-    transparent,
-    transparent calc(var(--hour-row-height) - 1px),
-    rgba(15, 23, 42, 0.32) calc(var(--hour-row-height) - 1px),
-    rgba(15, 23, 42, 0.32) var(--hour-row-height)
-  );
-  background-position: 0 var(--hour-top-gap);
+  background-image:
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.22) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.4) 1px, transparent 1px);
+  background-size: 100% calc(var(--hour-row-height) / 2), 100% var(--hour-row-height);
+  background-position: 0 var(--hour-top-gap), 0 var(--hour-top-gap);
   background-repeat: repeat;
 }
 
