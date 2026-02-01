@@ -11492,8 +11492,6 @@ function bindCalendarInteractions(data, itemMap) {
         const hourCount = parseFloat(styles.getPropertyValue("--hour-count")) || 0;
         let rowHeight = parseFloat(styles.getPropertyValue("--hour-row-height")) || 64;
         let gridTop = grid.getBoundingClientRect().top + topGap;
-        let baseHour = 7;
-        const hourMarks = [];
         const timeGrid = zone.closest(".calendar-time-grid");
         const hoursColumn = timeGrid?.querySelector(".calendar-hours");
         const hourCells = hoursColumn?.querySelectorAll(".calendar-hour") || [];
@@ -11504,26 +11502,8 @@ function bindCalendarInteractions(data, itemMap) {
             if (Number.isFinite(measured) && measured > 0) {
                 rowHeight = measured;
             }
-            gridTop = firstRect.top;
-            const labelText = String(hourCells[0].textContent || "").trim();
-            const match = labelText.match(/(\d{1,2})/);
-            if (match) {
-                const parsedHour = Number(match[1]);
-                if (Number.isFinite(parsedHour)) {
-                    baseHour = parsedHour;
-                }
-            }
         }
-        hourCells.forEach(cell => {
-            const label = String(cell.textContent || "").trim();
-            const match = label.match(/(\d{1,2})/);
-            if (!match) return;
-            const hour = Number(match[1]);
-            if (!Number.isFinite(hour)) return;
-            const rect = cell.getBoundingClientRect();
-            hourMarks.push({ top: rect.top, hour });
-        });
-        return { grid, rowHeight, topGap, hourCount, gridTop, baseHour, hourMarks };
+        return { grid, rowHeight, topGap, hourCount, gridTop };
     };
 
     dropZones.forEach(zone => {
@@ -11559,23 +11539,8 @@ function bindCalendarInteractions(data, itemMap) {
                     : Math.max(0, 24 * 60 - durationMinutes);
                 const maxOffset = (maxMinutes / 60) * metrics.rowHeight;
                 const clampedOffset = Math.min(Math.max(0, offsetY), maxOffset);
-                const marks = metrics.hourMarks || [];
-                let relativeMinutes = (clampedOffset / metrics.rowHeight) * 60;
-                if (marks.length) {
-                    const y = event.clientY;
-                    let idx = 0;
-                    while (idx < marks.length - 1 && y >= marks[idx + 1].top) {
-                        idx += 1;
-                    }
-                    const current = marks[idx];
-                    const next = marks[idx + 1] || { top: current.top + metrics.rowHeight, hour: current.hour + 1 };
-                    const span = Math.max(1, next.top - current.top);
-                    const fraction = Math.min(Math.max(0, (y - current.top) / span), 0.999);
-                    const absoluteMinutes = (current.hour * 60) + (fraction * 60);
-                    const dayStartMinutes = (marks[0].hour || 7) * 60;
-                    relativeMinutes = absoluteMinutes - dayStartMinutes;
-                }
-                const snapped = Math.round(relativeMinutes / 15) * 15;
+                const minutesFromStart = (clampedOffset / metrics.rowHeight) * 60;
+                const snapped = Math.round(minutesFromStart / 15) * 15;
                 const clamped = Math.min(Math.max(0, snapped), maxMinutes);
                 targetStartMinutes = Math.round(clamped / 15) * 15;
             }
