@@ -11482,6 +11482,7 @@ function bindCalendarInteractions(data, itemMap) {
     const timeZone = getLocalTimeZone();
     const dropZones = document.querySelectorAll(".calendar-dropzone[data-date]");
     let dragTimeOffsetMinutes = 0;
+    let dragPointerOffsetPx = 0;
     let dragDebugTimer = null;
     const debugEl = document.getElementById("drag-debug");
     const showDragDebug = (text) => {
@@ -11513,6 +11514,9 @@ function bindCalendarInteractions(data, itemMap) {
             } else {
                 dragTimeOffsetMinutes = 0;
             }
+            const rect = card.getBoundingClientRect();
+            const pointerOffset = event.clientY - rect.top;
+            dragPointerOffsetPx = Number.isFinite(pointerOffset) ? Math.max(0, pointerOffset) : 0;
             event.dataTransfer.setData("text/plain", id);
             event.dataTransfer.effectAllowed = "move";
             card.classList.add("dragging");
@@ -11552,7 +11556,7 @@ function bindCalendarInteractions(data, itemMap) {
             const isTimeGrid = Boolean(zone.closest(".calendar-time-grid"));
             const metrics = isTimeGrid ? resolveTimeGridMetrics(zone) : null;
             if (!metrics) return;
-            let offsetY = event.clientY - metrics.gridTop;
+            let offsetY = event.clientY - metrics.gridTop - dragPointerOffsetPx;
             if (!Number.isFinite(offsetY)) offsetY = 0;
             offsetY = Math.max(0, offsetY);
             const minutesFromStart = (offsetY / metrics.rowHeight) * 60;
@@ -11582,7 +11586,7 @@ function bindCalendarInteractions(data, itemMap) {
             let debugGridTop = null;
             let targetStartMinutes = null;
             if (metrics) {
-                let offsetY = event.clientY - metrics.gridTop;
+                let offsetY = event.clientY - metrics.gridTop - dragPointerOffsetPx;
                 if (!Number.isFinite(offsetY)) offsetY = 0;
                 offsetY = Math.max(0, offsetY);
                 debugOffsetY = offsetY;

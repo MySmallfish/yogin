@@ -75,3 +75,4 @@
 2026-02-01 01:07  Keep drag/drop debug overlay visible on hover/drop for easier diagnosis.
 2026-02-01 01:18  Snap drag/drop to 30-min increments, brighten calendar grid lines, and log drop diagnostics.
 2026-02-01 01:33  Treat UTC strings without timezone as UTC, update hover snap to 30 minutes, and use UTC parsing for calendar dates.
+2026-02-01 01:52  Snap drag/drop based on item top (subtract pointer offset) so drops align to card top.
