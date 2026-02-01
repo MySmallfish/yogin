@@ -11476,11 +11476,16 @@ function bindCalendarInteractions(data, itemMap) {
         const id = card.getAttribute("data-event") || "";
         card.addEventListener("dragstart", (event) => {
             if (!event.dataTransfer || !id) return;
-            const start = new Date(item.startUtc);
-            if (!Number.isNaN(start.getTime())) {
-                const dayStartMinutes = 7 * 60;
-                const startMinutes = (start.getHours() * 60) + start.getMinutes();
-                dragTimeOffsetMinutes = Math.max(0, startMinutes - dayStartMinutes);
+            const item = itemMap.get(String(id));
+            if (item?.startUtc) {
+                const start = new Date(item.startUtc);
+                if (!Number.isNaN(start.getTime())) {
+                    const dayStartMinutes = 7 * 60;
+                    const startMinutes = (start.getHours() * 60) + start.getMinutes();
+                    dragTimeOffsetMinutes = Math.max(0, startMinutes - dayStartMinutes);
+                } else {
+                    dragTimeOffsetMinutes = 0;
+                }
             } else {
                 dragTimeOffsetMinutes = 0;
             }
