@@ -84,6 +84,12 @@ const layoutTemplate = compileTemplate("layout", `
             </span>
             <span class="nav-label">{{t "nav.rooms" "Rooms"}}</span>
           </a>
+          <a href="#/plans" data-route="plans" class="nav-item">
+            <span class="nav-short" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M3 5h18a2 2 0 0 1 2 2v2H1V7a2 2 0 0 1 2-2zm-2 8h22v6a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-6zm4 2v2h6v-2H5z"/></svg>
+            </span>
+            <span class="nav-label">{{t "nav.plans" "Plans"}}</span>
+          </a>
         </div>
         <div class="nav-section">
           <a href="#/customers" data-route="customers" class="nav-group nav-header">
@@ -94,23 +100,11 @@ const layoutTemplate = compileTemplate("layout", `
           </a>
         </div>
         <div class="nav-section">
-          <div class="nav-group nav-header nav-header-static">
+          <a href="#/reports" data-route="reports" class="nav-group nav-header">
             <span class="nav-short" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 9.7-8 10-4.5-.3-8-5-8-10V6l8-4z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
             </span>
             <span class="nav-label">{{t "nav.section.admin" "Admin"}}</span>
-          </div>
-          <a href="#/reports" data-route="reports" class="nav-item">
-            <span class="nav-short" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M4 20h16M6 16h2V8H6v8zm5 0h2V4h-2v12zm5 0h2v-6h-2v6z"/></svg>
-            </span>
-            <span class="nav-label">{{t "nav.reports" "Reports"}}</span>
-          </a>
-          <a href="#/plans" data-route="plans" class="nav-item">
-            <span class="nav-short" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M3 5h18a2 2 0 0 1 2 2v2H1V7a2 2 0 0 1 2-2zm-2 8h22v6a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-6zm4 2v2h6v-2H5z"/></svg>
-            </span>
-            <span class="nav-label">{{t "nav.plans" "Plans"}}</span>
           </a>
           <a href="#/users" data-route="users" class="nav-item">
             <span class="nav-short" aria-hidden="true">
@@ -6304,7 +6298,7 @@ let billingHandlersBound = false;
 function getSidebarState() {
     const stored = localStorage.getItem(sidebarStorageKey);
     if (stored === null) {
-        return window.innerWidth < 1500;
+        return window.innerWidth < 1800;
     }
     return stored === "1";
 }
@@ -11682,7 +11676,7 @@ function bindCalendarInteractions(data, itemMap) {
                 if (currentMinutes === dayStartMinutes + targetStartMinutes) return;
             }
             try {
-                const effectiveStartMinutes = (targetStartMinutes === null || targetStartMinutes === 0)
+                const effectiveStartMinutes = targetStartMinutes === null
                     ? dragTimeOffsetMinutes
                     : targetStartMinutes;
                 console.log("[calendar] drop", {
