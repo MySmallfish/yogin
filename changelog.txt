@@ -67,3 +67,4 @@
 2026-01-31 23:26  Map drag/drop time using hour label base hour to eliminate 1-hour offset.
 2026-01-31 23:38  Align drag/drop grid top to day column grid (fix 1-hour offset from day label).
 2026-01-31 23:50  Anchor drag/drop mapping to hour label top to eliminate remaining offset.
+2026-02-01 00:06  Use hour label positions to compute drag/drop time offsets precisely.
